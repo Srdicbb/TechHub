@@ -1,0 +1,10 @@
+# zavisnosti i izlaz builda
+node_modules/
+build/
+dist/
+# generiše build.mjs iz lucide-static
+src/icons.js
+# alati
+__pycache__/
+*.pyc
+.DS_Store

@@ -1,0 +1,15 @@
+export const DOMAINS = [
+  { id: 'messaging', title: 'Poruke i brokeri', icon: 'send', blurb: 'Kako servisi razgovaraju asinhrono: queue, topic, event streaming, garancije isporuke i šta raditi sa porukama koje ne mogu da se obrade.' },
+  { id: 'concurrency', title: 'Konkurentnost', icon: 'lock', blurb: 'Niti, ThreadPool i sinhronizacija: šta se dešava kad više niti dira isto stanje i kako `async/await` štedi niti.' },
+  { id: 'parallel', title: 'Paralelno programiranje', icon: 'cpu', blurb: 'Kako se posao deli na jezgra i kako faze obrade povezati kanalima bez gubljenja kontrole nad opterećenjem.' },
+  { id: 'caching', title: 'Keširanje', icon: 'zap', blurb: 'Gde podaci žive i koliko košta da se do njih stigne: obrasci keširanja, izbacivanje, talasi promašaja i distribuirani keš.' },
+  { id: 'distributed', title: 'Distribuirani sistemi', icon: 'network', blurb: 'Šta se menja kad stanje živi na više mašina: particije mreže, raspodela ključeva i transakcije preko više servisa.' },
+  { id: 'sql', title: 'Baze i SQL', icon: 'database', blurb: 'Indeksi, izolacija transakcija i najčešći problem sa ORM-om, prikazani na stranicama i vremenskim linijama.' },
+  { id: 'architecture', title: 'Arhitektura i otpornost', icon: 'blocks', blurb: 'Kako organizovati kod i kako se zaštititi kada zavisnost uspori ili padne.' },
+  { id: 'kubernetes', title: 'Kubernetes i cloud', icon: 'container', blurb: 'Podovi, servisi, isporuka nove verzije bez prekida i automatsko skaliranje.' },
+  { id: 'observability', title: 'Monitoring', icon: 'activity', blurb: 'Tragovi kroz više servisa, percentili i SLO: kako videti šta sistem stvarno radi.' },
+  { id: 'dotnet', title: '.NET runtime', icon: 'braces', blurb: 'Memorija i GC, životni vek servisa u DI kontejneru i pipeline ASP.NET Core zahteva.' },
+  { id: 'angular', title: 'Angular', icon: 'component', blurb: 'Detekcija promena (Default, OnPush, Signals) i RxJS operatori koji spajaju tokove.' },
+  { id: 'ai', title: 'AI i LLM', icon: 'brain-circuit', blurb: 'Embeddings i semantička pretraga, RAG i agenti koji pozivaju alate.' },
+  { id: 'algorithms', title: 'Algoritmi i strukture', icon: 'route', blurb: 'Složenost, sortiranje, pretraga, heš tabele i grafovi, sa koracima koje možeš da pratiš.' },
+];
