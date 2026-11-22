@@ -34,12 +34,16 @@
     </div>
   </aside>
   <div class="fly" id="fly" hidden></div>
+  <div class="modal" id="skm" hidden></div>
   <div class="scrim" id="scrim"></div>
   <div class="main">
     <header class="top">
       <button class="btn ic menu" id="menu" type="button" aria-label="Meni" aria-controls="side"><!--ICON:menu--></button>
       <nav class="crumbs" id="crumbs" aria-label="Putanja"></nav>
-      <button class="btn ic tema" id="tema" type="button" aria-label="Uključi tamnu temu" title="Uključi tamnu temu"><span class="sun"><!--ICON:sun--></span><span class="moon"><!--ICON:moon--></span></button>
+      <div class="acts">
+        <button class="btn ic" id="skills" type="button" aria-haspopup="dialog" aria-label="Skillset" title="Skillset"><svg aria-hidden="true" class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6 20.4 7.5v9L12 21.4 3.6 16.5v-9Z"/><path d="M12 6.8 16.9 10.3 14.6 16.2H9.6L7.5 10.5Z" fill="currentColor" fill-opacity=".3"/><path d="M12 12V2.6M12 12l8.4-4.5M12 12l-8.4 4.5" opacity=".45"/></svg></button>
+        <button class="btn ic tema" id="tema" type="button" aria-label="Uključi tamnu temu" title="Uključi tamnu temu"><span class="sun"><!--ICON:sun--></span><span class="moon"><!--ICON:moon--></span></button>
+      </div>
     </header>
     <main id="view" tabindex="-1"></main>
     <footer class="foot"><p>Scenu rotiraš prevlačenjem, a zumiraš točkićem ili sa dva prsta. Tastatura: <kbd>/</kbd> pretraga, <kbd>←</kbd> i <kbd>→</kbd> prethodna i sledeća tema.</p></footer>

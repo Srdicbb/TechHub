@@ -7,6 +7,8 @@ import { TOPICS } from './topics/index.js';
 import { ICONS } from './icons.js';
 import { legendViz } from './legend.js';
 import { sysViz } from './sysviz.js';
+import { T } from './i18n.js';
+import { LEVELS, levelOf, drawSkills } from './skills.js';
 
 {
   const $ = (s, r = document) => r.querySelector(s);
@@ -44,7 +46,7 @@ import { sysViz } from './sysviz.js';
       return plain ? esc(t.title) : `<a href="#${id}">${esc(t.title)}</a>`;
     });
   const sayFmt = s => String(s ?? '').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-  const plural = n => (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'teme' : 'tema';
+  const plural = n => T((n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'teme' : 'tema', n === 1 ? 'topic' : 'topics');
   const LANG = { csharp: 'C#', typescript: 'TypeScript', sql: 'SQL', yaml: 'YAML', bash: 'Shell', json: 'JSON', xml: 'HTML', plaintext: 'Tekst' };
 
   const stage = new Stage();
@@ -305,25 +307,107 @@ import { sysViz } from './sysviz.js';
   };
   const shape = k => `<svg viewBox="0 0 32 32" aria-hidden="true">${SHAPES[k]}</svg>`;
 
+  // ---------- početna: mapa oblasti; na prelaz mišem teme oblasti se rašire u krug oko nje ----------
   function roadmapHtml() {
-    const card = (sc, k) => `<div class="rm-sec" style="order:${k}"><p class="rm-sh">${esc(sc.title)}</p><ul>${sc.topics.map(id => {
-      const t = byId.get(id);
-      return `<li><a class="rm-t" href="#${id}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a></li>`;
-    }).join('')}</ul></div>`;
-    return `<ol class="rm">${TABS.map((tab, ti) => {
-        const ts = tabTopics(tab);
-        if (!ts.length) return `<li class="rm-tab soon"><a class="rm-node" href="#${tab.id}"><span class="ic">${icon(tab.icon)}</span><span><b>${esc(tabName(tab))}</b><small>u pripremi</small></span></a></li>`;
-        const cols = [[], []], h = [0, 0];
-        tab.sections.forEach((sc, k) => {
-          const c = tab.sections.length === 1 ? ti % 2 : (h[0] <= h[1] ? 0 : 1);
-          cols[c].push(card(sc, k)); h[c] += sc.topics.length + 1.6;
-        });
-        return `<li class="rm-tab">
-          <a class="rm-node" href="#${tab.id}"><span class="ic">${icon(tab.icon)}</span><span><b>${esc(tabName(tab))}</b><small>${ts.length} ${plural(ts.length)}</small></span></a>
-          <div class="rm-cols"><div class="rm-col l">${cols[0].join('')}</div><div class="rm-col r">${cols[1].join('')}</div></div>
+    return `<div class="orb" id="orb">
+      <p class="orb-hint">${icon('sparkles')}<span class="d">${T('Pređi mišem preko oblasti i njene teme se rašire oko nje.', 'Hover an area and its topics fan out around it.')}</span><span class="m">${T('Izaberi oblast da vidiš njene teme.', 'Pick an area to see its topics.')}</span></p>
+      <svg class="orb-path" aria-hidden="true"><path class="base"/><path class="flow"/></svg>
+      <ol class="orb-list">${TABS.map((tab, i) => {
+        const ts = tabTopics(tab), nm = esc(tabName(tab));
+        return `<li class="orb-n${ts.length ? '' : ' soon'}" style="--i:${i}">
+          <a class="orb-core" href="#${tab.id}" aria-label="${nm}"><span class="orb-ring" aria-hidden="true"><i></i></span>${icon(tab.icon)}</a>
+          <span class="orb-name"><b>${nm}</b><small>${ts.length ? `${ts.length} ${plural(ts.length)}` : T('u pripremi', 'coming soon')}</small></span>
+          ${ts.length ? `<div class="orb-burst" role="group" aria-label="${T('Teme', 'Topics')}: ${nm}"><svg class="orb-rays" aria-hidden="true"></svg>${ts.map((t, k) => `<a class="orb-t" href="#${t.id}" style="--k:${k}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a>`).join('')}<a class="orb-t orb-all" href="#${tab.id}" style="--k:${ts.length}"><span class="tt">${T('Cela oblast', 'Whole area')}</span>${icon('arrow-right')}</a></div>` : ''}
         </li>`;
-      }).join('')}</ol>`;
+      }).join('')}</ol>
+    </div>`;
   }
+  // raspored: čvorovi niz blagu krivu, teme svake oblasti na luku kruga levo i desno od nje
+  function layoutOrb(orb) {
+    const W = orb.clientWidth, list = W < 760, nodes = $$('.orb-n', orb), svg = $('.orb-path', orb);
+    orb.classList.toggle('list', list);
+    if (list) { nodes.forEach(n => { n.style.left = n.style.top = ''; }); orb.style.height = ''; return; }
+    const STEP = 150, TOP = 96, GAP = 46;
+    orb.style.setProperty('--pw', Math.round(Math.max(150, Math.min(250, W / 2 - 250))) + 'px');
+    const pts = [];
+    nodes.forEach((n, i) => {
+      const ts = $$('.orb-t:not(.orb-all)', n), mr = Math.ceil(ts.length / 2), ml = ts.length - mr;
+      const R = Math.max(118, (Math.max(mr, ml) - 1) * GAP / 2 / .92);
+      let wmax = 0, rays = `<circle class="orbit" r="${R.toFixed(1)}"/>`;
+      ts.forEach((a, k) => {
+        const right = k < mr, j = right ? k : k - mr, m = right ? mr : ml;
+        const y = (right ? j - (m - 1) / 2 : (m - 1) / 2 - j) * GAP, x = Math.sqrt(Math.max(0, R * R - y * y)) * (right ? 1 : -1);
+        a.classList.toggle('l', !right);
+        a.style.setProperty('--x', x.toFixed(1) + 'px');
+        a.style.setProperty('--y', y.toFixed(1) + 'px');
+        wmax = Math.max(wmax, a.offsetWidth);
+        rays += `<line pathLength="1" x1="0" y1="0" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" style="--k:${k}"/><circle class="dot" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3" style="--k:${k}"/>`;
+      });
+      const rs = $('.orb-rays', n);
+      if (rs) rs.innerHTML = rays;
+      const half = R + 20 + wmax, amp = Math.max(0, W / 2 - half - 10);
+      const x = W / 2 + Math.max(-amp, Math.min(amp, Math.sin(i * 1.25 + .5) * Math.min(130, W * .13))), y = TOP + i * STEP;
+      n.style.left = x.toFixed(1) + 'px';
+      n.style.top = y + 'px';
+      n.style.setProperty('--hw', half.toFixed(0) + 'px');
+      n.style.setProperty('--hh', (R * .92 + 34).toFixed(0) + 'px');
+      pts.push([x, y]);
+    });
+    const H = TOP + (nodes.length - 1) * STEP + 120;
+    orb.style.height = H + 'px';
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    let d = `M${pts[0][0].toFixed(1)},${pts[0][1]}`;
+    for (let i = 1; i < pts.length; i++) {
+      const [x0, y0] = pts[i - 1], [x1, y1] = pts[i];
+      d += ` C${x0.toFixed(1)},${y0 + STEP * .55} ${x1.toFixed(1)},${y1 - STEP * .55} ${x1.toFixed(1)},${y1}`;
+    }
+    $$('path', svg).forEach(p => p.setAttribute('d', d));
+  }
+  let orbOpen = null, orbTimer = 0, orbPointer = 'mouse';
+  function orbSet(n) {
+    clearTimeout(orbTimer);
+    if (orbOpen === n) return;
+    orbOpen?.classList.remove('open');
+    orbOpen = n;
+    n?.classList.add('open');
+    $('#orb')?.classList.toggle('has-open', !!n);
+  }
+  const orbLater = () => { clearTimeout(orbTimer); orbTimer = setTimeout(() => orbSet(null), 240); };
+  function hookOrb() {
+    const orb = $('#orb');
+    if (!orb) return;
+    orbOpen = null;
+    orb.classList.add('js');
+    orb.addEventListener('pointerdown', e => { orbPointer = e.pointerType; });
+    for (const n of $$('.orb-n', orb)) {
+      if (n.classList.contains('soon')) continue;
+      const hover = e => e.pointerType === 'mouse' && !orb.classList.contains('list');
+      n.addEventListener('pointerenter', e => { if (hover(e)) orbSet(n); });
+      n.addEventListener('pointerleave', e => { if (hover(e)) orbLater(); });
+      n.addEventListener('focusin', () => { if (!orb.classList.contains('list')) orbSet(n); });
+      n.addEventListener('focusout', e => { if (!n.contains(e.relatedTarget)) orbLater(); });
+      // dodir ili uzak raspored: prvi dodir otvara teme; u širokom rasporedu drugi vodi na oblast, a u uskom zatvara
+      const core = $('.orb-core', n);
+      let wasOpen = false;
+      core.addEventListener('pointerdown', () => { wasOpen = orbOpen === n; });
+      core.addEventListener('click', e => {
+        const list = orb.classList.contains('list');
+        if (!list && orbPointer === 'mouse') return;
+        const opened = e.detail === 0 ? orbOpen === n : wasOpen;
+        if (!opened) { e.preventDefault(); orbSet(n); }
+        else if (list) { e.preventDefault(); orbSet(null); }
+      });
+    }
+    // čvorovi se pojavljuju dok se skroluje
+    const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.closest('.orb-n').classList.add('in'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -8% 0px' });
+    $$('.orb-core', orb).forEach(c => io.observe(c));
+    let raf = 0;
+    const ro = new ResizeObserver(() => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => layoutOrb(orb)); });
+    ro.observe(orb);
+    observers.push(io, ro);
+    layoutOrb(orb);
+  }
+  document.addEventListener('pointerdown', e => { if (orbOpen && !orbOpen.contains(e.target)) orbSet(null); });
 
   function showHome() {
     setTab(null);
@@ -348,6 +432,7 @@ import { sysViz } from './sysviz.js';
         ${vizCard(legendViz, 'legend')}
       </section>
     </div></section>`;
+    hookOrb();
     mountViz($('.viz', $('#view')), legendViz, 'legend');
   }
 
@@ -461,6 +546,7 @@ import { sysViz } from './sysviz.js';
   }
 
   function route() {
+    closeSkills(false);
     const h = decodeURIComponent(location.hash.slice(1));
     document.body.classList.remove('nav-open');
     hideFly(true);
@@ -579,6 +665,44 @@ import { sysViz } from './sysviz.js';
     const to = e.key === 'ArrowLeft' ? adj.prev : e.key === 'ArrowRight' ? adj.next : null;
     if (to) location.hash = to;
   });
+  // ---------- Skillset: iskačući prozor sa radarom oblasti ----------
+  const skm = $('#skm');
+  let skmRo = null, skmBack = null;
+  function openSkills() {
+    const areas = TABS.map(tab => ({ title: tab.title, level: levelOf(tab.id) }));
+    skm.innerHTML = `<div class="modal-back" data-close></div>
+      <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="skm-h">
+        <header class="modal-h"><div><h2 id="skm-h">Skillset</h2><p>${T('Nivo znanja po oblastima iz mape, od 1 do 5.', 'Knowledge level for each roadmap area, from 1 to 5.')}</p></div>
+          <button class="btn ic modal-x" type="button" data-close aria-label="${T('Zatvori', 'Close')}">${icon('x')}</button></header>
+        <div class="sk-fig"><svg role="img" aria-label="${T('Radar znanja po oblastima', 'Knowledge radar by area')}"></svg></div>
+        <ol class="sk-levels">${LEVELS.map((l, i) => `<li><b>${i + 1}</b>${esc(l)}</li>`).join('')}</ol>
+        ${areas.some(a => a.level) ? '' : `<p class="sk-empty">${T('Nivoi još nisu popunjeni. Kad odlučimo kako se popunjavaju, ovde će se pojaviti oblik znanja.', 'Levels are not filled in yet. Once we decide how they are filled, the shape of your knowledge will appear here.')}</p>`}
+      </section>`;
+    skm.hidden = false;
+    document.documentElement.classList.add('modal-on');
+    const svg = $('.sk-fig svg', skm);
+    skmRo = new ResizeObserver(() => drawSkills(svg, areas));
+    skmRo.observe(svg);
+    skmBack = document.activeElement;
+    $('.modal-x', skm).focus();
+  }
+  function closeSkills(refocus = true) {
+    if (skm.hidden) return;
+    skm.hidden = true;
+    skm.innerHTML = '';
+    skmRo?.disconnect();
+    skmRo = null;
+    document.documentElement.classList.remove('modal-on');
+    if (refocus) (skmBack || $('#skills')).focus?.();
+  }
+  $('#skills').addEventListener('click', openSkills);
+  skm.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSkills(); });
+  skm.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.stopPropagation(); closeSkills(); }
+    else if (e.key === 'Tab') { e.preventDefault(); $('.modal-x', skm).focus(); }   // jedino dugme u prozoru zadržava fokus
+    e.stopPropagation();
+  });
+
   window.addEventListener('hashchange', route);
   markTheme();
   route();
