@@ -13,5 +13,6 @@ import angular from './angular.js';
 import ai from './ai.js';
 import algorithms from './algorithms.js';
 import sysdesign from './sysdesign.js';
+import network from './network.js';
 
-export const TOPICS = [...messaging, ...concurrency, ...concurrency2, ...parallel, ...caching, ...distributed, ...sql, ...architecture, ...kubernetes, ...observability, ...dotnet, ...angular, ...ai, ...algorithms, ...sysdesign];
+export const TOPICS = [...messaging, ...concurrency, ...concurrency2, ...parallel, ...caching, ...distributed, ...sql, ...architecture, ...kubernetes, ...observability, ...dotnet, ...angular, ...ai, ...algorithms, ...sysdesign, ...network];

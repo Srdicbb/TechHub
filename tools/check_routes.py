@@ -31,7 +31,8 @@ async def main():
             await pg.wait_for_timeout(2300)
             name = r or 'home'
             await pg.screenshot(path=str(out / f'{name}.png'))
-            info = await pg.evaluate("""() => { const v = document.querySelector('.viz-stage');
+            # labele se mere prema celoj površini scene (.stage-view); na uskom ekranu ona je šira od kartice i skroluje se vodoravno
+            info = await pg.evaluate("""() => { const v = document.querySelector('.stage-view') || document.querySelector('.viz-stage');
               const labs = [...document.querySelectorAll('.stage-labels .lbl')].filter(e => e.style.display !== 'none');
               const r = v ? v.getBoundingClientRect() : null; let off = 0;
               for (const l of labs) { const b = l.getBoundingClientRect(); if (r && (b.left < r.left - 1 || b.right > r.right + 1 || b.top < r.top - 1 || b.bottom > r.bottom + 1)) off++; }

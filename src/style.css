@@ -438,6 +438,8 @@ td:first-child{font-weight:600}
   .viz-stage{height:min(84vw,440px)}
   .stage-view{min-width:640px}
   .knob input[type=range]{width:96px}
+  .knob{flex-wrap:wrap;row-gap:6px}
+  .seg button{padding:0 9px;white-space:nowrap}
   .pager{grid-template-columns:minmax(0,1fr)}
   .top .pn{display:none}
   .st.minor{display:none}

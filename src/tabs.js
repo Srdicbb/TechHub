@@ -3,13 +3,11 @@
 // page: 'system' znači da su teme delovi jedne stranice sa simulacijom; soon: oblast još nema tema.
 export const TABS = [
   {
-    id: 'konkurentnost', title: 'Konkurentnost', name: 'Konkurentnost i paralelizam', icon: 'cpu',
-    blurb: 'Od jezgra procesora do `async/await`: kako se posao deli na niti i jezgra, kako ga .NET raspoređuje i kako deljeno stanje ostaje ispravno kad mu pristupa više niti.',
+    id: 'mreza', title: 'Mreža', name: 'Mreža i protokoli', icon: 'globe',
+    blurb: 'Šta se dešava između klijenta i servera: slojevi i paketi, TCP i UDP, DNS, HTTP i njegove verzije, metode i idempotentnost, HTTPS i TLS handshake.',
     sections: [
-      { id: 'k-osnove', title: 'Osnove', icon: 'cpu', topics: ['concurrency-vs-parallelism', 'cpu-cores', 'threads', 'os-scheduler'] },
-      { id: 'k-net', title: '.NET: taskovi i async', icon: 'braces', topics: ['thread-pool', 'async-await', 'parallel-for', 'channels'] },
-      { id: 'k-sync', title: 'Sinhronizacija i thread safety', icon: 'lock', topics: ['race', 'thread-safety', 'lock', 'semaphore', 'atomic', 'deadlock'] },
-      { id: 'k-mapa', title: 'Pregled', icon: 'map', topics: ['concurrency-map'] },
+      { id: 'n-osnove', title: 'Kako paket stiže', icon: 'network', topics: ['net-layers', 'tcp-udp', 'dns'] },
+      { id: 'n-http', title: 'HTTP i HTTPS', icon: 'globe', topics: ['http-basics', 'http-methods', 'https-tls'] },
     ],
   },
   {
@@ -20,6 +18,16 @@ export const TABS = [
       { id: 'sd-s-ulaz', title: 'Ulaz u sistem', icon: 'shield', topics: ['sd-firewall', 'sd-gateway', 'sd-lb', 'sd-rate'] },
       { id: 'sd-s-podaci', title: 'Podaci i brzina', icon: 'database', topics: ['sd-cache', 'sd-db', 'sd-queue'] },
       { id: 'sd-s-pouzdanost', title: 'Pouzdanost', icon: 'activity', topics: ['sd-resilience', 'sd-observe'] },
+    ],
+  },
+  {
+    id: 'konkurentnost', title: 'Konkurentnost', name: 'Konkurentnost i paralelizam', icon: 'cpu',
+    blurb: 'Od jezgra procesora do `async/await`: kako se posao deli na niti i jezgra, kako ga .NET raspoređuje i kako deljeno stanje ostaje ispravno kad mu pristupa više niti.',
+    sections: [
+      { id: 'k-osnove', title: 'Osnove', icon: 'cpu', topics: ['concurrency-vs-parallelism', 'cpu-cores', 'threads', 'os-scheduler'] },
+      { id: 'k-net', title: '.NET: taskovi i async', icon: 'braces', topics: ['thread-pool', 'async-await', 'parallel-for', 'channels'] },
+      { id: 'k-sync', title: 'Sinhronizacija i thread safety', icon: 'lock', topics: ['race', 'thread-safety', 'lock', 'semaphore', 'atomic', 'deadlock'] },
+      { id: 'k-mapa', title: 'Pregled', icon: 'map', topics: ['concurrency-map'] },
     ],
   },
   {

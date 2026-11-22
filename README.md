@@ -1,6 +1,6 @@
 # Priručnik koncepata
 
-Lični priručnik za pripremu intervjua i obnavljanje osnova: konkurentnost i paralelizam, system design, arhitektura, podaci, cloud, .NET i Angular, AI i algoritmi. Svaka tema ima živu scenu (three.js ili SVG), ključne tačke, primere koda i zamke. System design ima interaktivnu simulaciju sistema pod opterećenjem.
+Lični priručnik za pripremu intervjua i obnavljanje osnova: mreža i protokoli, system design, konkurentnost i paralelizam, arhitektura, podaci, cloud, .NET i Angular, AI i algoritmi. Svaka tema ima živu scenu (three.js ili SVG), ključne tačke, primere koda i zamke. System design ima interaktivnu simulaciju sistema pod opterećenjem.
 
 ## Pokretanje
 

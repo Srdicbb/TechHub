@@ -1,4 +1,5 @@
 export const DOMAINS = [
+  { id: 'network', title: 'Mreža i protokoli', icon: 'globe', blurb: 'Slojevi i paketi, TCP i UDP, DNS, HTTP i TLS.' },
   { id: 'messaging', title: 'Poruke i brokeri', icon: 'send', blurb: 'Kako servisi razgovaraju asinhrono: queue, topic, event streaming, garancije isporuke i šta raditi sa porukama koje ne mogu da se obrade.' },
   { id: 'concurrency', title: 'Konkurentnost', icon: 'lock', blurb: 'Niti, ThreadPool i sinhronizacija: šta se dešava kad više niti dira isto stanje i kako `async/await` štedi niti.' },
   { id: 'parallel', title: 'Paralelno programiranje', icon: 'cpu', blurb: 'Kako se posao deli na jezgra i kako faze obrade povezati kanalima bez gubljenja kontrole nad opterećenjem.' },
