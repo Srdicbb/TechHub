@@ -1,0 +1,178 @@
+@bc3014e106
+Stack, heap and GC
+@286c0977dd
+Local variables and references live on the **stack** and disappear when the method ends. Objects live on the **heap**, and the garbage collector removes the ones that can no longer be reached; it splits the heap into generations, because most objects die young.
+@a1974d7088
+Value types (`int`, `struct`) as local variables live on the stack; reference types (`class`) are always on the heap, and only the reference is on the stack.
+@610e869957
+The GC starts from the roots (the stack, static fields, registers), marks all reachable objects and frees the rest.
+@e783794fd5
+Gen0 is collected often and fast. Survivors move to Gen1, then to Gen2, where collection is rare.
+@9107df27ad
+Objects of 85,000 bytes and more go to the **Large Object Heap** (LOH), which is collected with Gen2 and is not compacted by default.
+@02f4b968fd
+Boxing: when a value type goes into an `object`, a copy is created on the heap. In a loop that is needless garbage.
+@05ab01f6f6
+C# · Stack, heap and boxing
+@f78f29bfde
+an object on the heap, a reference on the stack
+@db2e586055
+boxing: a new copy on the heap
+@39763b8f50
+a temporary buffer on the stack, no GC
+@de28f6ef60
+the stack is released; Order waits for the GC if nobody else points to it
+@69d2af150b
+C# · Fewer allocations
+@f1ba88ea04
+borrow instead of new
+@9ffca11b7f
+instead of s += ... in a loop
+@e16013d62c
+Shell · What the GC does in production
+@859f647184
+a heap snapshot for finding leaks
+@365197b46c
+A static collection or an event nobody unsubscribes from keeps objects forever: memory leaks exist in a language with a GC too.
+@ff837f000b
+Frequent arrays larger than 85 KB (big JSON, images) fill the LOH and fragment memory. Use `ArrayPool` or a stream.
+@0ab0179e5b
+`GC.Collect()` in production code almost always hurts: the GC knows better when.
+@9cf39d0f8f
+Allocated
+@d5c1ab65e4
+reachable
+@1d90bbcc64
+unreachable
+@3a523a76d0
+Stack
+@938ed8f049
+**{0}**: the GC starts from the roots (the stack, static fields) and marks the reachable objects.
+@4887ab164a
+moves to **{0}**
+@836be78506
+stays in Gen2
+@e12c9af654
+The unreachable objects ({0}) were freed, and {1} survivors {2}.
+@8334f6e153
+A new method gets a frame on the stack. The objects it creates go into **Gen0**, and the frame holds references to them.
+@e45af33a65
+An array larger than 85 KB goes straight to the **Large Object Heap**.
+@6475cc86ff
+The methods have finished: their frames were removed from the stack, so their objects **no longer have a root**.
+@5cd88e0542
+DI: Singleton, Scoped, Transient
+@d3782cce1c
+The DI container creates objects for you and decides how long they live. **Singleton** exists once for the whole application, **Scoped** once per request, and **Transient** is created on every request for it.
+@c300264bf2
+Singleton: one instance while the application runs, so it must be safe for simultaneous use by several threads.
+@ec9bceef61
+Scoped: one instance per scope, and in ASP.NET Core a scope is one HTTP request. `DbContext` is typically scoped.
+@a1a619fdde
+Transient: a new instance every time it is requested, even twice in the same request. For lightweight stateless objects.
+@014c96b392
+**Captive dependency**: a singleton that receives a scoped service captures it forever, so all requests share that `DbContext`.
+@1d5cf91333
+In a `BackgroundService` (a singleton), a scoped service is obtained through `IServiceScopeFactory.CreateScope()`.
+@f1aa73a6e5
+C# · Registration
+@3546d86537
+one for the application
+@e548919c56
+one per request
+@5246ea47ef
+new every time
+@5026509a98
+C# · A scoped service in a background job
+@0a90cbf53e
+a new scope = a new DbContext
+@6395266746
+C# · Catch a captive dependency at startup
+@ed1f66e4a3
+an exception if a singleton asks for a scoped service
+@a2b96d2908
+validate all registrations at startup
+@9ecb9159d2
+State in a singleton without protection (a list, a counter): all requests change it at the same time.
+@d66cecda06
+An `IDisposable` transient resolved from the root provider lives until the end of the application, because the container keeps it in order to dispose of it.
+@00ba2df1d5
+Registration
+@6d67b25213
+Correct
+@e4b03423fb
+Application (root)
+@8198c5b398
+Request {0}
+@c12d950cc9
+Container
+@90876f4b2e
+**Request {0}** opens a new scope. The controller asks for Clock, OrderService (twice) and Validator (twice).
+@601c05efec
+Singleton **{0} #1** is not created again: every request gets the same object.
+@bbb766e703
+Scoped **OrderService #{0}** was created once; the second request in the same HTTP request gets **the same** object.
+@63b7c0baf6
+Transient **Validator** is created on every request for it: two instances in the same request.
+@0b1ab74d40
+**Captive dependency**: the singleton ReportService received the scoped `ShopDb #1` and holds it forever.
+@54406d010b
+Request {0} uses **the same ShopDb #1** from the first request: shared between threads, with stale data, and maybe already disposed.
+@18bb722fec
+End of request {0}: the scope closes and disposes of the scoped and transient objects. The singleton stays.
+@5e2d236e80
+The ASP.NET Core pipeline
+@3f060a1102
+A request passes through the middleware components in the order they were registered, and the response goes back through the same components in reverse. Each one can do something before and after the next, or stop the chain.
+@896fcaf87d
+The order matters: `UseAuthentication` goes before `UseAuthorization`, and the exception handler at the very start.
+@bf9e759cec
+A middleware that does not call `next` stops the chain (short-circuit): that is how static files, CORS preflight and 401 work.
+@14bd828cb0
+Code after `await next()` runs on the way back: that is where durations are measured and the outcome is recorded.
+@8b4ef77f11
+An exception thrown deep in the chain travels back to the first middleware that catches it.
+@0fe31dce55
+`UseRouting` selects the endpoint early, so middleware after it (authorization, CORS) knows which endpoint will run.
+@64e1976dfc
+C# · The order in Program.cs
+@333a17c06f
+catches everything that fails below (with AddProblemDetails)
+@7d06f9b00c
+a file? answer and do not go further
+@7eae4fb700
+who are you
+@faff78df60
+are you allowed
+@fc37029fa3
+C# · Your own middleware: before and after
+@e17d27aebb
+before: on the way to the endpoint
+@a1ecef1675
+after
+@7cd382ef76
+C# · Stopping the chain
+@cc029618c0
+next is not called: the chain stops here
+@9d93e834bb
+`UseAuthorization` before `UseAuthentication`: the user is always anonymous, so every protected endpoint returns 401.
+@0418074cb7
+Reading the request body in middleware without `EnableBuffering`: the endpoint then gets an empty body.
+@6d52378a55
+Writing headers after `next` when the response has already started throws an exception (headers already sent).
+@57ff880e95
+Request
+@710c88a959
+Forbidden (403)
+@df074483de
+Exception (500)
+@e6fa74ba67
+The request enters and passes through the middleware components **in registration order**. Each does its part before calling `next()`.
+@70b3f8bea3
+**Authorization** rejects the request and does not call `next()`: the chain stops, and the endpoint never runs.
+@b164e161cb
+The endpoint throws an **exception**. It travels back through the chain...
+@858c0e15fb
+The endpoint returns a result. The response goes **back** through the same components: the code after `await next()` runs now.
+@8b3fa53a02
+**ExceptionHandler** catches the exception and turns it into a clean 500 response (ProblemDetails).

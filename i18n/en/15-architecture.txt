@@ -1,0 +1,156 @@
+@31ade7d89b
+The layers are arranged so that dependencies point only inward: the domain knows nothing about the database, HTTP or the framework. Outer layers implement interfaces defined by the inner ones.
+@2b99a725db
+**Domain**: entities and business rules, with no dependency on infrastructure.
+@715108d946
+**Application**: use cases and the interfaces they need (`IOrderRepository`, `IClock`).
+@f9a871acc7
+**Infrastructure**: EF Core, Redis, Service Bus, the implementations of those interfaces.
+@75d70f0ee1
+**Presentation**: the API, controllers or minimal API; it translates HTTP into a use-case call.
+@67d8856a17
+Dependency inversion: Application defines the interface, Infrastructure implements it, and the DI container wires them together in `Program.cs`.
+@121fb7daa4
+C# · The interface in Application, the implementation in Infrastructure
+@df35a35f9a
+the rules live in the domain
+@9cf1034214
+C# · Wiring in Program.cs
+@6e5e0125b1
+C# · An architecture test (NetArchTest)
+@05a3f6d7aa
+the domain must not know about EF Core
+@a38591cce3
+A generic repository over EF Core (`IRepository<T>` with `GetAll`) duplicates the DbContext and hides queries. Create interfaces as the use cases need them.
+@0b6b27a4f3
+Four projects for a small CRUD service are ceremony without benefit. Layers pay off when there is a real domain.
+@eb243b75e7
+A domain full of public setters is a DTO, not a domain: the rules should live in the entities' methods.
+@96d99b9ffc
+Dependencies
+@44dd94a489
+Inward
+@d23cfe5f96
+Breaking the rule
+@f08d2f12e2
+<b>Domain</b><small>entities and rules</small>
+@87b526fff2
+<b>Application</b><small>use cases, interfaces</small>
+@c68f6e1745
+HTTP request
+@c86ef4e1e4
+**Breaking the rule**: the domain uses EF Core directly. A change of database now also changes the business rules, and the domain tests need a database.
+@e9efc4ee7e
+The green arrows are dependencies: they all point **toward the center**. Infrastructure implements an interface from the Application layer, so the domain does not know about the database.
+@ca5aa7e36b
+When a dependency starts failing, the circuit breaker stops calling it and returns an error immediately (**open**). After a pause it lets a trial request through (**half-open**); if it succeeds, normal operation resumes (**closed**).
+@7de1ac556f
+Closed: calls go through, and the breaker counts errors in a sliding window.
+@eae991bd5d
+Open: after the error threshold, calls are rejected immediately (fail fast), without waiting for a timeout, so the dependency gets room to breathe.
+@f533d97c07
+Half-open: after a pause a trial call is let through. Success closes the breaker, an error opens it again.
+@1e3d9ea582
+A breaker goes with a fallback: a cached response, a default value or a clear message to the user.
+@611673d5cf
+The order in the pipeline: retry outside, the breaker inside, then a timeout per attempt. While the breaker is open, attempts fail immediately and do not load the dependency.
+@420675c8f0
+C# · Polly v8: retry, breaker, timeout
+@807d005523
+50% errors...
+@ea2b531650
+...in a 10 s window
+@ddac556f75
+only after at least 8 calls
+@3be536fea4
+how long it stays open
+@b28c761f8e
+per attempt
+@910358df9d
+C# · The standard handler for HttpClient
+@0dc491dbee
+rate limit, timeout, retry, circuit breaker, timeout per attempt
+@0241279a96
+C# · A fallback while the breaker is open
+@e173232a10
+a fast response instead of waiting for a dead dependency
+@fef85d1fd0
+One breaker for all dependencies: the failure of one closes access to all. A breaker goes per dependency (per host).
+@46a2a250ef
+A threshold set too low opens the breaker at the first noise; too high, and it opens when it is already too late.
+@79050a711f
+The dependency fails or recovers
+@7257019410
+State
+@3827b455fa
+Rejected immediately
+@bf5514317a
+Client
+@61830bb914
+Dependency
+@297b48a8d2
+The dependency has **recovered**. The breaker will discover it with a trial call when the pause expires.
+@a8e4b85e55
+The dependency is **failing**: calls take long and end with an error. The breaker counts the errors.
+@8bcf7bb410
+The pause has expired: **half-open**, one trial call goes to the dependency.
+@0e078a4e11
+The trial call succeeded: the breaker **closes** and traffic flows normally.
+@476ad6e4d1
+The trial call failed: the breaker **opens** again.
+@42c6dd7792
+{0} of the last {1} calls failed: the breaker **opens** and rejects calls immediately, without waiting.
+@2a8979a853
+The breaker stands between the client and the dependency. Watch its state (color) and the handle.
+@a714c8bc5d
+Rate limiting: token bucket
+@cb7ff2852f
+A rate limiter protects a service from too many requests. **Token bucket**: the bucket holds at most B tokens and refills at rate r; every request uses a token, and when the bucket is empty the request gets `429`.
+@bd9452e079
+The bucket capacity allows short bursts, and the refill rate determines the long-term average.
+@48c0d7b988
+**Fixed window** counts requests per minute. It is simple, but around the window boundary it lets through up to twice as many.
+@fcd3b401d6
+**Sliding window** splits the window into segments and softens the boundary; a **concurrency limiter** limits simultaneous requests, not total ones.
+@ac7debbab1
+A rejected request gets `429 Too Many Requests` and, ideally, a `Retry-After` header.
+@d7fb172905
+The limit should be per user or API key: one noisy client must not shut down the others.
+@54cc5d0595
+C# · The ASP.NET Core rate limiter
+@56387a341d
+capacity (burst)
+@7b93f9d315
+refill:
+@be583a4e23
+5 tokens per second
+@356e66ebe2
+no waiting: 429 right away
+@848aa505d9
+C# · A limit per user
+@3517f2da9c
+Azure API Management · policy
+@c1b658e64c
+A limiter in the memory of each instance: with 5 instances the real limit is 5× higher. A global limit needs a shared counter (Redis) or a gateway.
+@38bf6e49d2
+A client that retries immediately on 429 makes the crowd even bigger: respect `Retry-After` and back off.
+@e00e99d171
+Refill
+@bd374aa30f
+Capacity
+@a5e4eacf81
+A burst of 15 requests
+@0fa333162a
+Let through
+@dec9d3f48e
+Rejected (429)
+@ee56407639
+Tokens
+@56bf84ded2
+Bucket: at most {0}
+@82c354a405
++{0} tokens per second
+@23a2afb1be
+A burst of 15: the first **{0}** pass using the tokens in the bucket, the rest get **429** until the bucket refills.
+@06640b1e9a
+Requests arrive at about 2.5 per second, and the bucket refills at {0} per second. When the tokens are used up, the excess gets **429**.

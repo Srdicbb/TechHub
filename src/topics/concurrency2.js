@@ -1,8 +1,9 @@
+import { dec1 as dec, lang } from '../i18n.js';
 // Konkurentnost i paralelizam: nove teme (osnove, ThreadPool, sinhronizacija, mapa biblioteka)
 const cs = (t, src) => ({ t, lang: 'csharp', src });
 const sh = (t, src) => ({ t, lang: 'bash', src });
-const dec = v => String(Math.round(v * 10) / 10).replace('.', ',');
-const pl = (n, one, few, many) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; };
+// srpska množina ima tri oblika; na engleskom je jednina samo za 1, a množina je oblik "few" (prevod ga daje u množini)
+const pl = (n, one, few, many) => { if (lang === 'en') return n === 1 ? one : few; const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; };
 
 export default [
   // ------------------------------------------------------------------ Konkurentnost i paralelizam

@@ -1,0 +1,154 @@
+@cce7fbfc12
+Partition {0}
+@fa09311298
+ (no partition)
+@cf9e066ad8
+Billing group
+@846fbdd58a
+Analytics group
+@b14916a9a6
+Analytics moved its offset back to the start: **the same records are read again**, and Billing does not notice, because it has its own offset.
+@5012b2d378
+The color is the key (customer). The same key always goes to **the same partition**, so ordering holds per customer. Records stay in the log even after they are read.
+@6c325c32bd
+Delivery guarantees
+@957eefceec
+Networks and processes fail, so the system chooses: it risks a loss (**at-most-once**) or a duplicate (**at-least-once**). **Exactly-once** is built in practice as at-least-once plus idempotent processing.
+@fa704277f6
+At-most-once: the acknowledgement (ack) before processing. A crash after the ack means a lost message.
+@b7dee3c268
+At-least-once: the acknowledgement after processing. A crash before the ack means the same message arrives again.
+@8b469db4b1
+Idempotency: repeated processing does not change the result. Usually through a table of processed IDs (an inbox) in the same transaction as the effect.
+@805b5b3541
+Some operations are idempotent by themselves: "set the status to Paid", an upsert by key. These are not: "add 100 to the balance", "send an email".
+@153ce24a81
+Three guarantees
+@b7230200b2
+Guarantee
+@2b43f50b8e
+When the ack goes
+@a282d55ab7
+On a crash
+@94401b58a2
+When it is fine
+@922a8d2cc6
+Before processing
+@6d4fe608ca
+The message is lost
+@4dbe0b555f
+Metrics, logs, telemetry
+@7ed5c91f36
+After processing
+@f41a6c1476
+A duplicate
+@26016ba907
+The default for business events
+@7485431271
+After processing, with an ID check
+@f88116d078
+The duplicate is recognized and skipped
+@fd5582ba4e
+Money, stock, anything that must not happen twice
+@c76420dce2
+C# · An idempotent handler with an inbox table (EF Core)
+@6576539f42
+already processed: just acknowledge
+@b38bab0c11
+the effect and the ID together
+@a698b168e6
+C# · Service Bus: duplicate detection on send
+@5ca2449261
+the same MessageId sent twice within a 10-minute window: the second one is dropped
+@2ca5256af7
+SQL · A unique key as the last line of defense
+@c8369ff864
+the second INSERT of the same MessageId fails with error 2627: the duplicate is caught
+@94ab7a7a6c
+Duplicate detection on the broker protects against a double **send**, not a double **processing** after a consumer crash.
+@db89bab3c5
+Checking "does it exist" and then writing, without a transaction and a unique key: two parallel processings both pass the check.
+@e34e362e3b
+An external API (email, payment) is not part of your transaction. Send it an idempotency key if it supports one.
+@c9e6069732
+Mode
+@c297af6437
+Idempotent
+@8201168ba0
+Crash probability
+@600402e15a
+Duplicates
+@cc78c9748c
+Exactly once
+@c40617dcf0
+Ack before processing
+@2f30d8e7fe
+Ack after processing
+@1df39c4ea9
+Ack after processing + an inbox table
+@535f673b5a
+Charges
+@26cbd5fea3
+Inbox: processed ID
+@124ac3c69a
+A crash before processing: #{0} is **lost**. The broker thinks it was processed.
+@ca29be567e
+A crash **before the ack**: the broker does not know that #{0} was processed and sends it again.
+@643a4911df
+Retry, backoff and DLQ
+@5c005e1b2d
+Transient errors are handled by retrying with ever longer gaps (**exponential backoff**) and a random offset (**jitter**). A message that still fails after N attempts goes to the **dead-letter queue** so it does not block the others.
+@2816255176
+The gap grows exponentially: 0.5 s, 1 s, 2 s, 4 s. An overloaded dependency gets time to recover.
+@c0a33293e6
+Jitter spreads the attempts. Without it, everyone who failed together hits again at the same moment.
+@318a3467e0
+A poison message (a bad format, a nonexistent entity) will never succeed. After `MaxDeliveryCount` attempts it goes to the DLQ.
+@7c56e5e0cd
+The DLQ is a queue for people and tools: an alert on the message count, insight into the reason, resending after the fix.
+@58ae4454e4
+Retry only transient errors (timeout, 503, 429). Send a validation error to the DLQ right away.
+@7544d5f81d
+C# · Polly v8: retry with backoff and jitter
+@3fc633174d
+0.5 s, 1 s, 2 s, 4 s
+@d5470cdddf
+C# · A poison message straight to the DLQ
+@911338a5de
+it will not succeed even after ten attempts
+@86be4792a5
+other errors: the message goes back to the queue and DeliveryCount grows
+@bbed6cbb6a
+C# · Reading the DLQ
+@015f7f680c
+Retries at several levels multiply: 3 attempts in the HTTP client × 3 in the service × 10 broker deliveries = 90 hits on the same dependency.
+@ba4c1b51ec
+Retrying a non-idempotent operation without an idempotency key creates duplicates.
+@74f5e7af6a
+A DLQ that nobody watches is just slower data loss.
+@1254bc5de2
+Max deliveries
+@c1583c4392
+Yes
+@408c9bd931
+A 4 s dependency outage
+@e65b727e11
+Retried
+@8da21ad4a7
+In the DLQ
+@783a95c668
+succeeds
+@0f571a6b27
+transient error
+@ca78a4b408
+Dependency (API)
+@baeee41820
+← waiting for a retry
+@d862da3134
+**The dependency is down** for 4 s: all attempts fail and the messages go to wait.
+@265166713a
+The dependency has recovered. With jitter, the retries arrive **spread out**.
+@22549c3e66
+The dependency has recovered. Without jitter, the messages that failed together come back **at the same moment**.
+@1a16f64669
+The yellow message succeeds after one or two retries, and the magenta one (poison) never does. Trigger the **dependency outage** and compare with and without jitter.

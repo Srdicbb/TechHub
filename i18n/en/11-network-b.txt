@@ -1,0 +1,192 @@
+@786f9891f7
+The most common records
+@93a0c40a40
+Record
+@6b57fde6ac
+What it gives
+@d656c71bff
+IPv4 / IPv6 address
+@bdff822968
+Another name (alias)
+@98bc246779
+Which servers are authoritative for the domain
+@bb42991fde
+Mail server
+@2f9fff6473
+Arbitrary text: domain verification, SPF
+@31715d7fc8
+Shell · dig and nslookup
+@7c72e1d872
+just the answer
+@46905f7649
+the whole path: root → .rs → authoritative
+@a3ad788cdf
+Windows and Linux: ask exactly this resolver
+@c7634bb993
+"I changed the DNS, but some users still go to the old server": old entries live until the TTL expires in every cache, and some clients do not even respect the TTL.
+@ffce4859b4
+An application that keeps TCP connections forever or remembers the IP at startup does not see a DNS change even after the TTL expires.
+@9a926e5041
+Slow DNS looks like a slow application: the first request to a new host waits for name resolution.
+@d7bf59f9e6
+TTL of the A record
+@5625d46cab
+New query
+@1e1402be0d
+Flush the cache
+@34c617e9f9
+Authoritative DNS
+@c13bc5a3e9
+Browser
+@73f3f781ec
+Recursive resolver<small>1.1.1.1 or the provider's DNS</small>
+@cedf84f8c2
+Root .<small>knows who runs .rs</small>
+@2d5d880720
+TLD .rs<small>knows who runs shop.rs</small>
+@3c8fe0da45
+ns1.shop.rs<small>knows the address of api.shop.rs</small>
+@72adeb2f9e
+Upstream queries
+@2ffab078e0
+Response time
+@c3b1e8fe51
+From cache
+@9d3a6e3984
+NS .rs · 2 days
+@f35d02b559
+Resolver cache
+@f76c4a55ab
+<small>empty</small>
+@61aeb52468
+The A record has expired (TTL). NS records live longer, so the next query goes only to ns1.shop.rs.
+@efa6f13116
+The answer is in the resolver's cache (another {0} s): no upstream queries, about 12 ms. That is how most DNS queries are answered.
+@d614d3e133
+ask .rs
+@9a76f5a378
+ask ns1.shop.rs
+@525044d64a
+The cache is empty, so the resolver goes step by step: **root** refers it to .rs, **.rs** to ns1.shop.rs, and **ns1.shop.rs** gives the A record with a TTL of {0} s. Three queries, about {1} ms.
+@fc3e16be1c
+The resolver already knows who is authoritative for shop.rs (the NS record is still cached), so it asks only **ns1.shop.rs**: one query, about {0} ms.
+@b4f5335375
+The cache is empty: the next query goes the whole way, starting from the root server.
+@43193b69fe
+HTTP: request, response and versions
+@d27f6bfcb8
+HTTP is a request–response conversation: the client sends a **method**, a **path**, **headers** and, when needed, a body, and the server returns a **status**, headers and a body. The message is the same in all versions; what changes is how it travels: HTTP/1.1 one request per connection at a time, HTTP/2 many streams over one TCP connection, HTTP/3 the same over QUIC on UDP.
+@0efd70c473
+Status codes by group: **2xx** success, **3xx** redirect, **4xx** client error (400, 401, 403, 404, 409, 429), **5xx** server error (500, 502, 503, 504).
+@602e9ea1d6
+Headers carry everything else: `Content-Type`, `Authorization`, `Cache-Control`, `ETag`, `Accept-Encoding`.
+@61d9b2f230
+HTTP/1.1 keeps the connection open (keep-alive), but only one request at a time goes over a connection, so the browser opens up to 6 connections per host.
+@45ce41b560
+HTTP/2 sends all requests at once over one connection (multiplexing) and compresses headers. But one lost TCP packet stops all streams (head-of-line blocking).
+@3825e7f29d
+HTTP/3 runs over QUIC: streams are independent, so a loss stops only its own stream, and the connection opens in one RTT.
+@d4d45fdbae
+HTTP messages · request and response
+@deb51850df
+C# · Ask for HTTP/3, but accept 2 or 1.1 if the server cannot do it
+@30db5eaa27
+`200 OK` with `{"error": ...}` in the body breaks clients, caches and monitoring: an error should have a 4xx or 5xx status.
+@a87b56e3c6
+Spreading resources over several domains (domain sharding) helped HTTP/1.1; with HTTP/2 it only slows things down, because every domain needs a new connection.
+@a738ea52aa
+`502` and `504` are returned by a proxy or gateway, not by your application: first check whether the request reached it at all.
+@2a3e2c0654
+Version
+@18fed68513
+Network
+@0e91ac5ff8
+no loss
+@9404d84de0
+one lost packet
+@e69e347141
+in queue
+@f1939e4b58
+connection: QUIC + TLS
+@2e9e4d7118
+connection: TCP + TLS
+@4afc450426
+waiting for response
+@d02022568c
+download
+@28969d3c4f
+stall
+@7c79cfa1d5
+loaded in {0} s
+@d4f450bf3c
+Loaded in
+@5016f86fc9
+QUIC connection
+@11ac595148
+TCP connection
+@f8ebbd4c24
+Opening the connection
+@da982cc7b2
+**HTTP/1.1**: one request at a time goes over a connection. The browser opens up to 6 connections and each pays for its own handshake (orange), while the other resources wait in the queue (gray) for a connection to free up.
+@b70de74b38
+**HTTP/2**: one connection, and all 11 requests go at once as soon as the HTML arrives. No queueing and no extra handshakes; the streams share the same bandwidth.
+@9debe13880
+**HTTP/3**: the same multiplexing, but over QUIC on UDP, so the connection (together with TLS) opens in one RTT instead of two.
+@76adb7c8fb
+ A lost packet from vendor.js stops only the connection it is on; the other connections keep working.
+@b44cc872b1
+ **Head-of-line blocking**: one lost TCP packet stops all streams on the connection (red) until it is sent again, even though only part of vendor.js was lost.
+@ae0c58eb66
+ QUIC knows which stream a packet belongs to: only vendor.js waits, while the other streams continue and use the freed bandwidth.
+@93ffb43d10
+HTTP methods and idempotency
+@7137ecde2f
+The method says what the request does with the resource. Two properties decide whether it may be repeated: a **safe** method does not change state (GET, HEAD), and an **idempotent** one leaves the same state no matter how many times it is called (GET, PUT, DELETE). POST is not idempotent: a repeated POST creates a new resource.
+@eaba49040a
+**GET** reads, **POST** creates a new resource or triggers an action, **PUT** sets the whole resource, **PATCH** changes part of it, **DELETE** deletes it.
+@779f1cca05
+Idempotency is about state, not the response: the second DELETE returns 404, but the resource is still gone.
+@c83048717f
+The network can lose the response after successful processing. The client then does not know whether the server did the work, so it retries; that is why automatic retries are allowed only on idempotent operations.
+@a49a34b805
+A POST is made idempotent with a key: the client sends an `Idempotency-Key`, the server stores the key and the result, and a repeated request gets the same response (that is how Stripe and most payment APIs work).
+@a5eb84c065
+PATCH may or may not be idempotent: "set the status to paid" is, "increase the quantity by 1" is not.
+@5ac33f2c58
+Methods
+@bb138353a0
+Safe
+@086658af77
+Idempotent
+@cc6ccd5716
+Typical success
+@01c8dc078b
+200 OK or 204 No Content
+@26f0158d5a
+depends on the change
+@e5697fd402
+C# · POST with an Idempotency-Key
+@f1bd2c4029
+repeated request: the same response, no new order
+@8da5ea5242
+the same transaction as the order
+@cb43246ab8
+a unique key catches simultaneous attempts
+@559c8b03d3
+A GET that changes state (`GET /obrisi?id=7`) will be executed by a browser during prefetch, by a crawler, or by a cache that repeats it.
+@55e642063a
+An automatic retry on a POST (Polly, a gateway, a mobile client) without an idempotency key creates duplicate orders and double charges.
+@4f2401fe48
+The key needs a unique index and a write in the same transaction as the result. Without the index, two simultaneous attempts both pass the check; without the transaction, a crash between the two writes leaves an order without a key.
+@d1fade64c5
+Send again
+@007338f3f9
+Client<small>mobile app</small>
+@2086026a8e
+Stored keys
+@62a908e511
+API calls
+@156ed64414
+Orders in the database
+@b4056ee36f
+Charged

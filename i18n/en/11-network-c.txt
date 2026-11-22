@@ -1,0 +1,143 @@
+@56d0a30d0b
+
+GET /api/products/42 HTTP/1.1
+Host: shop.rs
+Accept: application/json
+Authorization: Bearer eyJhbGciOi...
+
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+Cache-Control: max-age=60
+ETag: "a1b2c3"
+
+{"id":42,"name":"Headphones","price":7990}
+@c54f9a1f0c
+Database · orders
+@7ea78e2ba0
+shipped
+@e647126603
+paid
+@91c1291fd7
+awaiting payment
+@0e9231e539
+response lost
+@3b35b49196
+Key **{0}** has already been seen: the server returns the stored 201 response, with no new order and no new charge.
+@7799650daf
+201 Created (stored)
+@403e725c2d
+new · duplicate
+@d419a9caba
+**GET** only reads: it is safe (does not change state) and idempotent. The response will get lost, and a repeated GET returns the same data.
+@3eeb014ef2
+**POST** creates a new order. Watch what happens when the response gets lost and the client sends the same request again after a timeout.
+@4d751bccc6
+**PUT** sets order #7 to the state "paid". The response will get lost, and the client will repeat the request.
+@83024567d2
+**DELETE** deletes order #7. The response will get lost, and the client will repeat the request.
+@57b0d85202
+ The client sends the key **{0}** with the request.
+@d57ed89f6c
+timeout, sending again
+@4dd473c6e0
+Both GETs returned the same data, and the database did not change. Repeating is safe.
+@102ddf808e
+The second PUT set the same state: #7 is still "paid". Repeating is safe.
+@98822d93f7
+The second DELETE got **404**, but the state is the same: order #7 is gone. Idempotency is about state, not the response.
+@93ea6b0463
+The same key in both attempts: **one order, one charge**, and the client got a 201 response.
+@2f5cac8c55
+The response to the first POST got lost, the client retried and a **second order** was created (#{0}), and the customer was charged twice. Turn on **Idempotency-Key**.
+@9e27ea1e0f
+An Idempotency-Key is used for POST; GET, PUT and DELETE are idempotent by themselves.
+@0f69383a32
+HTTPS and the TLS handshake
+@b26eecba05
+HTTPS is HTTP over **TLS**. Before the first request, in the **handshake**, the client and server agree on algorithms, the server proves its identity with a **certificate** signed by an issuer the client trusts (a CA), and both sides derive a shared **session key** that encrypts everything afterwards. TLS 1.3 needs one RTT for that, TLS 1.2 two, and HTTP/3 merges the TCP and TLS steps into one.
+@0e7fa95d2f
+A certificate binds a domain name to a public key. The client checks the chain up to a CA it trusts, the validity period and whether the name matches the host.
+@70827444b1
+The key exchange (ECDHE) produces the same secret key on both sides without it ever traveling over the network. A later theft of the server's key does not reveal old sessions (forward secrecy).
+@84a42ab107
+When resuming a session, the client can send the request in its very first message (0-RTT, TLS 1.3 and QUIC). Such data can be replayed, so it may be used only for idempotent requests.
+@9dd7769311
+TLS is usually terminated at the edge (load balancer, Application Gateway, ingress); inside, traffic is re-encrypted when needed or uses mTLS, where the client also has a certificate.
+@1223e15261
+**HSTS** tells the browser that the domain is always opened over HTTPS, so not even the first request goes unencrypted.
+@57b5ce4517
+Waiting before the first byte of the response
+@dbf6354a23
+To the response
+@0cde5323ad
+HTTP over TCP
+@32afdcbf2a
+1 RTT for both
+@73a2c52c11
+HTTP/3, 0-RTT (session resumption)
+@58da249d49
+the request goes right away
+@0c4c2ad94b
+With an RTT of 80 ms, the difference between TLS 1.2 and HTTP/3 is 160 ms on every new connection.
+@14d768d865
+C# · HTTPS redirection and HSTS in ASP.NET Core
+@2fe7e72ef3
+Shell · TLS version, certificate and chain
+@ae1e2856be
+the whole certificate chain
+@f3e8e422ed
+An expired certificate takes down all clients at once. You need automatic renewal (Let’s Encrypt, Key Vault, cert-manager) and an alert 30 days before expiry.
+@5826f93ead
+Disabled certificate validation (`ServerCertificateCustomValidationCallback = (...) => true`) from a test that reaches production opens the door to a man-in-the-middle attack.
+@b60430046b
+A server that does not send intermediate certificates works in the browser, which has them cached, but fails in `HttpClient` and on mobile devices.
+@143bb3b215
+Waits (RTT)
+@9200e2a74d
+To first byte
+@3bfabac902
+TLS negotiation
+@806c7f1b90
+encrypted data
+@385ebd70c1
+unencrypted data
+@9f388da53d
+ServerHello + certificate
+@159ee63bb5
+key exchange + Finished
+@8ed7775e8c
+ServerHello + certificate + Finished
+@c267ca0199
+**HTTP without TLS**: after the TCP handshake the request goes right away, but as plain text: every router and Wi‑Fi along the way can read and modify it.
+@0dccf4dc17
+**TLS 1.2**: two more round trips after TCP. The server sends its certificate, the client sends its part of the key exchange, and both sides confirm (Finished).
+@0abcb427ce
+**TLS 1.3**: the client sends its part of the key (key share) already in the first message, so the negotiation is done in one round trip, and the request goes together with Finished.
+@574350bb24
+**HTTP/3 (QUIC)** merges transport and TLS: there is no separate TCP handshake, so both the connection and the encryption are ready in one RTT.
+@b69ee6fecb
+**0-RTT** (HTTP/3, session resumption): the client has a key from the previous session, so it sends the request already in the first QUIC message. It is the fastest, but such data can be replayed, so only for idempotent requests. Over TCP, the TCP handshake would still come first.
+@07e5e9fb38
+Channel<small>encrypted with the session key</small>
+@c75c92584d
+Channel<small>negotiation in progress</small>
+@ab1b34babc
+Channel<small>unencrypted</small>
+@61d4f02f47
+Browser<small>{0}</small>
+@8f3d482f54
+key from the previous session
+@cfc783e25d
+session key
+@2b9af3e969
+certificate verified: name, CA signature, validity
+@e64ab5135c
+Fast, but with no protection at all.
+@b48a2114f4
+An existing connection is reused, so this is paid only once.
+@627f825bfb
+The first byte of the response arrived after **{0} RTT**: with an RTT of {1} ms that is **{2} ms** on every new connection. {3}
+@fffcdd2a92
+0 RSD
+@8b10cb32fa
+ RSD

@@ -1,0 +1,198 @@
+@c5e3dc4eeb
+Monolith
+@337b9bfdb8
+Microservices
+@53c4bc684e
+Load
+@a7a716dcaf
+Instance
+@60046da6c3
+Autoscaling
+@981fc2c027
+Cache
+@6c1a6ca333
+Send 1M requests
+@925531a676
+Add instance
+@b93b22f404
+Remove instance
+@788fce5616
+Catalog
+@dd57f567ec
+catalog
+@23b422f724
+Orders
+@3d44e4fe3e
+orders
+@666f07e194
+Payments
+@8a1dc12282
+payments
+@70e1bfb9ba
+Application · monolith
+@695fb628aa
+Clients
+@919009363b
+Cache (Redis)
+@f65ec9e893
+Database
+@9d47f515bf
+Autoscaler
+@2726f32ac9
+Database:
+@28e38dfd7b
+Succeeded
+@8b94f609df
+Errors
+@9eaeb6802e
+Rejected 429
+@2678344ac9
+Burst
+@6da7ab41b3
+request
+@a9f14d6943
+rejected (429)
+@6c4ee1c820
+error
+@79c5ec8f96
+**{0}: an instance crashed (OOM).** Requests arrived faster than it could process them and the queue ate the memory. The other services keep running: the failure stays inside one service.
+@3afd817bad
+**An instance crashed (OOM).** The waiting queue ate the memory. Its traffic now goes to the other instances, which therefore fill up even faster: that is a cascading failure.
+@daada37a69
+Autoscaler<small>CPU {0}: {1} → {2}</small>
+@038b245447
+ of service
+@48ed8b550e
+**Autoscaler**: the average CPU{0} is {1} and the target is 60%. It asks for ceil({2} × {3} / 60%) = {4} {5}. New instances take a few seconds to start before they receive traffic.
+@0142118485
+A burst is already in progress.
+@621efa9474
+, and the rate limiter will reject the excess with 429.
+@164524fe15
+: without a rate limiter the queue grows until the instances crash.
+@6e30375727
+**1,000,000 requests** arrive within 10 seconds, peaking at about {0} req/s. Current capacity is {1} req/s{2}
+@258c3eb3ed
+ For more successful requests, add instances before the burst: the autoscaler is too slow for a jump that lasts a few seconds.
+@70b3247cd6
+ Try it with the rate limiter, or scale up in advance: XL with 8 instances has a capacity of 144,000 req/s.
+@3eee0e28c9
+ The autoscaler was adding instances, but a new instance needs a few seconds and the burst lasts ten.
+@d9f272c524
+ The system survived because the limiter rejected the excess.{0} For those requests to succeed too, capacity has to be raised in advance.
+@e9b521d2f3
+ The system handled the whole burst.
+@2148d53a70
+**The burst is over.** Out of 1,000,000 requests: {0} succeeded, {1} rejected (429), {2} errors, and {3} were stopped by the firewall.{4}
+@41f084f138
+The busiest is {0} ({1} req/s on {2} {3}):
+@9a2d59984a
+{0} req/s on {1} {3} {2}:
+@68468fe11f
+{0}CPU is about {1} and memory is almost idle. Requests are processed immediately and the waiting queue is empty.
+@19dc30ee28
+{0}CPU is about {1}. There is headroom, and latency is still low.
+@97e08dcf8c
+ The autoscaler will add instances.
+@9ebc0eb0c4
+{0}CPU is about {1}. The system works, but p95 grows because requests wait in the queue more and more often.{2}
+@2fc3951137
+{0}capacity is about {1} req/s, so the rate limiter lets {2} through and rejects the excess with **429**. The instances stay alive.
+@126de6d65a
+{0}capacity is about {1} req/s. The excess of {2} req/s goes into the queue, the queue consumes memory, and the instances will crash in a few seconds (**OOM**). Add instances, pick a bigger instance or turn on the rate limiter.
+@769e19006a
+ Where there is only one instance, a restart means a short outage.
+@19e517ba04
+**Vertical scaling** to {0}: every instance restarts on a bigger or smaller machine, one at a time. Instance capacity is now {1} req/s.{2}
+@b6e9eb0588
+Every 2 s the **autoscaler** measures the average CPU and asks for ceil(n × CPU / 60%) instances. It scales down only after CPU has been low for several checks in a row.
+@b71dcff2fd
+The autoscaler is off: you change the number of instances by hand with the **+** and **−** buttons.
+@47f7deec99
+Autoscaler<small>target CPU 60%</small>
+@a642fad431
+Autoscaler<small>off</small>
+@ec378200b6
+**Rate limiter** on. Here it follows the capacity of the healthy instances and lets up to 90% of it through; the excess immediately gets **429** instead of building a queue that brings the instances down.
+@90dc455371
+Rate limiter off: everything that passes the firewall goes to the instances, so overload builds a queue and brings them down.
+@b849b86e27
+**Cache** on, but cold: hits grow gradually until it fills, so the database still sees full pressure for a few seconds.
+@667857036a
+Cache off: every processed request now goes to the database. Watch the bar above the database.
+@d7a6500ea0
+ per service
+@7c4ec7846a
+At most {0} instances{1} in this scene. For more capacity, pick a bigger instance.
+@966a0256da
+ The autoscaler is on and may change the number of instances later.
+@eb258d8c30
+**Horizontal scaling**: one more {0} instance{1} behind the load balancer. It takes about 3 s to start before it receives traffic.{2}
+@600c84d07b
+At least one instance has to remain.
+@ee5db18c56
+An instance{0} is shutting down: the load balancer stops sending it requests, and it finishes the ones it already has (draining).
+@fb78cd6fa9
+Clients<small>{0}{1}</small>
+@b6a5828e57
+ queries/s
+@b1a7728d02
+Firewall · WAF<small>blocks {0}/s</small>
+@bb622dedad
+Rate limiter<small>off</small>
+@f7a8555d92
+3 services ·
+@65b6bc9d92
+{0}<small>{1}{2} of {3} healthy</small>
+@514e4786bc
+down
+@c6315b5ab2
+Application · monolith<small>{0} × {1} · {2}</small>
+@ea9983a11c
+Cache (Redis)<small>hits {0}</small>
+@328fd92181
+Cache (Redis)<small>off</small>
+@d7c6fac777
+**The system is down**: there are no healthy instances, so the {0} returns error 503 to everyone. The instances restart, but if the load stays the same they crash again. Turn on the rate limiter or scale.
+@e88a3e759c
+**{0} is down**, but the other services keep processing their requests. That is failure isolation in microservices.
+@41d06fc5fc
+The system has recovered: all instances are healthy and accept requests.
+@db5d8b342f
+ Turn on the cache: every hit is one query less.
+@b70b9ee0e8
+**The{0} database is the bottleneck**: {1} queries/s arrive and it handles {2}. The excess queries time out and return an error.{3}
+@c8385f661c
+Three services behind the **API gateway**, each with its own database. Catalog gets the most traffic, so it heats up first when the load grows. Clicking a component takes you to its description below.
+@ab852ea331
+A monolith with **2 {0} instances** behind a load balancer. The bars above the instances are CPU and RAM. Move **Load** or send **1M requests** and watch them fill; when the system starts failing, scale it. Clicking a component takes you to its description below.
+@9b6bb87b14
+
+    <div class="ch">
+      <p class="ch-h"><b>Requests per second</b><span class="key"><i class="sw area"></i>sent</span><span class="key"><i class="sw ln ok"></i>succeeded</span><span class="key"><i class="sw lost"></i>lost</span></p>
+      <div class="ch-p" data-p="0"><svg viewBox="0 0 {0} {1}" preserveAspectRatio="none" role="img" aria-label="Sent and successful requests per second, last 60 seconds, logarithmic scale">
+        {2}
+        <path class="area"/><path class="lost"/><path class="ln ok"/></svg>
+        {3}
+        <span class="vl" data-v="ok"></span><i class="cx"></i><span class="tip"></span>
+      </div>
+    </div>
+    <div class="ch">
+      <p class="ch-h"><b>Average per instance</b><span class="key"><i class="sw ln cpu"></i>CPU</span><span class="key"><i class="sw ln ram"></i>RAM</span></p>
+      <div class="ch-p" data-p="1"><svg viewBox="0 0 {4} {5}" preserveAspectRatio="none" role="img" aria-label="Average instance CPU and RAM, last 60 seconds">
+        {6}
+        <line class="tg" x1="0" x2="{7}" y1="{8}" y2="{9}"/>
+        <path class="ln cpu"/><path class="ln ram"/></svg>
+        {10}
+        <span class="ax tgtl" style="top:{11}%">target</span>
+        <span class="vl" data-v="cpu"></span><span class="vl" data-v="ram"></span><i class="cx"></i><span class="tip"></span>
+      </div>
+    </div>
+@5f82d2a6aa
+no healthy instances
+@f5c939c06a
+−
+@93375e3f6a
+now
+@34413a0fc4
+<b>{0}</b>sent {1}/s<br>succeeded {2}/s

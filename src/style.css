@@ -347,6 +347,7 @@ td:first-child{font-weight:600}
 
 /* ---------- gornji ugao: Skillset i tema ---------- */
 .acts{display:flex;gap:6px;flex:none}
+.lang{font:800 13.5px/1 var(--fd);letter-spacing:.04em}
 
 /* ---------- iskačući prozor ---------- */
 html.modal-on{overflow:hidden}

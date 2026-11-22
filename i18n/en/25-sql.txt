@@ -1,0 +1,254 @@
+@cac9020cb9
+Read Committed (locks)
+@b4aca33f83
+At this level the anomaly **happened**: {0}.
+@2216be4ce1
+No anomaly
+@f8c8b2f87c
+At this level the anomaly **does not happen**. The price is waiting (locks) or keeping old versions.
+@77c6f31be6
+balance = 50
+@1a045632b0
+no COMMIT
+@5c898fc73b
+T1 changes the balance to 50, but has not committed yet.
+@96a8a67c23
+SELECT balance
+@1054917a64
+Read Uncommitted: T2 reads **the uncommitted 50**.
+@369de4ee41
+T1 rolls back the change. The value 50 never existed, but T2 has already used it.
+@fc45a26eb1
+dirty read
+@ee9bfc2f3c
+old version
+@c9417d6a8b
+Snapshot: T2 reads **the last committed version**, without waiting.
+@0acbd5c764
+{0}: T2 **waits**, because the row is locked until T1 finishes.
+@5fb6a4fe54
+T1 rolls back the change and releases the lock.
+@881ee06dcd
+T2 gets the committed value.
+@3c6949197c
+T1 reads the balance: 100.
+@1732aa579b
+{0}: T1 holds a shared lock on the row it read until the end, so T2 **waits**.
+@7260ac9f5d
+T1 reads again and gets the same value.
+@cc0aee3e84
+T1 finishes and releases the lock.
+@b89c407858
+UPDATE goes through
+@b5ee172c41
+and COMMIT
+@76c604ae12
+Snapshot: T1 sees the database as it was **at the start of its transaction**.
+@74ab3a803e
+{0}: T1 holds no lock after reading, so T2 changes the row.
+@018a0a5ed4
+The same query in the same transaction returns **a different value**.
+@3904de464a
+non-repeatable read
+@d774aaceda
+amount > 100
+@c8ce1dce0a
+T1 counts the orders above 100: there are 3.
+@03f5c7d679
+waits on
+@777f294dff
+Serializable also locks **the key range**, so an INSERT into that range waits.
+@2e32f72bc8
+INSERT goes through
+@6565f8a33c
+→ 3 (version)
+@4793e519e9
+Snapshot: T1 still sees its own version of the data.
+@75f4392cd2
+Repeatable Read locks the rows it read, but **not the empty space** between them.
+@c78f47564f
+Nothing prevents a new row in the range T1 is reading.
+@81ac125b94
+The same query now sees **a row that did not exist before**.
+@098080b699
+phantom read
+@9cc4900651
+Index: a B+ tree
+@71d365292c
+An index in SQL Server is a B+ tree of 8 KB pages. A search by key (a **seek**) goes through a few levels down to a leaf, and without a suitable index the database reads all pages in order (a **scan**).
+@e6bc9a8eed
+The root and inner nodes hold key ranges; the leaves hold the rows (clustered) or the key and a pointer to the row (nonclustered).
+@9599f1e380
+The depth grows logarithmically: millions of rows fit into 3 to 4 levels, so a seek is just a few page reads.
+@3d6460c38f
+The leaves are linked, so a range query (`BETWEEN`) is one seek to the start followed by a walk along the leaves.
+@a4864f068a
+A nonclustered index without all the query's columns does a **key lookup** for every row. `INCLUDE` columns make a covering index.
+@ab91371ed6
+An index speeds up reads and slows down writes: every INSERT, UPDATE and DELETE changes the tree too.
+@fd8687270b
+SQL · A clustered and a covering nonclustered index
+@9c7d2c072e
+the query does not have to go to the table
+@413fefb2d4
+Index Seek, no Key Lookup
+@a435c8d181
+SQL · What a query really reads
+@d3a623e100
+the number of pages read (logical reads)
+@c4b911b023
+without an index on Total: Clustered Index Scan
+@1555a26c74
+a function on the column prevents a seek:
+@237a8091c1
+C# · An EF Core index with INCLUDE columns
+@3d2ec1e829
+An index on a column with few distinct values (e.g. `IsDeleted`) rarely helps: the optimizer still chooses a scan.
+@e2da7db5b1
+A random GUID as the clustered key splits pages on insert. A sequential key (identity, `NEWSEQUENTIALID`) avoids that.
+@f5142773c6
+Too many indexes on a write-heavy table: every write pays for maintaining all the trees.
+@a56fdfe2c2
+No index (scan)
+@f613c89a7e
+Pages read
+@1e23f32c74
+Root
+@a18fa7a934
+Inner
+@444ef46bbb
+Leaves
+@d9d7360ce6
+Without an index on the searched column, the database reads **all pages** in order. Here there are 9; in a real table, thousands.
+@e0e6473239
+**WHERE Id = {0}**: the root, then an inner node, then a leaf. Three pages instead of all of them.
+@cae4871869
+**WHERE Id BETWEEN {0} AND {1}**: a seek to the first leaf, then a walk along the linked leaves.
+@e7fe59132c
+Isolation levels
+@6268185723
+The isolation level determines what a transaction sees of other transactions' changes: uncommitted ones, just committed ones, or only the state from its own start. A higher level gives fewer anomalies and is paid for with waiting or versions.
+@a091dd54f5
+**Dirty read**: you read a change that is not committed yet and may be rolled back.
+@d8d1a363ed
+**Non-repeatable read**: the same row read twice in the same transaction returns different values.
+@978b022d88
+**Phantom**: the same range query run twice returns a different set of rows, because someone inserted a new one.
+@56487c074f
+SQL Server uses Read Committed with locks by default; Azure SQL Database has RCSI turned on, so reads do not wait for writes.
+@45b7ef3052
+Snapshot prevents all three anomalies, but it allows **write skew**, and on a write conflict it aborts one transaction with error 3960.
+@2bf0bcbab8
+Levels and anomalies
+@5b69611287
+Dirty
+@a04057c8a1
+Non-repeatable
+@78d7d75099
+Phantom
+@de5fcb6468
+How
+@7f16cb8786
+reads without shared locks
+@eeb8fecca3
+a lock only while reading a row (the default)
+@bbeb8d5027
+reads the last committed version (Azure SQL)
+@af101134aa
+holds a lock on the rows read until the end
+@785bc5ebde
+also locks key ranges
+@13af119c5e
+the whole transaction sees one version
+@a8f0e1cb9b
+SQL · The level for one transaction and for the whole database
+@da44058dae
+a shared lock until the end of the transaction
+@25a3fcf6f6
+guaranteed the same value
+@6a632770a0
+RCSI for the whole database
+@1bb0c8b6b1
+allow the SNAPSHOT level
+@9fe192b5fc
+C# · An EF Core transaction with a level
+@260f9b45be
+error 1205 (deadlock) or 3960 (snapshot conflict): retry
+@3872c3510c
+C# · Optimistic concurrency (rowversion)
+@4aba2c80ed
+changes on every write
+@9f473de5ae
+Serializable "just in case": more deadlocks and waiting as soon as the load grows.
+@d39fa562f7
+`NOLOCK` for speed does not just read uncommitted data: during page splits it can read the same row twice or not at all.
+@5da827b98c
+Anomaly
+@fd0bebe4b0
+Dirty read
+@3d25942ca6
+time →
+@4e319674d5
+N+1 queries
+@be76fc854e
+One query for a list, then one query for each element of the list: N+1 queries instead of one. On a local machine it goes unnoticed, while in production every trip to the database costs milliseconds.
+@6eb9b50f54
+It happens when related data is loaded in a loop: lazy loading or a manual query per element.
+@b617e68192
+The total time is roughly the number of queries × the latency to the database: 200 orders × 2 ms = 400 ms just waiting on the network.
+@48c9fe6ee4
+`Include` joins the data into one query (JOIN). A `Select` projection returns only the columns the screen shows.
+@9accb060c7
+Several `Include` collections in one query create a Cartesian product. `AsSplitQuery` splits it into a few queries.
+@7322492f03
+It shows up in the log (the same SQL repeated N times) or in tracing as a series of identical short spans.
+@0df9e033a7
+1 query
+@0c12384d79
++ N queries
+@930f5193ee
+C# · One query
+@2e9ca94682
+a JOIN in one query
+@4ad38d6714
+or only what the screen shows
+@54861c9d6d
+C# · Turn on SQL logging so N+1 becomes visible
+@f60dee480a
+every query in the console
+@f3f23f7390
+A lazy loading proxy (`UseLazyLoadingProxies`) creates N+1 unnoticed, as soon as a template or serializer touches a navigation.
+@3cdd7134c2
+`Include` of everything "just in case" pulls megabytes the screen does not show.
+@f9cb550425
+A query in a loop
+@3a198d24c9
+Select projection
+@52534334cd
+Queries
+@9c10cbcd08
+1 query for the list + 1 query per order
+@2cd777fd82
+One query with a JOIN
+@53084ad337
+One query, only the needed columns
+@1e8ab8f8fa
+Application (EF Core)
+@7adefd4671
+about 2 ms per round trip
+@6d5192e6dd
+The first query returns the list of orders...
+@64846c98f9
+...and then **one query for the items of each order**: {0} more trips to the database.
+@7aab6f0066
+**{0} queries**, about {1} ms just waiting on the network. With 200 orders it would be over 400 ms.
+@dbcea5afc5
+One query with a JOIN returns the orders and their items at once.
+@0ed0d1aa8d
+One query returns only the columns the screen shows.
+@9dcf6a3efb
+More data per query, but one trip to the database.
+@9fbb742b8d
+The least data and one trip to the database.
+@1d1af1c864
+**1 query**, about {0} ms. {1}

@@ -1,0 +1,207 @@
+@cd741b3fe8
+Em
+@207fbaf82b
+Embeddings and semantic search
+@a746fbe4fb
+An embedding model turns text into a vector of several hundred or thousand numbers, so that texts with similar meaning end up close together. Searching by meaning is then a search for the nearest vectors.
+@bf3a5e14f6
+Similarity is measured by the cosine of the angle between vectors: 1 means the same direction (the same meaning), 0 unrelated.
+@ff292b8999
+The same model must be used for both the documents and the query: vectors from different models are not comparable.
+@b2567b74ea
+Exact search compares the query with all vectors (O(n)); indexes such as HNSW find the approximately nearest ones in a fraction of the time.
+@1e7b98f14b
+An embedding captures meaning, not exact words: "puppy" finds "dog", but an item code is better found by classic search. Hybrid search combines both.
+@f4dad044e4
+The view is a 3D projection; real vectors have hundreds of dimensions (e.g. 1,536).
+@38adfc1943
+C# · Microsoft.Extensions.AI: vector and similarity
+@53bb6097a9
+close to 1 = similar meaning
+@1e634d3e70
+C# · k nearest, without an index
+@a6a185d78f
+SQL · vector search in Azure SQL
+@72350c063a
+smaller cosine distance = more similar
+@c116843223
+Changing the embedding model means recomputing all vectors.
+@5cff928fe9
+Too long a text in one vector dilutes the meaning: split it into parts (chunking).
+@981c2a98a4
+Nearest (k)
+@18acfac41f
+Query
+@0b540b3943
+Animals
+@eb6a36d56d
+cat
+@19c2a0dbd8
+dog
+@08a73f933f
+rabbit
+@ed7226a0b3
+horse
+@fe4cc926bf
+parrot
+@fa4c96959c
+Food
+@e5f37c1b03
+cheese
+@6ddfdf2ed8
+bread
+@6a032f5aa3
+pizza
+@670097d309
+apple
+@37ccb51ad5
+Programming
+@af15a5bd8c
+running
+@734f4eb20b
+swimming
+@56ff04cc2b
+football
+@3ca43e4160
+tennis
+@f35d3cca7e
+basketball
+@ea66065b3e
+puppy
+@db1a6dda7b
+lasagna
+@29a6c06af2
+marathon
+@c5cfa0be7b
+kitten
+@7e7474e5e4
+noodles
+@6122d91d6a
+Query **{0}**: the nearest by cosine similarity are {1}. The match is by meaning, not by letters.
+@8176c36d78
+Rg
+@a5df371906
+RAG: answers from your own documents
+@11e6904c1d
+Retrieval-Augmented Generation: before the model answers, the system finds the relevant parts of your documents and puts them into the prompt. The model thus answers from your data and can cite the source.
+@83775d2c3a
+Indexing (in advance): documents are split into parts (chunks), each gets an embedding and goes into a vector database.
+@b9873ff1e3
+Query: the question gets an embedding, the database returns the k most similar parts, and they go into the prompt as context.
+@c5a75b9557
+Quality depends most on the search: with bad parts, even the best model answers wrongly.
+@706f62c974
+Hybrid search (vectors and keywords) and reranking raise precision.
+@a3939afb2f
+Instructing the model to "answer only from the context, otherwise say you do not know" reduces made-up answers.
+@4c12be38dc
+C# · Indexing
+@36c30a6b68
+own helper
+@f884448e90
+C# · The question: search, then the prompt
+@466e5f54a4
+What the model actually receives
+@c90799ea43
+
+[system] Answer only based on the context and cite the [source] ...
+[user]   Context:
+         [policy-3] You can return goods within 14 days of receipt ...
+         ---
+         [faq-7] Refunds are processed within 5 business days ...
+
+         Question: How do I return goods and when do I get my money back?
+@f8dad6054d
+The whole document in the prompt "just in case": expensive, slow, and the model gets lost in the excess.
+@39e215b1c7
+Without an access check during search, a user gets an answer from a document they are not allowed to see.
+@9b773b0c9e
+Indexing (in advance)
+@bc7250d39e
+Question (every time)
+@5b502c1083
+Policy
+@448afe54ff
+Contract
+@99d1a6c14d
+Documents
+@d8fa01a6d5
+Splitting into parts
+@fa1ac6bab3
+Vector database
+@b078719137
+User
+@65604e1a6e
+Parts in the database
+@4e10892b44
+**Indexing**: documents are split into parts, each part gets a vector and goes into the vector database.
+@cf6f02ffd9
+How do I return goods?
+@bb49c0225f
+What does it say about terminating the contract?
+@93b1a7acd3
+Question: **{0}** First it gets its own vector from the same embedding model.
+@93d28ed5cf
+question vector
+@ef7f6da63a
+The vector database returns the **3 most similar parts** (top-k).
+@fe34f78b96
+Prompt = instructions + the parts found + the question. Only now does it go to the model.
+@54575db2e0
+answer + [{0}]
+@99020b0662
+The answer arrives with a **source label**, so the user can check where the information comes from.
+@cc220c6cfe
+Agents and tool calling
+@3b77b8ad14
+An agent is a loop: the model gets a task and a list of tools, decides which tool to call, the application runs it and returns the result, and so on until the model gives a final answer.
+@84156eaa53
+The model does not run the tool: it returns the function name and arguments, and your code calls it and sends the result back.
+@285ca3b7cc
+The tool description (name, parameters, a short description) is part of the prompt: a good description is half the work.
+@9cb9e9d099
+The loop needs a limit: at most N steps, a token budget and a timeout.
+@8c8228929f
+Tools that change state (payment, deletion) need user confirmation or narrow permissions.
+@6220703c4b
+Record every step (tracing): without it you cannot see why the agent did what it did.
+@79bb1acf2e
+C# · Microsoft.Extensions.AI with tools
+@4d34460719
+runs the tool calls in a loop
+@a7f12f29cc
+One pass through the loop
+@e9aafc24ac
+
+1. user:         "Where is order 1042 and when does it arrive?"
+2. model:        tool call get_order_status(orderId: 1042)
+3. application:  result "shipped, courier DExpress"
+4. model:        tool call get_shipping_eta(orderId: 1042)
+5. application:  result 2026-11-24
+6. model:        "It has shipped and arrives on Tuesday, November 24."
+@c9d0f4dcda
+The tool result goes back into the prompt: text from outside (an email, a web page) can contain instructions and redirect the agent (prompt injection).
+@cb8e5521d2
+An agent without a step limit can spin in the loop and burn tokens.
+@df6df90104
+Loop step
+@480abe7885
+Application (loop)
+@a52393c0ac
+The user asks a question. The application sends it to the model **together with the tool descriptions**.
+@96047ea548
+Where is order 1042?
+@4e3399c7ec
+question + tools
+@b38809cfa9
+The model does not know where the order is, so it returns a **tool call request**: a name and arguments.
+@ce834ab616
+The **application** runs the tool (the model does not do that itself) and returns the result to the model.
+@30f825f049
+shipped, DExpress
+@fae295e3c8
+The model now asks for a **second tool** to estimate the delivery.
+@20d1f9d047
+The model has everything it needs and gives the **final answer**. The loop stops; had it reached 5 steps, the application would have cut it off.
+@5106a1b730
+arrives on Tuesday, 11/24

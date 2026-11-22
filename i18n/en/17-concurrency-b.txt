@@ -1,0 +1,198 @@
+@0fa607e4f1
+C# · An async "lock" with SemaphoreSlim(1, 1)
+@b259053703
+an await inside is fine
+@ac1895b337
+C# · Mutex: only one instance of the application
+@d4b8458a4c
+`Release` without a prior `Wait` (or twice) adds a token: the gate lets in more threads than it should.
+@2ea8c3be8b
+A synchronous `Wait()` in async code blocks the thread. With `async`, always use `WaitAsync`.
+@ef6a8f5c33
+A semaphore limits the number of threads in one process. A limit across several service instances needs a distributed limit (e.g. in Redis).
+@98e4156b88
+Tokens (N)
+@7d42f9535e
+In finally
+@790d5153bd
+Sometimes forgotten
+@09154e6287
+Inside
+@90e43688c5
+Free tokens
+@5528d374e3
+Waiting at the gate
+@d3963c75b6
+Critical section (at most {0})
+@091bca8259
+lock (1 token)
+@326addbeaf
+{0} left without `Release`: the token is **lost** forever. {1} remain in circulation.
+@d431863aef
+All tokens have leaked: **the gate is closed forever**, all threads are waiting. That is why `Release` goes in `finally`.
+@e66230b081
+With one token this is a **lock**: there is always at most one thread inside, the others wait in line.
+@77336fb98a
+The gate has **{0} tokens**: at most {1} threads are inside at the same time, the others wait their turn.
+@386f44ac31
+A deadlock happens when two threads each hold one resource and wait for the other's resource. Neither can continue, and without outside intervention they stay that way forever.
+@2517b627a6
+Four conditions (Coffman): mutual exclusion, hold and wait, no preemption, circular wait. Remove one and the deadlock disappears.
+@a1fcea4671
+The simplest defense is **the same lock order** everywhere: first A, then B, never the other way around.
+@d5f0de585f
+A timeout (`Monitor.TryEnter`, `WaitAsync` with a deadline) breaks the wait, but it can turn into a livelock if the threads keep backing off at the same moment.
+@3325de8a90
+Databases do the same: SQL Server detects a circular wait and aborts one transaction (error 1205), and the application retries it.
+@f749b04731
+Sync over async (`.Result` in a single-threaded context) is a classic .NET deadlock without a single `lock`.
+@1566c23a5c
+C# · Opposite order: deadlock
+@e1c305bc68
+reversed order
+@fa1f80acfd
+TransferAtoB and TransferBtoA in parallel -> both threads stall forever
+@dfe74fdf01
+C# · The same order, determined by a key
+@fc9bc2763d
+C# · Timeout and backing off
+@cefba76227
+a random delay against livelock
+@c75d66c017
+Calling unknown code (an event, a callback, a virtual method) while holding a lock: that code may take another lock in the opposite order.
+@976f4871ce
+A deadlock is rarely seen in tests because it needs exactly the wrong interleaving. A process dump (`dotnet-dump`, `clrstack`) shows who is waiting for what.
+@e0b2218c5d
+Order
+@95e23c87f5
+Opposite
+@2d85c75471
+The same (A, then B)
+@14e5ff2780
+Thread 1
+@1f617bb953
+Thread 2
+@a43b342a71
+holds the lock
+@f68e76f2f0
+Thread 1 locks **A**.
+@eee00a4005
+Thread 2 locks **B**.
+@54476403b9
+Thread 1 asks for **B**, which Thread 2 holds. It waits.
+@a8e0c9ab0d
+Thread 2 asks for **A**, which Thread 1 holds. It waits.
+@f3c16409fd
+**Circular wait**: each thread holds what the other needs. Neither will ever continue.
+@fc519465b0
+Both threads lock in the same order, **first A, then B**. Thread 1 takes A.
+@aff6c2481d
+Thread 2 asks for **A** and waits, but it holds nothing, so it does not block Thread 1.
+@29e72095d0
+Thread 1 takes **B** and finishes its work.
+@55842d70ec
+Thread 1 releases both locks.
+@58f709d870
+Thread 2 gets **A**...
+@3340df0b75
+...then **B**. Done, without stalling.
+@4f8eec797e
+Thread 1 holds **A**, Thread 2 holds **B**.
+@22000b061d
+Both ask for the other lock, but with a **200 ms deadline** (`Monitor.TryEnter`).
+@c528222bd7
+Thread 2's deadline expires: it **releases B**, waits a short random time and will try again.
+@f8972331c4
+Thread 1 now gets **B** and finishes.
+@c04e7065bb
+Thread 2 retries and succeeds. The price: time and repeated work.
+@45fb64fb23
+async/await and threads
+@48a3693754
+While waiting for the database or the network, `await` returns the thread to the pool, so the same thread serves other requests. A blocking wait (`.Result`) keeps the thread busy for nothing.
+@4a2fefefe8
+At `await` the method pauses and the thread goes back to the pool. Any free thread runs the continuation after the I/O.
+@45648f9299
+Blocking (`.Result`, `.Wait()`, `Thread.Sleep`) holds the thread while it waits. Under load the threads run out while the CPU sits idle.
+@efaddac7af
+Async does not speed up a single request; it increases the number of requests the same number of threads can serve.
+@53f8520ca5
+The compiler turns an async method into a state machine: every `await` is a point where the method can pause and resume.
+@8900f0e66f
+Async does not help with CPU work; that needs parallelism (`Parallel`, `Task.Run`).
+@da247027c9
+In UI applications the `SynchronizationContext` returns the continuation to the UI thread. In libraries, `ConfigureAwait(false)` says the continuation may run on any thread; ASP.NET Core has no such context.
+@e494e150c4
+Async tools
+@000c63c30a
+Need
+@04851c9d16
+Tool
+@7f6145c4a0
+several calls at once
+@59f9d8d5a9
+the first one to arrive
+@ebd33975ae
+a deadline for waiting
+@912ab64b92
+`WaitAsync(TimeSpan)` or `CancellationTokenSource.CancelAfter`
+@a89c2408ef
+cancel on request
+@c2c12a9c4a
+a stream of results
+@5f3902686f
+`IAsyncEnumerable<T>` and `await foreach`
+@6f1bd93b30
+the result is often already ready
+@ba8931dd98
+C# · Blocks the thread (avoid)
+@36a54a7833
+the thread stands still until the database answers
+@ddd8464ed7
+C# · Frees the thread while it waits
+@968ad9232f
+the thread goes back to the pool
+@a614bfa2ae
+C# · Two I/O calls at the same time
+@648a5ae0d5
+both calls are in flight together
+@1f0438ddf1
+here they are already finished
+@57f0f4d476
+C# · A library and a deadline for waiting
+@51780b1c7c
+library: the continuation does not have to return to the caller's context (e.g. the UI thread)
+@6195cd8957
+a 2 s deadline without a manual CancellationTokenSource (.NET 6+)
+@6d8100d445
+`async void` throws exceptions that nobody can catch (except in event handlers). Use `async Task`.
+@b16a4fc03c
+Sync over async in an environment with a `SynchronizationContext` (WPF, WinForms, old ASP.NET) causes a deadlock.
+@4d4e72b7aa
+A forgotten `await` (fire and forget) loses exceptions and keeps running after the request has ended.
+@5ee44aa86c
+Code
+@c1a77c3943
+.Result (blocks)
+@36088023b3
+Requests
+@bd95ae26d9
+Busy threads
+@b13b80b310
+In queue
+@3f630eaeea
+Waiting for the database
+@c46cf62d4b
+Throughput
+@44dbe9d3f7
+await: the thread goes back to the pool while the database works
+@753bb1a0d8
+.Result: the thread stands still while the database works
+@040d353fff
+Database: 2 s of I/O
+@d11cc36337
+Thread {0} · waiting
+@aa80103d0e
+With `await`, a thread works only while there is CPU work. While the database is busy the thread is free and takes **the next request**, so the queue does not grow.
+@6788579624
+With `.Result`, every thread **stands still for 2 s** while the database works (yellow). Four threads manage about 1.5 requests per second; the rest waits in the queue. Switch to `await`.

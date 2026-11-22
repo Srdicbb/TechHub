@@ -1,0 +1,178 @@
+@14283e1d5d
+several I/O calls at once
+@915eb2d7ea
+`Task.WhenAll` or `Parallel.ForEachAsync` with a limit
+@066d57bf18
+CPU processing of a large collection
+@17c8b84814
+at most N simultaneous operations
+@f1d9262d63
+a queue between a producer and consumers
+@656f2256f7
+a counter or flag from several threads
+@ad947984d7
+a shared cache that changes
+@73de00f73f
+configuration that everyone only reads
+@ab8673f7bd
+cancelling long work
+@353563e564
+periodic work in the background
+@dbdc1a62fd
+`BackgroundService` and `PeriodicTimer`
+@4cd38d085d
+multi-stage processing with different limits
+@dc57db72e8
+C# · Where things come from
+@23e0c571cb
+C# · Periodic work in the background
+@639fcb59f5
+C# · TPL Dataflow: download, process, save
+@0d5da1a3d8
+Mixing blocking and async primitives (`lock` around `await`, `.Result` in async code) is the most common source of bugs.
+@f76fdcb58b
+New code rarely needs `Thread` and `ManualResetEvent`: `Task`, `Channel<T>` and `CancellationToken` cover almost every case.
+@326ca45053
+Execution
+@419841c4a4
+Task and Task<T>
+@042e639bd3
+A unit of work with a result and the basis of async/await.
+@6b6e7372e6
+the return type of async methods, `Task.WhenAll` for several jobs at once.
+@292a10ea6e
+A Task without an allocation when the result is often already available.
+@69bead7b3c
+hot paths with a cache. Do not await it twice.
+@10414e30e6
+A group of threads that run jobs from a queue.
+@f75647721c
+indirectly, through `Task.Run`, `Parallel` and async continuations.
+@65e2152ff7
+A dedicated thread under your control.
+@f499b22885
+rarely: a long-running loop, a special priority or STA.
+@9145ec01d9
+`For`, `ForEach` and `ForEachAsync` split the work across threads.
+@7b8d4e2435
+CPU processing of a collection, and `ForEachAsync` for I/O with a limit.
+@1ffcab76e3
+`AsParallel()` runs a LINQ query on several cores.
+@62f5c75b6b
+CPU-expensive queries over large in-memory collections.
+@5eacf6ef9e
+Synchronization
+@2486172d17
+One thread in the critical section; reentrant.
+@0a9a9fd77a
+short changes to shared state, with no await inside.
+@fdbc960e8e
+A dedicated type for `lock`, faster than `object`.
+@40fc736b1a
+new code on .NET 9 and later instead of `new object()`.
+@b76b522339
+At most N threads or async flows at the same time; it has `WaitAsync`.
+@d55c5e678e
+a limit on parallel calls, an async "lock" with `(1, 1)`.
+@2e8093184e
+Several readers or one writer.
+@ca4b3f408f
+when reads dominate and take a while; otherwise a `lock` is simpler.
+@cac2b7ab21
+A lock with an owner that also works across processes.
+@200c4b6a88
+a single instance of an application, a resource shared between processes.
+@577d1bec75
+Events and Barrier
+@e9a44b9b13
+`ManualResetEventSlim`, `CountdownEvent`, `Barrier`: signals between threads.
+@1eb1c56420
+rare in new code; often replaced by a `Task` or `Channel<T>`.
+@674307e7ab
+Atomic and local
+@ad9ce9a23c
+Atomic addition, exchange and compare-and-swap.
+@c8ef9ee2f5
+counters, flags, a lock-free change of a single value.
+@777d32c018
+`Volatile.Read` and `Write` guarantee visibility and ordering.
+@07240f600b
+a flag that one thread writes and another reads.
+@af0ed7fd9c
+Every thread gets its own instance.
+@20e7b3d76d
+an expensive object per thread (a buffer) in a parallel loop.
+@2051d389af
+A value that follows the async flow across await.
+@34d457610a
+a correlation id and request context.
+@dd18fc10a0
+Initialization exactly once, safely from several threads.
+@af233e5deb
+an expensive singleton or a cache filled on the first request.
+@bfd955812d
+Collections
+@fd5172b253
+A map for simultaneous reads and writes, with a lock per part of the table.
+@6bc8ecd9f0
+a shared cache and per-key counters.
+@2b012c4169
+A FIFO queue without locking.
+@08976f359d
+a simple job queue; for waiting, `Channel<T>` is better.
+@4e836bd3a4
+An unordered collection, fast when the same thread both adds and takes.
+@ab61788026
+rare, e.g. a per-thread object pool.
+@c7bacf8949
+A queue that blocks the thread while it waits.
+@999eb469ba
+older code; for new code use `Channel<T>`.
+@3b9ae71d25
+Immutable collections
+@ce93543890
+A change creates a new version, and the old one stays the same.
+@d4c3bc4a8e
+shared state that rarely changes, state snapshots.
+@c2e78241df
+Frozen collections
+@2d883c2333
+`FrozenDictionary` and `FrozenSet` for the fastest reads.
+@710999951a
+configuration and tables that do not change after startup.
+@9ef9a4deab
+Streams and control
+@fa55327e8d
+An async queue between a producer and consumers, with backpressure.
+@4b228c4711
+background processing and an in-memory pipeline.
+@666b7f3591
+Blocks connected into a pipeline, each with its own parallelism.
+@4b653bbc16
+multi-stage processing with different limits.
+@b1f8e6a54e
+A stream of elements that arrive asynchronously, through `await foreach`.
+@5810908d78
+streaming results from a database or an API.
+@7d81eda303
+Event streams with operators (filtering, windows, merging).
+@0b8cf27ef5
+real-time events, UI and telemetry.
+@ac2278cbc1
+Cooperative cancellation of work.
+@b34fab710a
+every async method that may take a while.
+@6453175821
+An async timer: `await WaitForNextTickAsync`.
+@796086e4a7
+periodic work in a `BackgroundService`.
+@d647cf4528
+**{0}** ({1}). {2} When: {3}
+@783f0c3f07
+Click a type for a description and a recommendation. Without a click, the map tours itself.
+@c8d42c0081
+Atomic
+@ce3a6411e6
+Streams
+@be54fad2fe
+Pick a group, then a type.

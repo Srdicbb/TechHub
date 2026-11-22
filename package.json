@@ -1,15 +1,20 @@
 {
   "name": "prirucnik-koncepata",
-  "version": "1.2.0",
-  "description": "Priručnik koncepata sa živim three.js scenama: konkurentnost, system design, arhitektura, podaci, cloud, .NET, AI, algoritmi.",
+  "version": "1.3.0",
+  "description": "Priručnik koncepata sa živim three.js scenama, na srpskom i engleskom: network, system design, konkurentnost, arhitektura, podaci, cloud, .NET, AI, algoritmi.",
   "scripts": {
-    "build": "node build.mjs"
+    "build": "node build.mjs",
+    "i18n:extract": "node tools/i18n.mjs extract",
+    "i18n:check": "node tools/i18n.mjs check"
   },
   "type": "module",
   "dependencies": {
+    "acorn": "^8.19.0",
+    "acorn-walk": "^8.3.5",
     "esbuild": "^0.24.0",
     "highlight.js": "^11.10.0",
     "lucide-static": "^0.460.0",
+    "magic-string": "^0.30.21",
     "three": "^0.170.0"
   },
   "private": true

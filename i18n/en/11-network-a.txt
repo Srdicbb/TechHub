@@ -1,0 +1,206 @@
+@cc04375a80
+TCP/IP layers and the path of a packet
+@98b98685f0
+The network is built in layers. Each layer solves one problem and adds its own **header** in front of the data of the layer above: an HTTP message goes into a TCP segment, the segment into an IP packet, the packet into an Ethernet or Wi‑Fi frame. Along the way routers read only the IP header, and the server removes the headers in reverse order.
+@fd90f538b0
+**Application** (HTTP, DNS, gRPC): messages the program understands.
+@26af98d502
+**Transport** (TCP, UDP): from process to process, through ports. TCP adds ordering, acknowledgements and retransmission; UDP only a port and a checksum.
+@f8ab76ca75
+**Internet** (IP): from machine to machine, through addresses and routers. It guarantees neither delivery nor ordering; the TTL keeps a packet from circling forever.
+@5e9e375fb0
+**Link** (Ethernet, Wi‑Fi): only to the next device, through MAC addresses. The frame is rebuilt at every hop.
+@2599f1ec94
+A port distinguishes processes on the same machine: 443 is HTTPS, 5432 PostgreSQL. The addresses and ports of both sides together identify one TCP connection.
+@390aebcb9e
+The OSI model has seven layers; in practice the four of the TCP/IP model are used, and the labels L4 and L7 (for example for load balancers) come from OSI numbering.
+@24970d9bc5
+Layers and what they add
+@25451fd711
+Layer
+@873728f55f
+Protocols
+@6f4e789c64
+Address
+@b2e85ede8b
+Header
+@6769b8dbce
+Application (L7)
+@55226a0674
+URL, host name
+@488badd390
+depends on the protocol
+@062d8a9dec
+port
+@fcb0fe7700
+IP address
+@bf3885d982
+MAC address
+@baaf5afcc9
+Ethernet 14 B + 4 B at the end
+@3d8451edea
+Shell · the path of a packet and open connections
+@34b2f39709
+every line is one router (hop); Windows: tracert shop.rs
+@a1eb9d52e1
+open TCP connections; Windows: netstat -an | findstr ESTABLISHED
+@f8847cc629
+who listens on which port; Windows: netstat -abno
+@3ac90d2b62
+The MTU is usually 1,500 bytes. VPNs and tunnels reduce it, so large packets break somewhere: small requests get through, large ones hang without an error.
+@27dc277921
+A firewall that drops all ICMP breaks MTU discovery along the path (Path MTU Discovery) and causes connections that "just hang".
+@3705dcc4ad
+NAT hides private addresses behind one public address. Behind a proxy or an L7 load balancer the server sees their address, and the client's address is carried in `X-Forwarded-For`, which should be trusted only when your own proxy sets it.
+@cd6aa2db26
+Routers on the path
+@c10d76c9a4
+Transport
+@7a03387b78
+Client<small>browser, 10.0.0.12</small>
+@44ef816be3
+Router
+@79569e705a
+Router {0}
+@c2da32a6d3
+Hops
+@06da5571cd
+Headers
+@1df6f9a73f
+The **application** builds the HTTP request `GET /korpa`. It knows nothing about the network: it only hands the message to the layer below.
+@b4d6dd5321
+**Transport (TCP)** adds a header with the ports (51234 → 443), a sequence number and acknowledgements. The port says which process on the server the message belongs to.
+@86e2623e85
+**Internet (IP)** adds the sender and receiver addresses (10.0.0.12 → 203.0.113.10) and the TTL. IP does not guarantee delivery: a packet can get lost or arrive late.
+@9c3808b16e
+**Link (Ethernet or Wi‑Fi)** wraps everything in a frame with MAC addresses, but only up to the next device on the path: the router.
+@3e4463debe
+**TCP** finds the listening process by port 443, puts the bytes in order and sends an acknowledgement.
+@e88c3cd778
+**IP**: the destination address is the server's, so it removes the IP header and hands the segment to TCP.
+@eb47e9efc8
+The server receives the frame, sees that the MAC is its own and removes the **Ethernet** header.
+@ad6caee526
+**Router {0}**: the same, the TTL is now {1}. No router opens TCP or HTTP.
+@266e9e3920
+The **router** reads only the IP header: it decrements the TTL ({0} → {1}), finds the next hop in its routing table and builds a new Ethernet frame. TCP and HTTP stay untouched.
+@bedd938536
+The **application on the server** receives only the HTTP request, as if it had arrived directly. The response goes back the same way, with new headers.
+@1dac3672ec
+TCP and UDP: handshake and reliability
+@fa78cb0972
+Before any data, **TCP** opens a connection (the **handshake**: SYN, SYN-ACK, ACK), numbers the bytes, waits for acknowledgements and retransmits what was lost, so the application gets everything, in order. **UDP** just sends datagrams: no connection, no acknowledgements, no ordering, but also no waiting.
+@04c0f79a7c
+The handshake costs one RTT before the first byte. That is why connections are kept open (keep-alive) and reused (connection pooling).
+@beded4db0c
+Acknowledgements are cumulative: ACK 4 means "I have everything up to 3, the next one is 4". When a segment is missing, the receiver keeps later segments in a buffer and does not hand them to the application until the gap is filled.
+@e83740c11a
+A lost segment is sent again when the timer expires (RTO) or earlier, after three duplicate acknowledgements (fast retransmit).
+@5cadf85299
+The window determines how much unacknowledged data may be in flight; congestion control shrinks it when there are losses.
+@0b3af2baea
+Closing happens with FIN in both directions, and the side that closes first keeps the connection in the TIME_WAIT state for a while.
+@41ff8bb9d9
+UDP is used by DNS, live voice and video, games and QUIC (HTTP/3): wherever a late packet is worse than a lost one, or where the protocol above solves reliability itself.
+@70e06845f0
+TCP or UDP
+@63e95aec1b
+Connection
+@53ba462b28
+Yes, a handshake before the data
+@85d6f134e6
+No, sends immediately
+@a2296e4fba
+Delivery
+@425f37fb40
+Guaranteed, with retransmission
+@889de84cab
+No guarantee
+@c00cb75ea5
+Always in order
+@fdb91cc8b1
+As it arrives
+@9c36e6772d
+20 B or more
+@a2d7a08975
+Examples
+@5d0d2225f5
+HTTP/1.1 and HTTP/2, databases, SSH
+@d0ef49dd6b
+DNS, live video, games, QUIC
+@daac387433
+C# · Connections are reused: one client per service, not per request
+@ab63ab664e
+a new connection from time to time, so DNS changes get picked up
+@c2e8b50b84
+C# · UDP: send and do not wait (a StatsD metric)
+@5e4d3f8425
+`new HttpClient()` per request opens a new TCP connection every time: it pays for the handshake and leaves thousands of connections in TIME_WAIT until the ports run out (socket exhaustion).
+@1870ce03a4
+A client that keeps connections forever does not see DNS changes; hence `PooledConnectionLifetime`.
+@bce12c8a2a
+Nagle's algorithm merges small writes into larger segments and adds latency to small messages; interactive protocols turn it off (`NoDelay`).
+@0bb1c27ac5
+Protocol
+@c63e63cdef
+Loss
+@c6a2da378a
+no loss
+@67c311898c
+one packet
+@6c71f5e081
+two packets
+@f81b99d395
+To send
+@b6fdbf1a0b
+Retransmitted
+@f36fd86223
+Delivered to the app
+@cc94685dd0
+Duration
+@0c3f2de8fd
+data
+@661a488aa2
+acknowledgement
+@9c2a5db0ef
+waiting in the buffer
+@d96d59fe48
+lost
+@f4519bb217
+Receive buffer<small>the application gets: {0}</small>
+@4c8278894d
+Segment **{0}** got lost on the way. The client does not know it yet: it is waiting for the acknowledgement.
+@62ce6bda92
+**{0}** has arrived: the gap is filled, so the buffer hands {1}–{2} to the application at once.
+@f53b9d2597
+Segment {0} has arrived, but it waits in the buffer: the application gets nothing after {1} until **{2}** arrives. That is head-of-line blocking inside TCP.
+@02f52b6467
+Three **ACK {0}** acknowledgements in a row: the client resends {1} right away, without waiting for the timer (fast retransmit).
+@e400210e5c
+The acknowledgement for **{0}** did not arrive in time (RTO): the client sends it again.
+@0db9c29f91
+**Handshake**: the client sends SYN, the server answers SYN-ACK, the client acknowledges with ACK. Data starts flowing only after one RTT.
+@d8b571be05
+The connection is open. The window is 6 segments: the client sends 6 without waiting, and each next one only when an acknowledgement arrives.
+@03d70c88c9
+, with {0} retransmissions
+@088b7890d7
+All 8 segments were delivered to the application **in order**, {0} after the first SYN{1}. The connection closes with FIN in both directions.
+@ccd318a9a7
+**UDP** has no handshake and no acknowledgements: the client sends all 8 datagrams right away, one after another.
+@cc02d0c96b
+{0} of 8 arrived, in the order **{1}**. UDP does not retransmit or reorder: the application does that when it needs to (DNS repeats the query, video skips a frame).
+@91b1e00a89
+DNS: from a name to an IP address
+@aa9a3e6d6a
+Before any connection, the client has to turn a name (`api.shop.rs`) into an IP address. It asks a **recursive resolver** (the provider's, 1.1.1.1 or DNS in the cluster), and if the answer is not in its cache, the resolver goes step by step: the **root** server refers it to the **TLD** (`.rs`), the TLD to the domain's **authoritative** server, which gives the final answer. Every answer has a **TTL** and is cached.
+@2ea1d48362
+Caches exist in several places: the browser, the operating system, the resolver. Most queries are answered from a cache in a few milliseconds.
+@6c7b03a756
+The TTL is a trade-off: a long TTL means fewer queries, but a change of IP address reaches everyone only when the old entries expire.
+@e8afc927f9
+Before a migration or a failover the TTL is lowered days in advance, so that the later change is fast.
+@c78cac3dc3
+DNS can also distribute traffic: several A records (round robin), an answer by client location (GeoDNS) or by service health (Azure Traffic Manager).
+@6b6771815d
+In Kubernetes, CoreDNS gives names to services: `katalog.prod.svc.cluster.local` leads to the service's ClusterIP.

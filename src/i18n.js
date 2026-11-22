@@ -19,6 +19,10 @@ export const T = (sr, en) => (lang === 'en' && en != null ? en : sr);
 
 // broj sa decimalama po pravilu jezika: 1,5 ili 1.5
 export const dec = (v, d = 1) => (lang === 'en' ? v.toFixed(d) : v.toFixed(d).replace('.', ','));
+// zaokružen broj bez nepotrebne nule: 2,5 / 2.5 / 3
+export const dec1 = v => { const s = String(Math.round(v * 10) / 10); return lang === 'en' ? s : s.replace('.', ','); };
+// hiljade: 12 000 ili 12,000
+export const grp = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, lang === 'en' ? ',' : '\u00a0');
 
 export function setLang(l) {
   let saved = false;
@@ -27,3 +31,7 @@ export function setLang(l) {
   if (!saved) window.name = (window.name || '').replace(NAME, '').trim() + ' prirucnik-jezik=' + l;
   location.reload();
 }
+
+// ugrađeni prevodi (build ih ubacuje umesto srpskih niski i šablona, v. tools/i18n.mjs)
+export const __L = (sr, en) => (lang === 'en' ? en : sr);
+export const __LT = (sr, en, ...v) => (lang === 'en' ? en : sr).replace(/\{(\d+)\}/g, (m, i) => v[+i]);

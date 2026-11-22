@@ -1,0 +1,297 @@
+@b67abe3732
+CAP: a network partition
+@40db6af419
+When the network between replicas breaks, the system chooses: reject some requests so that the data stays consistent (**CP**), or always answer, so replicas temporarily have different values (**AP**).
+@4e71ccf3b7
+A network partition is not a choice but a fact: networks, routing and zones fail. Only the behavior while it lasts is chosen.
+@64ee4af1c0
+CP: a replica that cannot confirm a write with the others rejects it (an error or a timeout), but nobody reads wrong data.
+@f152ff669e
+AP: every replica answers, and after recovery they reconcile (last-write-wins, vector clocks, CRDTs).
+@5d99117b64
+PACELC: even without a partition there is a choice between latency and consistency. Synchronous replication is more consistent, but slower.
+@a12431dcc1
+Quorum: with N replicas, W acknowledgements for a write and R for a read, if W + R > N every read sees the latest write.
+@ff1e50e979
+Consistency levels in Cosmos DB
+@2a5e764635
+What it guarantees
+@9ee8000eae
+A read always sees the latest committed write
+@ba2e93eea3
+The highest latency; a write waits for the replicas
+@a4b7bc57f0
+Lag of at most K versions or T time
+@482edb744e
+Predictable staleness
+@47262791a7
+Your session sees its own writes, in order
+@47b12e04e8
+The default; a good compromise
+@19faf6ef86
+You never see writes out of order
+@aee4975b55
+Old values are possible
+@8e87d25bea
+Replicas eventually agree
+@5417774df0
+The lowest latency and cost
+@079dad14f0
+C# · Cosmos DB: the client's consistency level
+@806ba13429
+cannot be stronger than the account level
+@33043ea271
+C# · SQL: reading from a secondary replica
+@b1c503be34
+a write always goes to the primary replica
+@e5821f7821
+a read from a secondary can lag behind the write (asynchronous replication)
+@57f0acb638
+Quorum
+@167ae55584
+
+N = 3 replicas, W = 2 acknowledgements for a write, R = 2 responses for a read
+W + R = 4 > N  ->  every read touches at least one replica with the latest write
+W = 1, R = 1   ->  fast, but a read may return an old value
+@8fa89edf64
+"I choose CA" does not exist in a distributed system: without a partition there is no choice to make.
+@131e5b621b
+Reading from a replica right after a write: the user does not see their own change. After a write, read from the primary or use session consistency.
+@5ddecbaef6
+Last-write-wins with unsynchronized clocks silently deletes newer writes.
+@3a7337b68a
+Choice
+@508a361dd5
+CP: consistency
+@fcb7ad7455
+AP: availability
+@745bc0b058
+Cut or restore the network
+@00c3f2dfed
+Accepted writes
+@84cc66bd9d
+Rejected requests
+@b24d1900f2
+Stale reads
+@ba0c344d6f
+Replica A: 100
+@3c5d34ef64
+Replica B: 100
+@ea94e47039
+Client 1 writes
+@8d773b2394
+Client 2 reads
+@193b362a31
+Network cut
+@e33f3ee044
+Replica A: {0}
+@351d06d047
+Replica B: {0}
+@6a388c6d10
+**Partition.** CP: the replica cannot confirm the write with the other one, so it **rejects** writes and reads that could be wrong.
+@39c3c96ad7
+**Partition.** AP: both replicas keep answering, but B returns an **old value**.
+@6b250156ff
+The network is back: the replicas **reconcile** and B gets the latest value.
+@2dd005c212
+The network is back.
+@832d566a30
+write +10
+@512fd45739
+rejected
+@be92910031
+unavailable
+@9d07279575
+ (old)
+@076338abe1
+CP without a partition: a write is confirmed only when it has also reached B (synchronously), so it is slower, but a read from B is always correct.
+@e8f400b856
+AP without a partition: a write is confirmed right away, and B gets it a little later, so for a short time it returns an old value.
+@ceaedea0dc
+Consistent hashing
+@c91a164c08
+Keys and nodes are mapped onto the same circle. A key belongs to the first node clockwise. When a node is added or removed, only the keys of one part of the circle move, not almost all of them as with `hash % N`.
+@3622ec3da7
+With `hash(key) % N`, going from N to N+1 nodes moves about N/(N+1) of the keys, so almost all of them. The cache is practically emptied.
+@0ff050bbd2
+On the ring a new node takes over only the keys between itself and the previous node: about 1/N of the keys.
+@f657b3da1e
+Virtual nodes (every physical node at several points of the circle) spread keys and load more evenly.
+@49573426e9
+It is used by distributed caches, Cassandra and DynamoDB. Redis Cluster uses a related idea with 16,384 fixed slots.
+@3fdad9a578
+C# · A ring with virtual nodes
+@260c281c2d
+the first node clockwise
+@894859e765
+(in production: binary search)
+@00e9f9145a
+end of the circle: back to the start
+@ab113d9499
+C# · Modulo: short, but expensive on change
+@143ed6ac81
+a new node -> almost all keys move
+@92a26c8001
+Shell · Redis Cluster slots
+@be8ad0b206
+which of the 16,384 slots the key falls into
+@35f17d129e
+{hash tag}: one user's keys in the same slot
+@168024caef
+Without virtual nodes one node easily gets twice as many keys as another, just because of its position on the circle.
+@a9bc0fd8dc
+Moving keys is not free: a new node starts empty, so its part of the circle briefly has only misses.
+@8311e2b079
+Distribution
+@ee5a9b95a8
+Ring
+@a9e8932ea5
+Virtual nodes per node
+@aa01bac75f
+Add a node
+@e2e12889f6
+Remove a node
+@d71cc5e832
+Moved
+@3507c25fbc
+Most keys on a node
+@d6f93192e4
+Node {0}
+@9bdcd41ea5
+ (ideal {0})
+@ec16e3fda0
+{0} of {1} ({2}%)
+@9c8b45ace6
+Node {0} was added: with `hash % {1}`, **{2} of {3}** keys move.
+@fdb507ec38
+Node {0} was added: it takes over only its own parts of the circle. **{1} of {2}** keys move.
+@3ded476ffc
+Node {0} was removed: **{1} of {2}** keys move, including those that were not on {3}.
+@6563e4ea61
+Node {0} was removed: the next node on the circle takes over its keys (**{1} of {2}**). The rest stay where they are.
+@0ce0a09f42
+The color of an orb is the node that holds the key. A key belongs to **the first node clockwise**. Add or remove a node and watch how many orbs change color.
+@c495a1b9e5
+Sagas and compensations
+@a445205460
+A transaction across several services cannot use a single `ROLLBACK`. A saga is a sequence of local transactions, and if one step fails, the previous ones are undone by **compensations** in reverse order.
+@951545e27a
+Every step is a local transaction in its own service and each has a compensation (a charge, then a refund).
+@4695dcc9f7
+**Orchestration**: a central orchestrator knows the order and sends commands. It is easy to follow, but the orchestrator knows about everything.
+@598d39044f
+**Choreography**: services react to each other's events. There is no center, but the flow is harder to see and change.
+@44949b62ef
+A saga has no isolation: others see intermediate states (reserved goods before payment), so statuses such as "pending" are used.
+@d379f7e9df
+Steps and compensations must be idempotent, because messages can arrive twice.
+@eb85580039
+C# · An orchestrator (simplified)
+@2d136d019c
+in reverse order
+@173a3ee411
+C# · Durable Functions: durable orchestration state
+@04d0529bda
+survives a process restart
+@a71647cdd2
+C# · Choreography: a service reacts to an event
+@f7f92975e3
+Inventory service
+@4de14a2841
+Payments refunds the money
+@6cc5e9bf7f
+An orchestrator with state only in memory: a restart in the middle of a saga leaves a charge without goods. The saga state must be durable (a database, Durable Functions, MassTransit).
+@97aaae4c5e
+A compensation does not erase history: a refund is a new transaction and shows up on the statement.
+@c932b4910b
+A compensation can fail too: it needs a retry and a plan for manual intervention.
+@820cfc2922
+Style
+@7346b07579
+Orchestration
+@6d8fdac8be
+Choreography
+@77ccb9e10c
+Fails
+@8965515cd8
+Nothing
+@c77996730e
+created
+@be7b14d024
+cancelled
+@4c0e785331
+charged
+@0d91a76bd6
+refunded
+@74974a4be2
+reserved
+@fe3e41936d
+released
+@0c46301d7a
+scheduled
+@7434ee4e9f
+Orchestrator
+@b5569d79a4
+The orchestrator sends a command to the **{0}** service.
+@aa4c472f23
+The client starts the saga in the **Orders** service.
+@470a9fbb11
+**{0}** reacts to the event of the previous step.
+@b2630e350b
+event
+@d55393ecf0
+out of stock
+@93d1046731
+no courier
+@a9a0ea06a0
+**{0}** fails ({1}). Its local transaction was not done, but the previous steps were.
+@d8cc1bd237
+All steps succeeded: the saga is complete.
+@fbdd011379
+Compensation: **{0}** in the {1} service.
+@1f774f0e25
+The compensations were done in reverse order. The system is consistent, but **the history remains**: the charge and the refund are two transactions.
+@fd5027bd2b
+A service that writes to the database and then publishes an event can crash between those two steps. The **outbox** writes the event into the same database, in the same transaction, and a separate process publishes it later.
+@3d3e7d36d9
+A dual write (database, then broker) is not atomic: a crash between the two steps gives an order without an event.
+@a96d1fd432
+The outbox table is part of the same transaction as the business data: both writes are durable or neither is.
+@2e39045bba
+A relay (polling or CDC from the transaction log) reads the outbox, publishes, and marks what was sent.
+@7a3364f102
+Delivery is at-least-once: the relay may publish twice, so consumers must be idempotent (an inbox).
+@63ee927f23
+C# · An order and an event in one transaction
+@9b0c9de54d
+one SaveChanges = one transaction: both rows or neither
+@a404e48c74
+C# · The relay as a BackgroundService
+@078dd2bb1d
+SQL · The outbox table
+@b797dab7f7
+Several relay instances without coordination send the same messages in parallel: lock the rows (`UPDLOCK, READPAST`) or run a single relay.
+@3bc6fb94c8
+An outbox that is never cleaned grows forever: delete sent messages after a few days.
+@0b6a50088d
+Pass the `MessageId` from the outbox to the broker: then the broker's duplicate detection also catches a double send.
+@a275fcd3be
+Approach
+@825c428547
+Order
+@e4e62fdecf
+Events published
+@e8f5519d30
+Without an event
+@e00417fb07
+The order and the event in the same transaction
+@fce9762939
+A write to the database, then a separate send to the broker
+@dbe7a149de
+Order service
+@526b2ee503
+Consumer
+@09fe8a842a
+The service crashed after write #{0}, but the event **is already in the outbox**: the relay will send it.
+@f29745e40f
+The service crashed **between the write and the send**: order #{0} exists, and the event will never arrive.

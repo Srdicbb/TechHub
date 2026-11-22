@@ -1,9 +1,9 @@
+import { dec, grp } from '../i18n.js';
 // Network: od paketa i DNS-a do HTTP-a i TLS-a
 const cs = (t, src) => ({ t, lang: 'csharp', src });
 const sh = (t, src) => ({ t, lang: 'bash', src });
 const txt = (t, src) => ({ t, lang: 'plaintext', src });
 const hx = c => '#' + (c >>> 0).toString(16).padStart(6, '0');
-const dec = (v, d = 1) => v.toFixed(d).replace('.', ',');
 
 // ---------- waterfall učitavanja stranice (model u milisekundama) ----------
 const RES = [
@@ -718,7 +718,7 @@ app.MapPost("/porudzbine", async (NovaPorudzbina dto,
           const r = { id: nextId++, st: attempt > 1 ? 'nova · duplikat' : 'nova', k: '' };
           rows.push(r);
           mark(r, attempt > 1 ? 'dup' : 'new', attempt > 1 ? 0 : 2.5);
-          paid += 1200; sPaid.set(String(paid).replace(/\B(?=(\d{3})+(?!\d))/g, '\u00a0') + '\u00a0din');
+          paid += 1200; sPaid.set(grp(paid) + '\u00a0din');
           if (KEY) {
             keys.set(key, r.id);
             const k = x.chip(C.wait, { s: .3, at: [store.pos.x - .55 + (keys.size - 1) % 4 * .36, .4, store.pos.z] });

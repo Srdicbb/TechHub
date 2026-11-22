@@ -1,0 +1,146 @@
+@32784d4791
+A Deployment describes the desired state (how many replicas of which version), and a controller constantly compares the actual state with the desired one and fixes the difference. A Service gives a stable address and splits traffic across ready pods.
+@cff2106f5f
+A pod is the smallest unit: one or more containers with a shared network. Pods are disposable and get new IP addresses.
+@0dc966206d
+A Deployment manages a ReplicaSet, which keeps the given number of pods: a terminated pod is replaced with a new one.
+@f3e6a07641
+A Service selects pods by labels (`selector`) and sends traffic only to the ones that are ready (readiness).
+@374d31b8a8
+The **readiness** probe decides whether a pod receives traffic; the **liveness** probe restarts a stuck container.
+@86ba1c0951
+`requests` and `limits` (CPU, memory) determine where a pod is scheduled and how much it may use.
+@22dd9c4fe6
+YAML · A Deployment with probes and resources
+@851b4aa408
+all pods with this label
+@36d25de90e
+C# · Health endpoints in ASP.NET Core
+@aebfc683bb
+the ReplicaSet creates a new one right away
+@5752f8d1fa
+events: probes, OOMKilled, restarts
+@7135cc7b0e
+A liveness probe that checks the database: when the database hiccups, Kubernetes restarts all pods at once. Liveness checks only the process.
+@e8d88ba04d
+Without a memory limit, one pod can consume the whole node; with a limit that is too low, it gets `OOMKilled`.
+@2741249457
+The `latest` tag: you do not know what is running, and a rollback has nothing to return to.
+@b411dc409d
+Kill a pod
+@d8df47495c
+Take Node 3 down or bring it back
+@2618ee591b
+Desired
+@b33f4a9952
+Ready
+@bfe4b028b9
+Requests handled
+@bb450d930d
+The actual state ({0}) is not the desired one ({1}): the ReplicaSet **creates a new pod**. Until it passes the readiness probe (yellow), it gets no traffic.
+@270fb6e86c
+Pod {0} was killed.
+@4414152fb3
+**Node 3 is down**: its pods disappear, and new ones are scheduled on the remaining nodes.
+@6e77e4be48
+Node 3 is available again; new pods can go to it too.
+@52facb15f4
+The Service splits requests across ready pods (round robin). Every 9 s a pod is killed so you can see self-healing.
+@23e318510c
+Rolling update and canary
+@60848bc096
+A new version is rolled out without downtime. A **rolling update** replaces pods one by one, and a **canary** first sends a small part of the traffic to the new version and waits for metrics to confirm that everything is fine.
+@82b8225ff8
+`maxSurge` is how many pods may exist above the desired number; `maxUnavailable` how many may be missing.
+@d8fb9bb781
+A new pod gets traffic only after it passes the readiness probe, and only then is an old one terminated.
+@32823346c6
+A rollback is the same process in reverse: `kubectl rollout undo` brings back the previous ReplicaSet.
+@5c5cde9619
+Canary: a few pods of the new version next to the old ones, or a traffic split on the ingress or in a service mesh (e.g. 10%).
+@b7a7061040
+Blue-green: the whole new version stands next to the old one, and traffic switches at once. A fast way back, but double the resources.
+@b590d975c1
+YAML · The replacement strategy
+@65d390cd69
+a pod must be ready for 10 s to count
+@a24586e3bd
+at most 5 pods during the replacement
+@7cb380918a
+never fewer than 4 ready
+@77ea92d5fe
+Shell · Rollout and rollback
+@f28f7e83e4
+back to the previous version
+@57f8d19f03
+YAML · A canary with the NGINX ingress
+@1e4894d2d5
+10% of the traffic to the new version
+@9004aaf5a5
+A database schema change that is not backward compatible: during the replacement the old and new versions run against the same schema. Change the schema in two steps (expand, then contract).
+@4787e2f370
+A readiness probe that returns 200 right away lets traffic onto a pod that is not ready yet.
+@ffdb57449f
+Version 2
+@0870266759
+With a bug
+@4c821b8198
+v1 pods
+@559092a1e6
+v2 pods
+@9f7d3304c2
+Errors
+@e4353af053
+Version 1 runs on 4 pods.
+@2c346a01ad
+Rolling update, step {0} of 4: a new v2 pod starts (maxSurge 1), and the old ones stay until it is ready.
+@474337cde7
+Errors grow with every new pod. **kubectl rollout undo**: we go back to v1.
+@61cddb6374
+The rollback is complete: v1 is running again. Half of the users still saw errors.
+@8d38744081
+All pods are on v2, with no interruption in traffic.
+@ae5270dd9d
+Canary: one v2 pod next to four v1 pods. About **20% of requests** go to it.
+@9e8963f70f
+The canary's metrics show errors: **the canary is removed**. Only about 20% of requests saw errors, and only briefly.
+@62f7f7bcf8
+The metrics are good: the canary is **promoted**, and the other pods move to v2.
+@0892433c42
+All pods are on v2.
+@d49508a86e
+HPA: autoscaling
+@04cfaf7ef5
+The **Horizontal Pod Autoscaler** periodically measures the load (e.g. average CPU) and changes the number of replicas so that the average stays close to the target.
+@75a4d4a7c3
+Formula: desired = ceil(current × current metric / target metric). With 4 pods at 90% CPU and a 60% target: ceil(4 × 90 / 60) = 6.
+@7fef8ff1b0
+CPU is measured relative to `requests`, so a pod without `requests` cannot be scaled by CPU.
+@76d4182f22
+Scaling down waits for a stabilization period (5 minutes by default), so that the number of replicas does not jump up and down.
+@130851d6c5
+A new pod needs time to start and warm up: autoscaling does not solve a spike that lasts a few seconds.
+@9927e85a08
+KEDA adds scaling by external metrics: queue length, Kafka lag, number of HTTP requests.
+@f0673f89b5
+Shell · Monitoring
+@3be3fd4aa1
+The HPA and a hand-set `replicas` in the Deployment fight each other: every deploy resets the number of replicas to the value from the YAML.
+@347d2a6455
+Scaling by CPU for a service that mostly waits for I/O: CPU stays low while the queue grows. Scale by a metric that really grows.
+@57c8910e72
+Traffic spike
+@8b68379fd7
+Replicas
+@c6578ea019
+Average CPU
+@bac1a896bc
+target 60%
+@9edda60b83
+**Traffic spike**: CPU on the existing pods jumps, and the HPA adds replicas in its next round.
+@46cebeb8f6
+The average {0}% is above the target: the HPA adds **{1}** {2}. The new pods work only once they start (yellow).
+@eaeedfc323
+The load dropped and stayed low through the whole stabilization period: the HPA **removes one pod**.
+@cf295e4fc6
+The HPA would scale down to {0}, but it **waits for stabilization** so that it does not jump up and down.

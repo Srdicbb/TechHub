@@ -7,7 +7,7 @@ import { TOPICS } from './topics/index.js';
 import { ICONS } from './icons.js';
 import { legendViz } from './legend.js';
 import { sysViz } from './sysviz.js';
-import { T } from './i18n.js';
+import { T, lang, setLang } from './i18n.js';
 import { LEVELS, levelOf, drawSkills } from './skills.js';
 
 {
@@ -47,7 +47,7 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     });
   const sayFmt = s => String(s ?? '').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   const plural = n => T((n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'teme' : 'tema', n === 1 ? 'topic' : 'topics');
-  const LANG = { csharp: 'C#', typescript: 'TypeScript', sql: 'SQL', yaml: 'YAML', bash: 'Shell', json: 'JSON', xml: 'HTML', plaintext: 'Tekst' };
+  const LANG = { csharp: 'C#', typescript: 'TypeScript', sql: 'SQL', yaml: 'YAML', bash: 'Shell', json: 'JSON', xml: 'HTML', plaintext: T('Tekst', 'Text') };
 
   const stage = new Stage();
   const store = new Map();
@@ -68,11 +68,11 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
   // stablo oblasti: naslovi sekcija i teme, spojeni linijom kao grane
   const tree = tab => `<ul class="tree">${tab.sections.map(sc => `<li class="th">${esc(sc.title)}</li>${sc.topics.map(id => item(byId.get(id))).join('')}`).join('')}</ul>`;
   function renderToc() {
-    $('#toc').innerHTML = `<a class="nav-home" href="#" data-tip="Početna">${icon('house')}<span class="tt">Početna</span></a><p class="sb-h">Oblasti</p>` +
+    $('#toc').innerHTML = `<a class="nav-home" href="#" data-tip="${T('Početna', 'Home')}">${icon('house')}<span class="tt">${T('Početna', 'Home')}</span></a><p class="sb-h">${T('Oblasti', 'Areas')}</p>` +
       TABS.map(tab => {
         const n = tabTopics(tab).length, on = n > 0 && opened.has(tab.id);
         return `<section class="nav-tab${on ? ' open' : ''}${tab === curTab ? ' here' : ''}${n ? '' : ' soon'}">
-          <div class="nav-row"><a class="nav-t" href="#${tab.id}" data-tab="${tab.id}">${icon(tab.icon)}<span class="tt">${esc(tab.title)}</span><span class="n">${n || 'uskoro'}</span></a>${n ? `<button class="nav-x" type="button" data-x="${tab.id}" aria-expanded="${on}" aria-label="${on ? 'Sakrij' : 'Prikaži'} teme: ${esc(tab.title)}">${icon('chevron-down')}</button>` : '<span class="nav-x ph" aria-hidden="true"></span>'}</div>
+          <div class="nav-row"><a class="nav-t" href="#${tab.id}" data-tab="${tab.id}">${icon(tab.icon)}<span class="tt">${esc(tab.title)}</span><span class="n">${n || T('uskoro', 'soon')}</span></a>${n ? `<button class="nav-x" type="button" data-x="${tab.id}" aria-expanded="${on}" aria-label="${on ? T('Sakrij', 'Hide') : T('Prikaži', 'Show')} ${T('teme', 'topics')}: ${esc(tab.title)}">${icon('chevron-down')}</button>` : '<span class="nav-x ph" aria-hidden="true"></span>'}</div>
           ${on ? tree(tab) : ''}
         </section>`;
       }).join('');
@@ -81,7 +81,7 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
   // (claude.ai ga postavlja po svojoj temi i vraća ga nazad), pa bi pregazilo izbor.
   const theme = () => { const r = document.documentElement; return r.dataset.tema || r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); };
   function markTheme() {
-    const b = $('#tema'), dark = theme() === 'dark', lab = dark ? 'Uključi svetlu temu' : 'Uključi tamnu temu';
+    const b = $('#tema'), dark = theme() === 'dark', lab = dark ? T('Uključi svetlu temu', 'Switch to light theme') : T('Uključi tamnu temu', 'Switch to dark theme');
     b.dataset.on = dark ? 'dark' : 'light';
     b.setAttribute('aria-label', lab);
     b.title = lab;
@@ -98,7 +98,7 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
       cnt += hits.length;
       return hits.length ? `<div class="grp found"><p class="grp-h">${icon(tab.icon)}<span>${esc(tab.title)}</span></p><ul class="tree flat">${hits.map(item).join('')}</ul></div>` : '';
     }).join('');
-    $('#qn').textContent = cnt ? `${cnt} ${plural(cnt)}` : 'Nema rezultata';
+    $('#qn').textContent = cnt ? `${cnt} ${plural(cnt)}` : T('Nema rezultata', 'No results');
     markCurrent();
   }
   function markCurrent() {
@@ -116,7 +116,7 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     if (q.value.trim()) search(q.value); else renderToc();
   }
   function crumbs(parts) {
-    $('#crumbs').innerHTML = `<a class="home" href="#" aria-label="Početna">${icon('house')}</a>` +
+    $('#crumbs').innerHTML = `<a class="home" href="#" aria-label="${T('Početna', 'Home')}">${icon('house')}</a>` +
       parts.map(([label, href, mid], i) => `<span class="sep${mid ? ' m' : ''}" aria-hidden="true">${icon('chevron-right')}</span>` +
         (href && i < parts.length - 1 ? `<a class="${mid ? 'mid' : ''}" href="${href}">${esc(label)}</a>` : `<b>${esc(label)}</b>`)).join('');
   }
@@ -149,14 +149,14 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     const p = params(key, viz);
     const knobs = (viz.knobs || []).map(k => knobHtml(k, p, key)).join('');
     const acts = (viz.actions || []).map(a => `<button type="button" class="btn act" data-act="${a.id}"${a.aria ? ` aria-label="${esc(a.aria)}" title="${esc(a.aria)}"` : ''}>${icon(a.icon || 'zap')}<span>${esc(a.label)}</span></button>`).join('');
-    return `<section class="viz" aria-label="Vizualizacija">
+    return `<section class="viz" aria-label="${T('Vizualizacija', 'Visualization')}">
       <div class="viz-stage"><div class="viz-scroll"></div><div class="viz-stats"></div><div class="viz-legend"></div>
-        <button type="button" class="btn ic viz-fs" aria-label="Ceo ekran" title="Ceo ekran">${icon('maximize')}</button></div>
+        <button type="button" class="btn ic viz-fs" aria-label="${T('Ceo ekran', 'Full screen')}" title="${T('Ceo ekran', 'Full screen')}">${icon('maximize')}</button></div>
       <div class="viz-bar">
         <div class="grpc">
-          <button type="button" class="btn ic" data-cmd="play" aria-label="Pauza" title="Pauza">${icon('pause')}</button>
-          <button type="button" class="btn ic" data-cmd="restart" aria-label="Pokreni ispočetka" title="Pokreni ispočetka">${icon('rotate-ccw')}</button>
-          <div class="seg" role="group" aria-label="Brzina">${[.5, 1, 2].map(s => `<button type="button" data-speed="${s}" aria-pressed="${s === stage.speed}">${s === .5 ? '½' : s}×</button>`).join('')}</div>
+          <button type="button" class="btn ic" data-cmd="play" aria-label="${T('Pauza', 'Pause')}" title="${T('Pauza', 'Pause')}">${icon('pause')}</button>
+          <button type="button" class="btn ic" data-cmd="restart" aria-label="${T('Pokreni ispočetka', 'Restart')}" title="${T('Pokreni ispočetka', 'Restart')}">${icon('rotate-ccw')}</button>
+          <div class="seg" role="group" aria-label="${T('Brzina', 'Speed')}">${[.5, 1, 2].map(s => `<button type="button" data-speed="${s}" aria-pressed="${s === stage.speed}">${s === .5 ? '½' : s}×</button>`).join('')}</div>
         </div>
         ${knobs ? `<div class="grpc knobs">${knobs}</div>` : ''}
         ${acts ? `<div class="grpc acts">${acts}</div>` : ''}
@@ -187,8 +187,8 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
       legend(items) { lg.innerHTML = items.map(([c, t]) => `<span><i style="--c:${hex(c)}"></i>${t}</span>`).join(''); },
       paused(v) {
         pb.innerHTML = icon(v ? 'play' : 'pause');
-        pb.setAttribute('aria-label', v ? 'Pusti' : 'Pauza');
-        pb.title = v ? 'Pusti' : 'Pauza';
+        pb.setAttribute('aria-label', v ? T('Pusti', 'Play') : T('Pauza', 'Pause'));
+        pb.title = v ? T('Pusti', 'Play') : T('Pauza', 'Pause');
       },
     };
   }
@@ -238,25 +238,25 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
   function codeHtml(c, i) {
     let h;
     try { h = hljs.highlight(c.src.trim(), { language: c.lang, ignoreIllegals: true }).value; } catch (e) { h = esc(c.src.trim()); }
-    return `<figure class="code"><figcaption><span>${esc(c.t || LANG[c.lang] || '')}</span><button type="button" class="btn sm copy" data-i="${i}">${icon('copy')}<span>Kopiraj</span></button></figcaption><pre><code class="hljs">${h}</code></pre></figure>`;
+    return `<figure class="code"><figcaption><span>${esc(c.t || LANG[c.lang] || '')}</span><button type="button" class="btn sm copy" data-i="${i}">${icon('copy')}<span>${T('Kopiraj', 'Copy')}</span></button></figcaption><pre><code class="hljs">${h}</code></pre></figure>`;
   }
   function hookCode(root, code) {
     $$('.copy', root).forEach(b => {
       b.onclick = async () => {
         const lab = $('span', b), src = code[+b.dataset.i].src.trim();
-        try { await navigator.clipboard.writeText(src); lab.textContent = 'Kopirano'; }
+        try { await navigator.clipboard.writeText(src); lab.textContent = T('Kopirano', 'Copied'); }
         catch (e) {
           const r = document.createRange(); r.selectNodeContents($('pre', b.closest('.code')));
           const s = getSelection(); s.removeAllRanges(); s.addRange(r);
-          lab.textContent = 'Označeno';
+          lab.textContent = T('Označeno', 'Selected');
         }
-        setTimeout(() => { lab.textContent = 'Kopiraj'; }, 1600);
+        setTimeout(() => { lab.textContent = T('Kopiraj', 'Copy'); }, 1600);
       };
     });
   }
   const strip = s => String(s).replace(/[`*]/g, '');
   function tableHtml(tb, hx = 'h2', cls = 'sec') {
-    return `<section class="${cls}"><${hx}>${esc(tb.title || 'Poređenje')}</${hx}><div class="scroll"><table class="stack"><thead><tr>${tb.head.map(h => `<th scope="col">${fmt(h)}</th>`).join('')}</tr></thead>
+    return `<section class="${cls}"><${hx}>${esc(tb.title || T('Poređenje', 'Comparison'))}</${hx}><div class="scroll"><table class="stack"><thead><tr>${tb.head.map(h => `<th scope="col">${fmt(h)}</th>`).join('')}</tr></thead>
       <tbody>${tb.rows.map(r => `<tr>${r.map((c, i) => `<td data-l="${esc(strip(tb.head[i]))}"><span>${fmt(c)}</span></td>`).join('')}</tr>`).join('')}</tbody></table></div>
       ${tb.note ? `<p class="note">${fmt(tb.note)}</p>` : ''}</section>`;
   }
@@ -281,13 +281,13 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     $('#view').innerHTML = `<article class="topic pad"><div class="wrap">
       <header class="t-head"><h1>${esc(t.title)}</h1><p class="lede">${fmt(t.desc)}</p></header>
       ${vizCard(t.viz, t.id)}
-      <section class="sec"><h2>Ključno</h2><ul class="pts">${t.points.map(p => `<li>${fmt(p)}</li>`).join('')}</ul></section>
+      <section class="sec"><h2>${T('Ključno', 'Key points')}</h2><ul class="pts">${t.points.map(p => `<li>${fmt(p)}</li>`).join('')}</ul></section>
       ${figsHtml(t)}
       ${tables.map(tableHtml).join('')}
-      ${t.code?.length ? `<section class="sec"><h2>Primeri</h2>${t.code.map(codeHtml).join('')}</section>` : ''}
-      ${t.pitfalls?.length ? `<section class="sec"><h2>Zamke</h2><ul class="pits">${t.pitfalls.map(p => `<li>${icon('triangle-alert')}<span>${fmt(p)}</span></li>`).join('')}</ul></section>` : ''}
-      ${t.rel?.length ? `<section class="sec"><h2>Povezano</h2><div class="tiles rel">${t.rel.filter(id => byId.has(id)).map(id => tile(byId.get(id))).join('')}</div></section>` : ''}
-      <nav class="pager" aria-label="Susedne teme">${prev ? `<a href="#${prev.id}" class="pg prev">${icon('arrow-left')}<span><small>Prethodna</small>${esc(prev.title)}</span></a>` : '<span></span>'}${next ? `<a href="#${next.id}" class="pg next"><span><small>Sledeća</small>${esc(next.title)}</span>${icon('arrow-right')}</a>` : ''}</nav>
+      ${t.code?.length ? `<section class="sec"><h2>${T('Primeri', 'Examples')}</h2>${t.code.map(codeHtml).join('')}</section>` : ''}
+      ${t.pitfalls?.length ? `<section class="sec"><h2>${T('Zamke', 'Pitfalls')}</h2><ul class="pits">${t.pitfalls.map(p => `<li>${icon('triangle-alert')}<span>${fmt(p)}</span></li>`).join('')}</ul></section>` : ''}
+      ${t.rel?.length ? `<section class="sec"><h2>${T('Povezano', 'Related')}</h2><div class="tiles rel">${t.rel.filter(id => byId.has(id)).map(id => tile(byId.get(id))).join('')}</div></section>` : ''}
+      <nav class="pager" aria-label="${T('Susedne teme', 'Neighboring topics')}">${prev ? `<a href="#${prev.id}" class="pg prev">${icon('arrow-left')}<span><small>${T('Prethodna', 'Previous')}</small>${esc(prev.title)}</span></a>` : '<span></span>'}${next ? `<a href="#${next.id}" class="pg next"><span><small>${T('Sledeća', 'Next')}</small>${esc(next.title)}</span>${icon('arrow-right')}</a>` : ''}</nav>
     </div></article>`;
     const v = $('#view');
     if (t.code) hookCode(v, t.code);
@@ -411,23 +411,25 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
 
   function showHome() {
     setTab(null);
-    crumbs([['Početna']]);
+    crumbs([[T('Početna', 'Home')]]);
     pn(null, ORDER[0]);
     $('#view').innerHTML = `<section class="pad home"><div class="wrap">
-      <header class="t-head"><h1>Priručnik koncepata</h1>
-      <p class="lede">Put kroz ${ORDER.length} tema u ${TABS.filter(t => tabTopics(t).length).length} oblasti: od mreže i skaliranja sistema, preko niti, poruka, baza i Kubernetes-a, do AI-ja i algoritama. Svaka tema ima scenu koja radi, ključne tačke, primere koda i zamke.</p></header>
+      <header class="t-head"><h1>${T('Priručnik koncepata', 'Concept Handbook')}</h1>
+      <p class="lede">${T(`Put kroz ${ORDER.length} tema u ${TABS.filter(t => tabTopics(t).length).length} oblasti: od mreže i skaliranja sistema, preko niti, poruka, baza i Kubernetes-a, do AI-ja i algoritama. Svaka tema ima scenu koja radi, ključne tačke, primere koda i zamke.`,
+        `A route through ${ORDER.length} topics in ${TABS.filter(t => tabTopics(t).length).length} areas: from networking and scaling systems, through threads, messaging, databases and Kubernetes, to AI and algorithms. Every topic has a working scene, key points, code examples and pitfalls.`)}</p></header>
       ${roadmapHtml()}
-      <section class="sec legend-sec"><h2>Kako čitati scene</h2>
-        <p class="note">Isti oblici i boje znače isto u svakoj temi.</p>
-        <ul class="keys">
-          <li>${shape('box')}<span><b>Kocka</b> servis, proces, komponenta</span></li>
-          <li>${shape('cyl')}<span><b>Valjak</b> baza, keš, skladište</span></li>
-          <li>${shape('orb')}<span><b>Kugla</b> poruka ili zahtev; boja je identitet</span></li>
-          <li>${shape('tube')}<span><b>Cev</b> red, topic, stream, kanal</span></li>
-          <li>${shape('plate')}<span><b>Ploča</b> granica: proces, čvor, region</span></li>
-          <li>${shape('gate')}<span><b>Kapija i tokeni</b> lock, semafor, limit</span></li>
-          <li>${shape('lane')}<span><b>Traka</b> nit, particija, vremenska osa</span></li>
-          <li>${shape('state')}<span><b>Bljesak</b> uspeh, čekanje, greška</span></li>
+      <section class="sec legend-sec"><h2>${T('Kako čitati scene', 'How to read the scenes')}</h2>
+        <p class="note">${T('Isti oblici i boje znače isto u svakoj temi.', 'The same shapes and colors mean the same thing in every topic.')}</p>
+        <ul class="keys">${[
+          ['box', 'Kocka', 'servis, proces, komponenta', 'Cube', 'service, process, component'],
+          ['cyl', 'Valjak', 'baza, keš, skladište', 'Cylinder', 'database, cache, storage'],
+          ['orb', 'Kugla', 'poruka ili zahtev; boja je identitet', 'Orb', 'message or request; color is identity'],
+          ['tube', 'Cev', 'red, topic, stream, kanal', 'Tube', 'queue, topic, stream, channel'],
+          ['plate', 'Ploča', 'granica: proces, čvor, region', 'Plate', 'boundary: process, node, region'],
+          ['gate', 'Kapija i tokeni', 'lock, semafor, limit', 'Gate and tokens', 'lock, semaphore, limit'],
+          ['lane', 'Traka', 'nit, particija, vremenska osa', 'Lane', 'thread, partition, timeline'],
+          ['state', 'Bljesak', 'uspeh, čekanje, greška', 'Flash', 'success, waiting, error'],
+        ].map(([k, a, b, ea, eb]) => `<li>${shape(k)}<span><b>${T(a, ea)}</b> ${T(b, eb)}</span></li>`).join('')}
         </ul>
         ${vizCard(legendViz, 'legend')}
       </section>
@@ -447,8 +449,8 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     $('#view').innerHTML = `<section class="pad"><div class="wrap dom">
       <header class="t-head"><h1>${esc(tabName(tab))}</h1><p class="lede">${fmt(tab.blurb)}</p></header>
       ${tab.sections.length ? tab.sections.map(s => `<section class="sec" id="s-${s.id}"><h2>${esc(s.title)}</h2><ol class="dlist">${s.topics.map(id => row(byId.get(id))).join('')}</ol></section>`).join('')
-        : `<div class="soon-box">${icon(tab.icon)}<p>Još nema tema u ovoj oblasti.</p></div>`}
-      <nav class="pager" aria-label="Susedne oblasti">${nb(TABS[ti - 1], 'prev', 'Prethodna oblast')}${nb(TABS[ti + 1], 'next', 'Sledeća oblast')}</nav>
+        : `<div class="soon-box">${icon(tab.icon)}<p>${T('Još nema tema u ovoj oblasti.', 'No topics in this area yet.')}</p></div>`}
+      <nav class="pager" aria-label="${T('Susedne oblasti', 'Neighboring areas')}">${nb(TABS[ti - 1], 'prev', T('Prethodna oblast', 'Previous area'))}${nb(TABS[ti + 1], 'next', T('Sledeća oblast', 'Next area'))}</nav>
     </div></section>`;
     if (secId) { const el = document.getElementById('s-' + secId); if (el) requestAnimationFrame(() => el.scrollIntoView({ block: 'start' })); }
   }
@@ -461,13 +463,13 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     const tables = t.table ? [].concat(t.table) : [];
     return `<section class="part" id="p-${t.id}" aria-labelledby="h-${t.id}">
       <header class="part-h"><span class="tsym" aria-hidden="true">${esc(t.sym)}</span><h3 id="h-${t.id}">${esc(t.title)}</h3>
-        ${t.focus ? `<button type="button" class="btn foc" data-focus="${t.focus}">${icon('crosshair')}<span>Pokaži u simulaciji</span></button>` : ''}</header>
+        ${t.focus ? `<button type="button" class="btn foc" data-focus="${t.focus}">${icon('crosshair')}<span>${T('Pokaži u simulaciji', 'Show in simulation')}</span></button>` : ''}</header>
       <p class="part-d">${fmt(t.desc)}</p>
       ${t.points?.length ? `<ul class="pts">${t.points.map(x => `<li>${fmt(x)}</li>`).join('')}</ul>` : ''}
       ${tables.map(tb => tableHtml(tb, 'h4', 'ptab')).join('')}
       ${(t.code || []).map((c, i) => codeHtml(c, ci + i)).join('')}
-      ${t.sim ? `<p class="part-sim"><b>U simulaciji</b><span>${fmt(t.sim)}</span></p>` : ''}
-      ${t.rel?.length ? `<p class="part-rel"><span>Detaljnije:</span>${t.rel.filter(id => byId.has(id)).map(id => `<a href="#${id}">${esc(byId.get(id).title)}</a>`).join('')}</p>` : ''}
+      ${t.sim ? `<p class="part-sim"><b>${T('U simulaciji', 'In the simulation')}</b><span>${fmt(t.sim)}</span></p>` : ''}
+      ${t.rel?.length ? `<p class="part-rel"><span>${T('Detaljnije:', 'More detail:')}</span>${t.rel.filter(id => byId.has(id)).map(id => `<a href="#${id}">${esc(byId.get(id).title)}</a>`).join('')}</p>` : ''}
     </section>`;
   }
   // putanja i susedi za trenutni deo stranice
@@ -531,11 +533,11 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
       return partHtml(t, ci);
     }).join('')}</section>`).join('');
     $('#view').innerHTML = `<article class="pad sys"><div class="wrap">
-      <header class="t-head"><h1>${esc(tabName(SYS))}</h1><p class="lede">Pusti zahteve kroz sistem i gledaj kako se pune CPU i memorija. Kad sistem počne da pada, skaliraj ga vertikalno (veća instanca) ili horizontalno (više instanci), uključi rate limiter ili keš. Klik na komponentu u sceni vodi na njen opis ispod.</p></header>
+      <header class="t-head"><h1>${esc(tabName(SYS))}</h1><p class="lede">${T('Pusti zahteve kroz sistem i gledaj kako se pune CPU i memorija. Kad sistem počne da pada, skaliraj ga vertikalno (veća instanca) ili horizontalno (više instanci), uključi rate limiter ili keš. Klik na komponentu u sceni vodi na njen opis ispod.', 'Send requests through the system and watch CPU and memory fill up. When the system starts to fail, scale it vertically (a bigger instance) or horizontally (more instances), or turn on the rate limiter or cache. Clicking a component in the scene takes you to its description below.')}</p></header>
       ${vizCard(sysViz, SYS.id)}
-      <nav class="sys-toc" aria-label="Delovi stranice">${SYS.sections.map(s => `<a href="#${s.id}">${icon(s.icon)}<span>${esc(s.title)}</span></a>`).join('')}</nav>
+      <nav class="sys-toc" aria-label="${T('Delovi stranice', 'Page sections')}">${SYS.sections.map(s => `<a href="#${s.id}">${icon(s.icon)}<span>${esc(s.title)}</span></a>`).join('')}</nav>
       ${secs}
-      <nav class="pager" aria-label="Susedne oblasti">${nb(TABS[ti - 1], 'prev', 'Prethodna oblast')}${nb(TABS[ti + 1], 'next', 'Sledeća oblast')}</nav>
+      <nav class="pager" aria-label="${T('Susedne oblasti', 'Neighboring areas')}">${nb(TABS[ti - 1], 'prev', T('Prethodna oblast', 'Previous area'))}${nb(TABS[ti + 1], 'next', T('Sledeća oblast', 'Next area'))}</nav>
     </div></article>`;
     const v = $('#view');
     hookCode(v, code);
@@ -587,6 +589,21 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
   });
   $('#menu').addEventListener('click', () => document.body.classList.toggle('nav-open'));
 
+  // statični tekst iz index.html na engleskom
+  if (lang === 'en') {
+    for (const el of $$('[data-en]')) el.innerHTML = el.dataset.en;
+    for (const el of $$('[data-en-aria]')) el.setAttribute('aria-label', el.dataset.enAria);
+    for (const el of $$('[data-en-ph]')) el.placeholder = el.dataset.enPh;
+    for (const el of $$('[data-en-tip]')) el.dataset.tip = el.dataset.enTip;
+    document.title = 'Concept Handbook';
+  }
+  // jezik: EN prevodi na engleski, SR vraća na srpski (latinica); stranica se ponovo učitava na izabranom jeziku
+  const lb = $('#lang');
+  lb.textContent = lang === 'en' ? 'SR' : 'EN';
+  lb.setAttribute('aria-label', lang === 'en' ? 'Prebaci na srpski' : 'Switch to English');
+  lb.title = lb.getAttribute('aria-label');
+  lb.addEventListener('click', () => setLang(lang === 'en' ? 'sr' : 'en'));
+
   // tema: izbor se pamti; bez izbora važi tema okruženja ili sistema
   $('#tema').addEventListener('click', () => {
     const th = theme() === 'dark' ? 'light' : 'dark';
@@ -605,8 +622,8 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     ls.set(MKEY, on ? 'uzak' : 'sirok');
     const f = $('#fold');
     f.setAttribute('aria-expanded', String(!on));
-    f.setAttribute('aria-label', on ? 'Proširi meni' : 'Skupi meni');
-    if (on) f.dataset.tip = 'Proširi meni'; else delete f.dataset.tip;
+    f.setAttribute('aria-label', on ? T('Proširi meni', 'Expand menu') : T('Skupi meni', 'Collapse menu'));
+    if (on) f.dataset.tip = T('Proširi meni', 'Expand menu'); else delete f.dataset.tip;
     if (on && q.value) { q.value = ''; search(''); }
     hideFly(true);
   }

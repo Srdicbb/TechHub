@@ -1,0 +1,218 @@
+@0475aeadba
+Th
+@6b97db26d4
+Process and thread
+@480b5e4a3a
+A process is a program with its own address space. A thread is a flow of execution inside a process: it has its own stack and registers, and it shares the heap and static fields with all other threads of that process.
+@fe9323bbab
+Every thread has **its own stack**: local variables and the call chain. Objects on the **heap** and static fields are shared by all threads of the process.
+@5518f8fee6
+That is why a local variable is safe by itself, while a shared object needs synchronization as soon as some thread modifies it.
+@e5a414e3cd
+A new thread is not free: a kernel object, a reserved stack (usually about 1 MB) and the cost of switching. That is why the ThreadPool exists.
+@377eaa605e
+A foreground thread keeps the process alive until it finishes. A background thread (and every pool thread) is stopped when the process shuts down.
+@b01e996726
+An unhandled exception in any thread (`new Thread`, a timer callback) crashes the whole process. An exception in a `Task` is stored in the task and surfaces at `await`.
+@fa1a9f10db
+Process, thread, Task
+@3c9b101eef
+Process
+@483c50eda5
+Thread
+@fc8f9b54d3
+What it is
+@9a5f79a943
+An isolated program in memory
+@3fc358d67e
+A flow of execution in a process
+@9d1327f8ee
+A unit of work, a promise of a result
+@b8fe327b54
+Its own
+@8efa0acefe
+Its own stack, shares the process heap
+@23b66c23a0
+None of its own; a pool thread runs it
+@3ffffa5bb0
+Creation cost
+@ac23592936
+High
+@f540a79e94
+Medium (stack, kernel object)
+@ab3b86cfda
+Low (an object in a queue)
+@fec1ae358a
+Communication
+@22862c1636
+IPC, network, files
+@2cdd291ee8
+Shared memory with synchronization
+@c49b4a312f
+`await`, a result, continuations
+@56d84ffa22
+C# · Local is on the stack, shared is on the heap
+@c77ed46ba8
+an object on the heap: both threads see it
+@9967c75ffd
+on this thread's stack, nobody else sees it
+@adf273fd54
+a shared object: needs a lock
+@754160de09
+C# · A named background thread
+@32269a21ff
+visible in the debugger and in a dump
+@101fd715de
+does not keep the process alive on shutdown
+@b347e5065f
+C# · Data per thread and per async flow
+@7554d2d211
+every thread gets its own instance
+@86c2cfced3
+follows the async flow even after await, even when the thread changes
+@2ec7b63d6d
+`new Thread()` for every request: expensive and with no upper bound. For short work use the ThreadPool (`Task.Run`) or async.
+@068152f661
+A static field with mutable state is shared between all threads, and therefore all HTTP requests.
+@0ce2acb210
+`[ThreadStatic]` does not follow the async flow, because after `await` the code continues on another thread. That is what `AsyncLocal<T>` is for.
+@c3769eb4a9
+Process: one address space
+@387d4163b1
+Heap: shared by all threads
+@a273bfa2e4
+Thread {0}: running
+@8682e7bde1
+stack
+@87c6dbe1e9
+Frames on the stacks
+@d6b754a856
+Objects on the heap
+@b48e45fd98
+Simultaneous access to the cache
+@6ebdb6ecf1
+thread 1
+@81f069bf83
+thread 2
+@7a69e3a443
+thread 3
+@ca0e64e7af
+shared state
+@b748b5dc5b
+Thread {0}: {1}
+@554f2facac
+reads and modifies the cache
+@6829f456ce
+Two threads modify **the same object** on the heap at the same time. Local variables on the stack are safe by themselves, but a shared object needs a `lock` or a concurrent collection.
+@bc31b11755
+waiting for I/O (blocked)
+@d603307034
+Every thread has **its own stack**: method calls stack on top of each other and disappear when the method returns. Objects go onto the **shared heap**, and a line shows who points to them.
+@e1a2f04695
+Race condition
+@ed5af60f34
+When two threads **read, modify, write** the same variable at the same time, one overwrites the other's result. `count++` is not one operation but three.
+@450621689c
+`count++` is a read, an addition and a write. Between those three steps another thread can write its own value.
+@752479fb8a
+The outcome depends on the thread schedule, so the bug shows up rarely and unpredictably, usually only under load.
+@9324009799
+`lock` makes the whole block indivisible for all threads that use the same lock object.
+@7c8837f4d1
+`Interlocked.Increment` does the same for a single variable, atomically in the processor and without locking.
+@ff980000ea
+The best protection is state that is not shared: immutable objects, messages, local copies merged at the end.
+@b755f366f7
+C# · The problem
+@5ed6caa5bd
+read, +1, write: not atomic
+@36f8df9e65
+e.g. 63,412 instead of 100,000
+@69e5e80134
+C# · Three correct solutions
+@c82d190a77
+1) lock: a critical section for several statements
+@c4f2cb8ab1
+2) Interlocked: atomic for a single variable
+@75d3d610ac
+3) no shared state: every thread computes its own, merged at the end
+@05aa495107
+C# · Concurrent collections
+@c6efde5d78
+safe from several threads
+@b740230bd5
+`Dictionary<,>` and `List<>` are not safe for simultaneous writes. They break rarely and strangely: a lost element, an exception, an infinite loop.
+@97eeab6757
+`volatile` does not make `count++` atomic. It only guarantees that the latest value is seen.
+@1ae901c335
+Check-then-act (`if (!dict.ContainsKey(k)) dict.Add(k, v)`) is a race even when every method is safe on its own.
+@d6af7c89f2
+Expected
+@24c30c3c25
+Actual
+@19b865977d
+Lost
+@210e12d981
+Shared memory
+@f1f96bb2c3
+Thread {0}
+@fc4dfa4ccc
+register: –
+@97c5ecfd74
+waiting for the lock
+@8529bd4458
++1 atomically
+@cfe507fa75
+read
+@b583cef54b
+read {0}
+@01ff0575ec
+write {0}
+@21ccc43c6c
+**A lost write**: Thread {0} read {1}, and the other thread wrote its own value in the meantime. Writing {2} overwrote its result.
+@c4bb8cdf9f
+Both threads **read, +1, write** without protection. When the steps overlap, one write overwrites the other.
+@9fd36b41e5
+With a `lock`, a thread holds the token from the read to the write, and the other waits. No lost writes, but the threads take turns.
+@66872ffd67
+`Interlocked.Increment` is one indivisible step in the processor: there is no window between the read and the write.
+@adea7f1bf6
+Semaphores: SemaphoreSlim and Mutex
+@2cec9bfa15
+A semaphore is a gate with N tokens: a thread takes a token on entry and returns it on exit, so there are at most N threads inside. `SemaphoreSlim` is lightweight and can be awaited asynchronously, while `Semaphore` and `Mutex` also work across processes.
+@8daf0607e8
+A thread takes a token on entry (`Wait`) and returns it on exit (`Release`). When there are no tokens, it waits.
+@3cc84ffe84
+Typical uses: at most N simultaneous API calls, a limited number of connections, at most N jobs in progress.
+@09b6334f1a
+`WaitAsync` waits without blocking the thread, so `SemaphoreSlim(1, 1)` is the usual async "lock" (`await` is not allowed inside a `lock` block).
+@e3a041e3c4
+A semaphore has no owner: another thread can return the token. A `Mutex` has an owner and works across processes, e.g. for a single instance of an application.
+@f1d2329a3c
+`Release` always goes in `finally`. A token that is not returned is lost forever, and the gate slowly closes.
+@4d07accdac
+Which mechanism
+@21bea85695
+Threads inside
+@1dbfc3802f
+`await` inside
+@f736bf35e1
+No
+@ac995a11a0
+Yes, via `WaitAsync`
+@d6d7d38fb0
+Across processes
+@9b43c92992
+Yes (named)
+@773227d704
+The cheapest
+@15f3af2aed
+Cheap
+@fa6a32267b
+A system call, more expensive
+@e15fa2bcc7
+C# · At most 3 simultaneous HTTP calls
+@bdd435401c
+3 tokens
+@a1c8fa6a47
+the token is returned even when it fails

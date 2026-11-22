@@ -1,0 +1,318 @@
+@e7ec317f3d
+Sc
+@f5cf60120a
+Vertical and horizontal scaling
+@e3ab19f8eb
+**Vertical** scaling means a bigger machine: more cores and memory for the same instance. **Horizontal** means more copies of the same application behind a load balancer. Vertical is the simplest, but it has a ceiling and usually needs a restart. Horizontal has no practical ceiling and survives the loss of a machine, but the application must be stateless.
+@4dd1622b9e
+Vertical needs no code changes, but the biggest machine is the ceiling, the price grows faster than the power, and a single instance is still a single point of failure.
+@2cd6cfd458
+Horizontal: session, files and cache have to move out of the process (Redis, blob storage, the database), because the same user's next request may land on another instance.
+@d05a03467b
+An autoscaler adds instances based on a metric: desired = ceil(current × current metric / target). With 4 instances at 90% CPU and a 60% target it asks for 6.
+@a5b38da6ca
+A new instance needs time to start and warm up (JIT, cache, connections), so a spike that lasts seconds has to be absorbed by spare capacity or a rate limiter.
+@8299e12cca
+The database is the hardest to scale: the application is easy to copy, the data is not.
+@8038a697f4
+Vertical or horizontal
+@835bbc45f1
+Vertical
+@e4ac0a13c2
+Horizontal
+@215eeb37ef
+A bigger machine
+@09c90468c8
+More machines behind a load balancer
+@5d3f018d07
+Code changes
+@6b09e21387
+Not needed
+@58f72d9e38
+The application must be stateless
+@6c365eb27b
+Ceiling
+@db95700392
+The biggest available machine
+@82012c8a73
+Practically none
+@9ca003a6ab
+Machine failure
+@99d8961d6e
+Outage
+@fce232bd97
+The other instances take over
+@821cf1f372
+Resizing
+@e70582d588
+Restart, short outage
+@63d3391a92
+No downtime
+@5d6e368e06
+C# · State outside the process, so any instance can handle any request
+@7935eb2fde
+the session lives in Redis
+@7ebe2ebb0c
+Cookies are encrypted with Data Protection keys: all instances must have the same ones
+@c00400f620
+Raise the load until instances start to fail, then try both ways: a bigger instance (vertical) and the **+ Instance** button (horizontal). With a single instance, vertical scaling causes an outage because the instance restarts.
+@e58a8e2d7d
+Ce
+@859847230f
+Capacity estimation
+@8b1aff51dd
+Before drawing an architecture it pays to estimate the load roughly: how many requests per second, how much data and how many instances. The goal is not an exact number but the order of magnitude, to see whether the problem is 100 or 100,000 requests per second.
+@4e59b7cd6e
+Average: 1 million active users × 20 requests a day = 20 million a day, about 230 req/s. A day has 86,400 s; for a rough estimate, 10⁵.
+@f245b2619c
+The peak is usually 3–10× the average (morning, a sale, a push notification), and the system is sized for the peak, not the average.
+@dc902f90ca
+Number of instances = peak / capacity of one instance / target utilization. 2,300 req/s / 1,000 req/s / 0.6 ≈ 4 instances, plus one spare for failures (N+1).
+@4f6de8609c
+**Little's law**: requests in flight = arrival rate × processing time. 2,000 req/s × 50 ms = 100 concurrent requests, which determines the number of threads and connections.
+@095367e112
+Above ~70% utilization latency grows non-linearly: the waiting queue fills up even before the CPU reaches 100%.
+@71bd449d25
+Numbers for a rough estimate
+@8e1da8fad4
+Quantity
+@cb401e4a69
+Seconds in a day
+@aee78dd6e5
+1 million requests a day
+@3320db38cb
+≈ 12 req/s on average
+@2a4a3c5cd9
+Peak compared to average
+@5977891bc1
+Target CPU utilization
+@83ef1e6d7d
+1 KB × 1 million records
+@2f8cb641e0
+Spare for failures
+@4ea24f9245
+N+1 instances, at least two zones
+@4c7fcd9beb
+An order of magnitude, not an exact value. The capacity of one instance is measured with a load test, not guessed.
+@509e9caed0
+The clients show how many requests arrive, and the load balancer how many instances are healthy. Compare the load with the capacity: an M instance handles about 5,000 req/s.
+@fd65a5898a
+Monolith or microservices
+@d676b90dcd
+A **monolith** is one application that is built, deployed and scaled as a whole. It is simple to develop, test and debug: calls between modules are ordinary method calls, and a transaction across the whole database comes for free. **Microservices** split the system into services that are deployed and scaled independently, each with its own database: a team changes its service without waiting for the others, a loaded part scales on its own, and the failure of one service does not bring down the whole system. The price is the network between services (latency, partial failures), data without a shared transaction, and much more operational work, because every service needs its own deployment, monitoring and tracing. A good default start is a **modular monolith** with clear module boundaries, which is split later where it really hurts.
+@df25db558d
+Switch the architecture to **Microservices** and raise the load to 15,000 req/s: only Catalog is overloaded. When it fails, Orders and Payments keep working, and the autoscaler adds instances mostly to Catalog. A monolith under the same load fails as a whole.
+@ac3a77c4fb
+Firewall and WAF
+@1f00ae0ce9
+The first filter at the entrance. A **network firewall** (L3/L4) lets through only allowed addresses, ports and protocols. A **WAF** (L7) reads HTTP requests and blocks known attacks: SQL injection, XSS, malicious bots. In front of everything is **DDoS protection** at the network edge, which absorbs huge traffic before it reaches your servers.
+@8d23ac92cf
+Least privilege: from outside only port 443 at the edge is open, and the database and internal services have no public address (private network, NSG, security groups).
+@d4f8789fbd
+A WAF works by rules (e.g. the OWASP Core Rule Set) and can also block valid requests, so it is introduced in detection mode first and only then in blocking mode.
+@5e6375ce18
+TLS is usually terminated at the edge (Front Door, Application Gateway, ingress), and inside it is re-encrypted when needed (mTLS between services).
+@d876dd39ee
+In Azure: NSG and Azure Firewall for the network, a WAF on Front Door or Application Gateway, DDoS Protection for network attacks.
+@abc938ae7c
+A firewall does not replace security in the application: authentication, authorization and input validation are still required.
+@ba6cd0f4f3
+Purple orbs are malicious requests. The firewall stops them before they consume any of the application's capacity.
+@8e45de504d
+A single entry point for clients in front of several services. The gateway routes a request by path or host (`/katalog` goes to the Catalog service) and takes over shared work: authentication, rate limiting, TLS, response caching, versioning and combining several calls into one.
+@02aac66af0
+The client does not know where the services live or how many there are: the gateway hides the internal topology and can change it without changes on the clients.
+@02fdc2d079
+**BFF** (backend for frontend): a separate gateway for the web and for the mobile app, each with responses tailored to its client.
+@b35ed64330
+The gateway must not become a new monolith: business logic stays in the services, and the gateway does only general things.
+@6a07e9a931
+Every request passes through it, so it has to be fast and redundant.
+@2e95f81f3d
+.NET: YARP as a reverse proxy in code; Azure API Management, Kong or NGINX as ready-made solutions.
+@85fad589b4
+appsettings.json · YARP: routing, load balancing and health checks
+@91ed0d751c
+In **Microservices** mode the box at the entrance becomes an API gateway: it splits requests between Catalog, Orders and Payments.
+@be6639270b
+Distributes requests across several instances and tracks which ones are healthy. When an instance fails or does not pass the **health check**, it stops receiving traffic, so the user does not see the failure. Without a load balancer there is no horizontal scaling.
+@2fee485c7a
+**L4** balances TCP connections by address and port: it is fast, but it does not see HTTP. **L7** reads HTTP, so it can route by path, header or cookie and terminate TLS.
+@9b9e86ead4
+**Sticky sessions** tie a user to an instance. They work, but they make scaling harder and lose the session when the instance fails: it is better for state to live outside the instance.
+@339933bf7b
+A health check should verify that the instance can really work (readiness: database, cache, dependencies), not just that the process exists.
+@7dcff69f8c
+A new instance receives traffic only after it passes the readiness check, and an instance that is shutting down first finishes the requests it already has (draining).
+@c9d9c8d4b9
+The load balancer itself must be redundant. In the cloud it is a managed service (Azure Load Balancer, Application Gateway), and in Kubernetes a Service and an Ingress.
+@ebd453dae1
+How it chooses
+@0a6344fe29
+In turn, one by one
+@3954491432
+Similar instances and similar requests
+@7c728d1a8e
+The instance with the fewest open requests
+@7fdefa18e8
+Requests of different duration
+@dbe43b73df
+In proportion to the instance weight
+@c47b244bd6
+Machines of different power
+@0e2b0d8b7c
+The better of two random ones
+@e2dc05ab70
+Many instances, no central counter
+@1403bb8c4b
+Hash by key
+@b758c24b05
+The same key always goes to the same instance
+@1473ce8d58
+Local cache, session, WebSocket
+@c563eb3461
+Lines from the load balancer lead only to healthy instances. When an instance fails, its line turns red and traffic goes to the others.
+@aea4161c70
+Rl
+@6b1c6227ce
+Rate limiting and load shedding
+@9e2a83416e
+A rate limiter caps how many requests a client or the whole system may send per unit of time. The excess is rejected immediately with `429 Too Many Requests` instead of entering the system and bringing it down. It is better to reject some requests than to fail for everyone.
+@5a93e8d173
+Algorithms: **token bucket** (allows short bursts), fixed window, sliding window and concurrency limit. In detail in the topic [[rate-limiting]].
+@8a5655eedf
+A limit per user or API key protects against one noisy client; a global limit protects the system from total overload.
+@5cd3eb612a
+With several gateway instances the counter has to be shared (Redis), or the limit is divided by the number of instances.
+@0dadd2714d
+**Load shedding** is a related idea: a service itself drops work when it is full (the queue is too long, latency too high) instead of accepting until it fails.
+@40476b5549
+The client should respect `Retry-After` and retry with backoff and jitter, otherwise the retries create a new wave.
+@cd35d9c927
+C# · Token bucket per user, for the whole API
+@0b82ca5201
+largest burst
+@da58708253
+50 requests per second on average
+@a31649e7d4
+the excess immediately gets 429
+@0bb4e8265b
+Turn on the **Rate limiter** and send 1M requests. Here the limiter follows the capacity of the healthy instances (an adaptive limit): it lets through as much as they can process, and the excess are yellow orbs with 429. The system stays alive.
+@138eb50f2f
+Ca
+@c972840d1a
+Caching and CDN
+@32296b7ddc
+A cache keeps the result of expensive work closer to whoever asks for it. Every hit is one database query less: with 90% hits the database sees ten times fewer queries. Caches exist at several levels, from the browser and CDN to process memory and Redis.
+@54db555a82
+A **CDN** keeps static files and public responses on servers close to the users: lower latency and less traffic to your system.
+@9935964c5e
+A **local cache** (`IMemoryCache`) is the fastest, but every instance has its own copy; a **distributed** one (Redis) is shared by all instances and survives restarts.
+@36b026facf
+**Cache-aside**: read from the cache, on a miss read from the database and write into the cache. The most common pattern; details in [[cache-aside]].
+@151384b5c3
+The hardest part is invalidation: a TTL limits how long data may be stale, and deleting the key on write shortens that window.
+@dd1ad079fa
+A cold cache after a restart or after a popular key expires sends everything to the database at once: that is a [[stampede]].
+@f00065d9ca
+Cache levels
+@ea5d8a68b1
+Approximate latency
+@9c58908692
+0 ms, no request
+@33961e8a66
+5–30 ms, close to the user
+@0cc930b19d
+response cache
+@b52b3b2fd9
+Process memory
+@2ed7a19330
+under 0.1 ms
+@327748ce0d
+Distributed
+@14d25abb85
+0.5–1 ms
+@a55765f198
+C# · HybridCache (.NET 9): process memory + Redis, with stampede protection
+@872387db40
+only one call per key
+@be1ec7fd9b
+Turn on the autoscaler, raise the load to 40,000 req/s and wait for the new instances, then turn off **Cache**: every request goes to the database and the bottleneck moves from the application to the database. When you turn it back on, the cache fills gradually, so the database still sees full pressure for a few seconds.
+@9cc4a277dc
+Scaling the database
+@1443f6e847
+The database is usually the first bottleneck, because the application is easy to copy and the data is not. The order is roughly: good indexes and queries, caching, a bigger machine, read replicas, and only then splitting the data across several databases (sharding).
+@d123f4bcfa
+**Indexes and queries** are the cheapest optimization: one query without an index can eat the CPU of the whole database. Watch out for [[n-plus-one]] too.
+@f1afdf4f58
+**Connection pool**: opening a connection is expensive, and the database accepts a limited number. With 20 instances × 100 connections it is easy to exceed the database limit.
+@f019252e83
+**Read replicas** take over reads. Replication is usually asynchronous, so a replica lags (replication lag) and the user may not see their own write right away.
+@620c155aef
+**Sharding** splits data by a key (e.g. tenant or user) across several databases. It scales writes too, but queries and transactions across several shards become hard, and a bad key creates a hot shard.
+@8f73358050
+**CQRS** separates the write model from the read model, which can live in another database or in a search engine.
+@5bc24930b7
+SQL for relations, transactions and ad hoc queries; NoSQL (Cosmos DB, MongoDB) for key-based access, huge volume and global distribution. See also [[cap]].
+@5bba15a542
+The bar above the database is its load. In the monolith there is one database for everything, and in microservices every service has its own, so an overloaded Catalog database does not slow down Payments.
+@8f2fdb531f
+Queues and asynchronous processing
+@b4902b2295
+Not everything has to finish while the user waits. Slow or risky work (sending an email, processing a payment, a report) goes into a queue, and the API returns `202 Accepted` right away. The queue absorbs bursts: the producer writes fast and the consumers process at their own pace.
+@88552dc995
+A queue decouples services in time: if a consumer fails, messages wait in the queue instead of getting lost.
+@2fc53d1796
+Consumers scale by queue length (KEDA), independently of the API.
+@a092d9aafa
+Delivery is usually at-least-once, so processing must be idempotent: the same message twice must not charge twice.
+@ff7cbf0f6e
+Writing to the database and sending the message are tied together by the [[outbox]]; otherwise one of the two may be missing.
+@f14fe0311a
+A queue when one consumer does the work, a topic when several services need the same event, Kafka when you need a log that can be read again.
+@8335555008
+C# · Accept now, process later
+@007d51647b
+the client checks the status later
+@08aea40fe4
+Ft
+@1eb3878c95
+Fault tolerance
+@837201a319
+In a distributed system something is always broken: an instance, the network, a dependency. The goal is for the failure of one part to stay local instead of spreading to the whole system as a cascading failure.
+@efdd862a98
+**No single point of failure**: at least two instances of everything, in different availability zones (N+1).
+@d399efa831
+A **timeout** on every call to a dependency; without it a slow service ties up threads and connections until everything stops.
+@b358393a40
+**Retry** with exponential backoff and jitter, only for transient errors and idempotent operations.
+@a34f7ff708
+A **circuit breaker** stops calling a failing dependency and gives it time to recover; details in [[circuit-breaker]].
+@31447be770
+**Bulkhead**: separate thread and connection pools per dependency, so a slow dependency does not eat the resources of all the others.
+@1b079fd1bd
+**Graceful degradation**: when recommendations do not work, show the page without them instead of an error.
+@2dcc4dcc60
+C# · Timeout, retry and circuit breaker for an HTTP client (Microsoft.Extensions.Http.Resilience)
+@0f4f7afaa6
+total timeout, retry with backoff, circuit breaker
+@3714c0462f
+Without a rate limiter, when one instance crashes (OOM), its traffic moves to the others, which then crash even faster. That is a cascading failure; after a restart the overloaded instances crash again.
+@539e1cb602
+Monitoring, SLOs and capacity
+@b202518074
+You cannot scale what you do not measure. Metrics show that something is wrong, logs what happened, and traces where the time was spent across several services.
+@d80cb455be
+**RED** for services: rate (requests per second), errors, duration. **USE** for resources: utilization, saturation, errors (CPU, memory, connections, queue length).
+@9ffb84c49a
+Latency is tracked through percentiles (p95, p99), not the average: the average hides slow users. See [[percentiles-slo]].
+@1ce3fee6ad
+An **SLO** (e.g. 99.9% of requests faster than 300 ms) and the error budget determine when development slows down and work goes into stability.
+@4b6251d4b8
+Alerts on symptoms the user feels (errors, latency), not on every CPU spike.
+@ebc65b75ee
+Capacity is planned from the same metrics: the peak trend, utilization at the peak, and how many instances the next growth needs.
+@82cb24e1b6
+The chart below the scene is a small dashboard: sent and successful requests, then the average instance CPU and RAM for the last 60 seconds. The red area is lost requests.
+@03f0e6ed46
+`IMemoryCache`, L1 in `HybridCache`

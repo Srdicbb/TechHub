@@ -1,0 +1,99 @@
+@4f3bf4fe5c
+Tr
+@9a4bd97b74
+Distributed tracing
+@f6ba67703c
+A trace follows one request through all services. Every step is a **span** with a start, a duration and a parent, and together they form a waterfall that shows where the time was spent.
+@6a40e92816
+The trace ID is carried in the `traceparent` header (W3C Trace Context) through HTTP and messages, so all services write into the same trace.
+@b99679fe97
+A span has a parent: nested spans show who called whom, and parallel calls appear as overlapping.
+@0ea7f8576d
+The **critical path** is the chain of spans that determines the total duration. Speeding up anything outside it does not help.
+@92038a0a07
+In .NET a span is an `Activity`. OpenTelemetry exports it to Application Insights, Jaeger, Tempo or any OTLP backend.
+@50cff67179
+Sampling keeps a share of the traces: enough for statistics, but errors are worth keeping in full.
+@d83724a1ef
+C# · OpenTelemetry in ASP.NET Core
+@0c1b161e2b
+our spans
+@1c80d0ff17
+C# · Your own span
+@06d40b1512
+The traceparent header
+@c38d16e5b7
+KQL · Application Insights: dependencies that fail
+@e4dc6ffc80
+A hand-made HTTP call or message without the header: the trace breaks at the service boundary.
+@f043c602a6
+High-cardinality values (a user id, a URL with an ID) as metric dimensions explode the number of series. They can go into spans, not into metrics.
+@572cd63f72
+SQL query
+@717353f795
+Normal
+@c0f699d541
+Slow
+@d74bba1380
+Request duration
+@501260cd28
+SQL database
+@0fe775306f
+The request enters the gateway. Every service opens a span and passes `traceparent` on.
+@cb6b4ffac4
+**The critical path** (magenta): Gateway, Orders, Inventory, SQL. A slow SQL query stretches the whole request to {0} ms; Payment runs in parallel and is not the problem.
+@3b58bf6136
+**The critical path** (magenta) is the chain that determines the duration. Payment runs in parallel with Inventory, so speeding it up would not shorten the request.
+@fa22cd0363
+Pc
+@4592c1c483
+Percentiles and SLOs
+@6c48a64364
+The average hides the tail: if 1% of requests are slow, the average barely moves, yet every hundredth user waits. **Percentiles** show what users really see, and the **SLO** says how many bad requests are allowed.
+@2ff3f3e407
+p99 = 300 ms means: 99% of requests are faster than 300 ms, and 1% are slower.
+@8b61faf210
+The tail grows with fan-out: a page that waits for 10 services sees the p99 of one of them far more often than in 1% of cases.
+@bd78dedd4d
+An SLI is a measurement (the share of requests faster than 300 ms), an SLO is a target (99.5% over 30 days), an SLA is a contract with consequences.
+@74958f0f3f
+The error budget is 1 − SLO. With an SLO of 99.9% per month, about 43 minutes of bad operation are allowed.
+@ca589876f8
+Percentiles cannot be averaged across instances: add up the histograms, and only then compute the percentile.
+@3ee1bb0170
+SLOs and the error budget
+@b86f7df91c
+Allowed over 30 days
+@9170d30601
+Per day
+@3ec4494d5d
+KQL · Application Insights
+@15322b4d4d
+PromQL · p99 from a histogram
+@d1df41a038
+C# · Your own histogram
+@4e07921611
+An alert on the average: the tail can double while the average stays the same.
+@96135b99a1
+Measuring only on the server: the user also sees the network, DNS and rendering. Add measurement in the browser (RUM).
+@a2cea3a8b8
+Slow requests
+@55d5be17bc
+Average
+@39b85e611a
+Under 300 ms
+@d78442e11d
+Duration histogram of the last 320 requests
+@b372c73b0a
+SLO: 99% under 300 ms
+@941d5e10b6
+**{0}% of requests are slow.** The average barely moves, while p99 is deep in the tail. That is why alerts go on percentiles, not the average.
+@9e6a3eb49b
+Without slow requests p99 is close to p95 and far below the SLO threshold. Increase the share of slow requests and watch p99.
+@4db3a11995
+
+traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+             │  │                                │                └ sampled
+             │  │                                └ parent span-id
+             │  └ trace-id: the same across all services
+             └ version

@@ -1,0 +1,224 @@
+@610575a71c
+Dictionary with one lock
+@55b6b905c6
+ConcurrentDictionary: a lock per part of the table
+@7e69001db4
+Waits for the lock
+@1be44bcc5b
+write in progress
+@b23cdecf33
+lost write
+@c1ea068015
+write, lock held
+@e142018e83
+thread waiting for the lock
+@f62681f9e1
+T{0} and another thread wrote into **bucket {1} at the same time**: one write was overwritten and vanished. In a real `Dictionary` a simultaneous write can corrupt the whole structure too.
+@bd2118dcc4
+A `Dictionary` without protection: four threads write at the same time. When two hit the same bucket at the same moment, one write is **lost** (red).
+@ad250f4272
+One `lock` around the whole table: nothing is lost, but the threads **wait for each other** (yellow) even when they write to different buckets. Compare the number of writes with ConcurrentDictionary.
+@3ef94526a6
+`ConcurrentDictionary` has several locks and each guards its own part of the buckets (same color). Threads that write to different parts work at the same time and wait only when they hit the same part. Reads lock nothing.
+@0bf3a13a89
+lock and Monitor
+@2e52f0629a
+`lock` lets one thread into the critical section, and the others wait until it leaves. Underneath are `Monitor.Enter` and `Monitor.Exit` in a `try/finally`, and since .NET 9 there is also a dedicated type, `System.Threading.Lock`.
+@05a08c8f6d
+The compiler turns `lock (obj) { ... }` into `Monitor.Enter` and `Monitor.Exit` in a `finally`, so the lock is released even when an exception is thrown.
+@384b526f50
+Monitor is **reentrant**: a thread that already holds the lock can enter again, but it must exit the same number of times.
+@6fb45e65d1
+A critical section should be short: no I/O, no `await` (the compiler does not even allow it) and no calls to unknown code.
+@7cabcf60e9
+`ReaderWriterLockSlim` lets several readers in together and a writer alone. It pays off only when reads are far more frequent and take a while.
+@5d09771778
+Under heavy contention threads pile up on the same lock (a **lock convoy**) and the system behaves as if it had one thread.
+@1bb7f18a4f
+Which lock when
+@51c132e785
+Mechanism
+@b8ea2ca215
+Who gets in
+@8c3655b0b3
+one thread
+@b86f9577fd
+the most common choice, reentrant
+@e1ee646657
+a dedicated type for `lock`, faster than `object`
+@46aaf13465
+several readers or one writer
+@edf7518045
+when reads dominate
+@e2bc9e7518
+one thread, spins instead of sleeping
+@0ed3ab72f4
+only for very short sections
+@2b82fa9e18
+one thread or async flow
+@e0a9353272
+an async "lock" via `WaitAsync`
+@464249a99c
+C# · What the compiler makes of a lock
+@9ed8e07b9c
+roughly the same as:
+@469877fb70
+C# · .NET 9: the dedicated Lock type
+@c9d1c8ceab
+instead of new object()
+@16a78b76fd
+the compiler uses _sync.EnterScope()
+@bf93b2b439
+C# · ReaderWriterLockSlim: several readers, one writer
+@e9435ab1e5
+`lock (this)`, `lock (typeof(X))` or a lock on a string: code outside the class can lock the same object.
+@3b565271b6
+`Monitor.Enter` on a value type boxes a new copy every time, so it protects nothing. The `lock` statement does not even allow it.
+@501eeee601
+Slow work under a lock (I/O, logging, a service call) keeps all the other threads waiting.
+@f7dccb4b96
+Reads
+@1f11e8a91c
+Waiting at the entrance
+@9d4b842559
+Several readers or one writer
+@042470c3e6
+Critical section: one thread
+@dc0ba98413
+reader
+@956366b02e
+writer
+@9d506c8e84
+writing
+@921c7f46db
+reading
+@f52c8615c3
+price list (changing)
+@786427a4dc
+The writer is inside **alone**: it waits for all readers to leave, and while it waits, new readers queue behind it so that the writer does not wait forever.
+@1f5f7a3158
+price list
+@72545a2901
+**Readers** (blue) enter together and do not disturb each other. The **writer** (magenta) must be alone in the section.
+@e11caf0f53
+`lock` lets **one** thread into the critical section, and the others wait at the entrance. Every thread changes `_balance` alone, so there are no lost updates, but under contention the queue grows.
+@9e07a2e363
+Atomic operations and Interlocked
+@c8bb1ab7da
+An atomic operation runs completely or not at all, with no interruption between steps. `Interlocked` uses special processor instructions for addition, exchange and compare-and-swap, so it works without a lock.
+@2a0263b09d
+`Interlocked.Increment(ref x)` reads, adds and writes as one indivisible processor operation.
+@89fb35c98c
+**Compare-and-swap** (`Interlocked.CompareExchange`): write the new value only if the current one equals the expected one. If it does not, someone got there first, so read again and retry.
+@d2df43f0f6
+A CAS loop is the basis of lock-free structures such as `ConcurrentQueue` and `ConcurrentStack`. Under heavy contention the number of retries grows.
+@c60a866b52
+Reading and writing an `int` or a reference are atomic by themselves; a `long` only in a 64-bit process. `volatile` and `Volatile.Read/Write` guarantee visibility and ordering, but not atomicity of compound operations.
+@7a21532e95
+Only a single field is atomic. Two variables that must change together need a `lock`.
+@a1bbb2281e
+Interlocked methods
+@3046265d51
+Method
+@ff944881bb
+What it does
+@96707b15b1
+±1 atomically
+@f05d05c399
+a request counter
+@11190dd62d
+adds a value
+@97dba7f425
+total bytes sent
+@b990d26bbe
+writes and returns the old value
+@6d9ea068e5
+take the buffer and leave a new one
+@ad197ae4a0
+writes only if the value is the expected one
+@231733b8b0
+a CAS loop, one-time initialization
+@c04332faa2
+reads a `long` atomically
+@5503913e15
+even in a 32-bit process
+@7ed19312e8
+bitwise operations
+@7e42ebff15
+flags
+@e7bbff4dba
+C# · A counter without a lock
+@88295474c3
+C# · A CAS loop: an atomic maximum
+@7ceb3a4ecc
+success: nobody got there first
+@40e898f07f
+someone did: try again with the new value
+@b0d36f3373
+C# · One-time initialization without a lock
+@ecbba8f65d
+may be called twice
+@f473c5bd9d
+the first write wins
+@db394f0d3b
+simpler: Lazy<Config> or LazyInitializer.EnsureInitialized
+@9d6d0e1993
+`volatile int count; count++` still loses writes: `volatile` does not make read-modify-write atomic.
+@35a7233a74
+Mixing `Interlocked` and a plain write on the same field breaks the guarantee.
+@1c42110b7b
+An expensive computation inside a CAS loop burns CPU on retries under contention. Then a `lock` is simpler and often faster.
+@622d6fc681
+Operation
+@33399646b2
+CompareExchange loop
+@f400a8b9a8
+Shared memory and threads
+@8f5cfa294c
+waiting
+@46cf56a1fd
+Successful writes
+@a8498c5f79
+Failed CAS
+@fec5de6392
+reads x
+@0d6825eb0d
+read {0}, computing
+@562d0d2fc7
+failure: x is already {0}
+@d0393a8b3e
+does the rest of its work
+@9eed3fd447
+With more threads there are even more failures.
+@cb5e5a6c7c
+With fewer threads there are fewer failures.
+@3d8fdb2b66
+Of {0} CAS attempts, {1} failed ({2} %). Nothing is lost, but every failure means another read. {3}
+@603dee8034
+Every thread reads x, computes x + 1 and does a **CompareExchange**: the write succeeds only if x is still what it read. If another thread got there first, CAS writes nothing (red) and the thread reads again.
+@304504bb17
+`Interlocked.Increment` is one indivisible processor instruction: there is no read in advance, so there are no failed attempts. The total is always correct.
+@14c5ed59bf
+Lb
+@52e22fa73c
+.NET libraries: what to use when
+@1af5d6ef1e
+A map of the types .NET offers for concurrent and parallel code, grouped by purpose. Click a type in the scene for a short description and a recommendation of when to use it.
+@652e7bf3b6
+**Execution**: `Task`, `ThreadPool`, `Parallel`, PLINQ and, rarely, `Thread`.
+@b7570ea08c
+**Synchronization**: `lock` and `Lock`, `SemaphoreSlim`, `ReaderWriterLockSlim`, `Mutex` and signals such as `ManualResetEventSlim` or `Barrier`.
+@ac711dddc6
+**Atomic and local**: `Interlocked`, `Volatile`, `ThreadLocal<T>`, `AsyncLocal<T>`, `Lazy<T>`.
+@43722ef293
+**Collections**: `System.Collections.Concurrent` for shared writes, and `Immutable` and `Frozen` for shared reads.
+@9ff32d7ce1
+**Streams and control**: `Channel<T>`, TPL Dataflow, `IAsyncEnumerable<T>`, Rx.NET, `CancellationToken`, `PeriodicTimer`.
+@9e1262ebbe
+I need... use
+@bc443d93c7
+I need
+@9cb32b7106
+Use
+@249084398c
+to wait for the database or HTTP without blocking

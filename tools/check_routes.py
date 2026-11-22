@@ -1,7 +1,8 @@
 """Provera svih stranica u pregledaču bez prozora: greške u konzoli, širenje stranice u stranu i labele van scene.
 Zahteva: pip install playwright && python -m playwright install chromium
-Upotreba: python tools/check_routes.py <izlazni-folder> <širina> <visina> [ruta ...]   (bez ruta = sve rute sa početne)"""
-import sys, json, asyncio, pathlib
+Upotreba: python tools/check_routes.py <izlazni-folder> <širina> <visina> [ruta ...]   (bez ruta = sve rute sa početne)
+Sa PRIRUCNIK_LANG=en proverava engleski prevod i javlja srpska slova koja su ostala u tekstu (van primera koda)."""
+import os, sys, json, asyncio, pathlib
 from playwright.async_api import async_playwright
 
 HTML = (pathlib.Path(__file__).resolve().parent.parent / 'dist' / 'index.html').as_uri()
@@ -18,10 +19,12 @@ async def main():
         pg.on('pageerror', lambda e: errs.append(f'[pageerror] {e}'))
         await pg.route('**/fonts.googleapis.com/**', lambda r: r.abort())
         await pg.route('**/fonts.gstatic.com/**', lambda r: r.abort())
+        EN = os.environ.get('PRIRUCNIK_LANG') == 'en'
+        if EN: await pg.add_init_script("localStorage.setItem('prirucnik.jezik', 'en')")
         await pg.goto(HTML)
         await pg.wait_for_timeout(800)
         if not routes:
-            routes = [''] + await pg.evaluate("[...document.querySelectorAll('.rm-node, .rm-t')].map(a => a.getAttribute('href').slice(1))")
+            routes = [''] + await pg.evaluate("[...document.querySelectorAll('.orb-core, .orb-t:not(.orb-all)')].map(a => a.getAttribute('href').slice(1))")
         report = {}
         for r in routes:
             errs.clear()
@@ -36,7 +39,12 @@ async def main():
               const labs = [...document.querySelectorAll('.stage-labels .lbl')].filter(e => e.style.display !== 'none');
               const r = v ? v.getBoundingClientRect() : null; let off = 0;
               for (const l of labs) { const b = l.getBoundingClientRect(); if (r && (b.left < r.left - 1 || b.right > r.right + 1 || b.top < r.top - 1 || b.bottom > r.bottom + 1)) off++; }
-              return { labels: labs.length, offstage: off, sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, say: document.querySelector('.viz-say')?.textContent?.slice(0, 80) }; }""")
+              const view = document.querySelector('#view').cloneNode(true); view.querySelectorAll('pre, script').forEach(e => e.remove());
+              const txt = view.textContent + ' ' + labs.map(l => l.textContent).join(' ') + ' ' + (document.querySelector('.viz-say')?.textContent || '');
+              // srpska slova, ili česte srpske reči bez njih (je, ili, kada...) koje u engleskom tekstu ne bi trebalo da postoje
+              const sr = [...new Set([...(txt.match(/[^\\s]*[čćšžđČĆŠŽĐ][^\\s]*/g) || []), ...(txt.match(/\\b(je|su|se|na|za|da|od|ili|kao|ako|koji|koja|koje|kada|kad|nije|samo|sve|ima|nema|bez|sa|ali|jos|tek|niti|jer|dok|posle|zbog|kroz|iz|uvek|tema|teme|primer|oblast)\\b/g) || [])])].slice(0, 6);
+              return { labels: labs.length, offstage: off, sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth, say: document.querySelector('.viz-say')?.textContent?.slice(0, 80), sr }; }""")
+            if not EN: info.pop('sr')   # srpska slova su greška samo u engleskom prevodu
             report[name] = {'errors': list(errs), **info}
         print(json.dumps(report, ensure_ascii=False, indent=1))
         await b.close()

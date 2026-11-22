@@ -1,0 +1,226 @@
+@e5da408afe
+ days
+@8ef099d8dc
+ yrs
+@fd1caddc78
+Big-O: how the cost grows
+@9131b56675
+Big-O says how the number of operations grows as the input n grows. It does not measure seconds but the shape of the growth: whether a doubled input means twice, four times or a million times more work.
+@3a453adce7
+Constants and smaller terms are ignored: 3n² + 5n is O(n²).
+@c432e98c2c
+The order worth knowing by heart: O(1) < O(log n) < O(n) < O(n log n) < O(n²) < O(2ⁿ).
+@f9e993eeb5
+Usually the worst case is meant. "O(1) on average" (Dictionary) and "amortized O(1)" (List.Add) are different claims.
+@c43857f75d
+For small n the constants matter more than the class: that is why real sorting algorithms switch to insertion sort for small parts.
+@e8ae69e17a
+Memory has its own complexity: a HashSet speeds up a lookup to O(1), but it uses O(n) extra memory.
+@4ad6987c03
+How many operations for n
+@821a14e2e8
+Class
+@ede7a5d84d
+Typical example
+@b546c06418
+Dictionary by key, array by index
+@004f3724a4
+binary search, B-tree index
+@b6b488738c
+one pass through a list
+@319ad27a85
+good sorting
+@bdf398d525
+two nested loops
+@3df817190a
+all subsets, naive Fibonacci
+@b3784e6339
+unimaginable
+@e8b0b57c2f
+At 1 µs per operation: n log n for a million elements takes about 20 seconds, and n² about 11.6 days.
+@75f2509738
+Complexity of .NET collections
+@01770aeebb
+Collection
+@87b509d7fd
+Add
+@6d52fd4101
+Lookup
+@1dcdd01ca6
+Note
+@4c0fcdb1ce
+O(1) amortized
+@cd9ba304fb
+index O(1); Insert and Remove in the middle O(n)
+@03964bb426
+O(1) on average
+@f841e43289
+no guaranteed order
+@8cc26bbfb7
+a tree, keys sorted
+@bd88b84d72
+two arrays, less memory
+@76b13c14f9
+only the ends are fast
+@6cddce7f19
+O(1) for the smallest
+@7d1250e4b4
+a heap; Dequeue is O(log n)
+@002e190235
+O(1) with a known node
+@30f23e1b83
+makes poor use of the CPU cache
+@476ac0f770
+C# · O(n²) and O(n) for the same problem
+@9b2f8e7e7a
+O(n²): every pair
+@6f47cdeac2
+O(n): one pass, the HashSet checks in O(1)
+@eaef5877f9
+C# · A hidden O(n) inside a loop
+@d66effa575
+O(n·m): List.Contains walks the whole list for every order
+@8eb27f7361
+O(n + m): build the HashSet once
+@1e3dbbd822
+C# · string += in a loop is O(n²)
+@72acdfa027
+every += creates a new string and copies everything so far
+@c55384eddf
+StringBuilder appends to a buffer: O(n)
+@d7b01f0a5f
+A hidden O(n) inside a loop: `List.Contains`, `IndexOf`, `ElementAt` or `Count()` on an `IEnumerable` inside a loop give O(n²).
+@85b1b5dc53
+N+1 queries is the same problem at the database level: [[n-plus-one]].
+@21d88d7c38
+Range of n
+@e898792923
+up to 16
+@9c2f0320ab
+up to 100
+@88ccad33af
+up to 1,000
+@b5e2c2e90e
+Y axis
+@ab9824c203
+linear
+@af8c0bfccf
+logarithmic
+@b009b06ef0
+Number of operations (logarithmic scale)
+@10d41f79d5
+Number of operations (linear scale)
+@352681a759
+n, input size →
+@4a663d2b4e
+time at 1 µs
+@4bcec82042
+For n = {0}: O(log n) is {1} steps, O(n log n) {2}, O(n²) {3} ({4}), and O(2ⁿ) would take {5}.
+@c28b13d01a
+ On a log scale O(2ⁿ) is a straight line that quickly leaves the chart.
+@8c3cf713ab
+ On a linear scale everything below n² looks like zero: switch the Y axis to logarithmic.
+@6bb4db8642
+The slider moves **n** from 1 to {0}. On the right is the number of operations for each class and how long they would take if one operation took 1 µs.
+@b4a47d1336
+Sorting
+@eaeb8424fe
+Four classic algorithms on the same array: compare the number of comparisons and swaps. Switch the input to "reversed" and watch quick sort with a bad pivot fall to O(n²).
+@8318e9bda1
+Comparison sorting cannot be faster than O(n log n) in the worst case.
+@3a0e10e25c
+Bubble and insertion are O(n²), but insertion is excellent for small and nearly sorted arrays (then O(n)).
+@96c4fce5b1
+Merge sort is always O(n log n) and stable, but it needs O(n) extra memory.
+@47489e45b0
+Quick sort is usually the fastest in practice; a bad pivot (e.g. always the last element of an already sorted array) gives O(n²).
+@b3138aa8f1
+A stable sort keeps the order of equal elements, which matters when you sort by several criteria.
+@6c832b5b6d
+Comparing algorithms
+@b2e93db287
+Algorithm
+@e8ad78d090
+Best
+@d9a27508f0
+Average
+@df31d3f03f
+Worst
+@3d997bca97
+Memory
+@d6a7a964e8
+Stable
+@53f33a7f81
+`Array.Sort` and `List<T>.Sort` use introsort (quick sort that switches to heap sort and insertion sort), so they have no O(n²) worst case, but they are not stable. LINQ `OrderBy` is stable.
+@e5600d3f7b
+C# · Quick sort (Lomuto, the pivot is the last element)
+@acbef3e45d
+smaller ones to the left
+@030a181c9e
+pivot to its final place
+@ae9991b832
+shift larger ones to the right
+@4e56482881
+C# · In practice: built-in sorting
+@b5e9235c71
+introsort, in place, not stable
+@50cbb02579
+stable: the same customer keeps their order
+@d3e7537863
+List<T>.Sort with a comparison
+@d44420c3e5
+A comparison that is not consistent (breaks transitivity or returns a random result) can throw an exception or produce a wrong order in `Array.Sort`.
+@08725f3d95
+Shuffling with `OrderBy(_ => Random.Shared.Next())` works, but it is O(n log n); `Random.Shared.Shuffle(array)` (.NET 8) is O(n).
+@1b27a2ba10
+Input
+@33f7e6f3b5
+random
+@10dab7ebe7
+nearly sorted
+@39220667d7
+reversed
+@5ef25c7621
+Elements
+@3045c43a89
+Shuffle
+@5213beb782
+Comparisons
+@132b7c1d20
+Writes
+@dbaeb3cd29
+Swaps
+@b9b9a50dd4
+comparison
+@b00bc6d317
+in its final place
+@27d4b1ff50
+element being inserted
+@6c41d0d4ef
+**Bubble sort** compares neighbors and swaps them when they are in the wrong order. After every pass the largest remaining element "bubbles up" to the end. O(n²).
+@5d8f620830
+**Insertion sort** takes the next element (purple) and moves it left until it stops in its place in the already sorted part. O(n²), and O(n) on a nearly sorted array.
+@00f9b58962
+**Merge sort** splits the array into halves until single elements remain, then merges the sorted parts. The lighter part is the range currently being merged. Always O(n log n), with O(n) extra memory.
+@143b4c1170
+**Quick sort** picks a pivot (purple, here the last element), moves the smaller elements to the left, and the pivot lands in its final place. Then it does the same for the left and right part. O(n log n) on average.
+@e05121741b
+ On a reversed array the pivot is always the smallest, so the split is not in half: this is the worst case, O(n²).
+@ac711a39b6
+ On a nearly sorted array the last element is a bad pivot: the split is uneven and the number of comparisons grows toward O(n²).
+@03521df181
+ The array is nearly sorted, so no element travels far: close to O(n).
+@65a7b6e3d6
+ A reversed array is the worst case: every element travels all the way to the start.
+@fa2e1d66aa
+ When a pass goes by without a single swap, the array is sorted and the algorithm stops early.
+@10d1e8a182
+ A reversed array is the worst case: every pair has to be swapped.
+@b95102e1a3
+ Merge sort does almost the same work regardless of the input.
+@e570aad8b4
+comparisons
+@f4a913a204
+Done for n = {0}: **{1} {2}** and {3} {4}. For comparison: n² = {5}, and n·log₂n ≈ {6}.
+@c747133042
+Binary search

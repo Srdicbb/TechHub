@@ -14,23 +14,23 @@
 </head>
 <body>
 <div class="app">
-  <aside class="side" id="side" aria-label="Meni">
+  <aside class="side" id="side" aria-label="Meni" data-en-aria="Menu">
     <div class="sb">
       <div class="sb-head">
-        <a class="sb-me" href="#" data-tip="Početna">
+        <a class="sb-me" href="#" data-tip="Početna" data-en-tip="Home">
           <span class="sb-av"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 28 9.5 16 16 4 9.5Z" fill="#f0a04b"/><path d="M4 9.5 16 16v13L4 22.5Z" fill="#8c3b2a"/><path d="M28 9.5 16 16v13l12-6.5Z" fill="#d9734a"/></svg></span>
-          <span class="sb-who"><small>Priprema za intervju</small><b>Priručnik koncepata</b></span>
+          <span class="sb-who" data-en="&lt;small&gt;Interview prep&lt;/small&gt;&lt;b&gt;Concept Handbook&lt;/b&gt;"><small>Priprema za intervju</small><b>Priručnik koncepata</b></span>
         </a>
-        <button class="sb-fold" id="fold" type="button" aria-label="Skupi meni" aria-expanded="true"><!--ICON:chevron-left--></button>
+        <button class="sb-fold" id="fold" type="button" aria-label="Skupi meni" data-en-aria="Collapse menu" aria-expanded="true"><!--ICON:chevron-left--></button>
       </div>
       <div class="search">
         <!--ICON:search-->
-        <input id="q" type="search" placeholder="Pretraži teme" autocomplete="off" spellcheck="false" aria-label="Pretraži teme">
+        <input id="q" type="search" placeholder="Pretraži teme" data-en-ph="Search topics" autocomplete="off" spellcheck="false" aria-label="Pretraži teme" data-en-aria="Search topics">
         <kbd>/</kbd>
       </div>
-      <button class="sb-qb" id="qbtn" type="button" aria-label="Pretraži teme" data-tip="Pretraga"><!--ICON:search--></button>
+      <button class="sb-qb" id="qbtn" type="button" aria-label="Pretraži teme" data-en-aria="Search topics" data-tip="Pretraga" data-en-tip="Search"><!--ICON:search--></button>
       <p class="qn" id="qn" aria-live="polite"></p>
-      <nav id="toc" aria-label="Sadržaj"></nav>
+      <nav id="toc" aria-label="Sadržaj" data-en-aria="Contents"></nav>
     </div>
   </aside>
   <div class="fly" id="fly" hidden></div>
@@ -38,15 +38,16 @@
   <div class="scrim" id="scrim"></div>
   <div class="main">
     <header class="top">
-      <button class="btn ic menu" id="menu" type="button" aria-label="Meni" aria-controls="side"><!--ICON:menu--></button>
-      <nav class="crumbs" id="crumbs" aria-label="Putanja"></nav>
+      <button class="btn ic menu" id="menu" type="button" aria-label="Meni" data-en-aria="Menu" aria-controls="side"><!--ICON:menu--></button>
+      <nav class="crumbs" id="crumbs" aria-label="Putanja" data-en-aria="Breadcrumb"></nav>
       <div class="acts">
         <button class="btn ic" id="skills" type="button" aria-haspopup="dialog" aria-label="Skillset" title="Skillset"><svg aria-hidden="true" class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.6 20.4 7.5v9L12 21.4 3.6 16.5v-9Z"/><path d="M12 6.8 16.9 10.3 14.6 16.2H9.6L7.5 10.5Z" fill="currentColor" fill-opacity=".3"/><path d="M12 12V2.6M12 12l8.4-4.5M12 12l-8.4 4.5" opacity=".45"/></svg></button>
+        <button class="btn ic lang" id="lang" type="button">EN</button>
         <button class="btn ic tema" id="tema" type="button" aria-label="Uključi tamnu temu" title="Uključi tamnu temu"><span class="sun"><!--ICON:sun--></span><span class="moon"><!--ICON:moon--></span></button>
       </div>
     </header>
     <main id="view" tabindex="-1"></main>
-    <footer class="foot"><p>Scenu rotiraš prevlačenjem, a zumiraš točkićem ili sa dva prsta. Tastatura: <kbd>/</kbd> pretraga, <kbd>←</kbd> i <kbd>→</kbd> prethodna i sledeća tema.</p></footer>
+    <footer class="foot"><p data-en="Drag to rotate a scene; zoom with the wheel or two fingers. Keyboard: &lt;kbd&gt;/&lt;/kbd&gt; search, &lt;kbd&gt;←&lt;/kbd&gt; and &lt;kbd&gt;→&lt;/kbd&gt; previous and next topic.">Scenu rotiraš prevlačenjem, a zumiraš točkićem ili sa dva prsta. Tastatura: <kbd>/</kbd> pretraga, <kbd>←</kbd> i <kbd>→</kbd> prethodna i sledeća tema.</p></footer>
   </div>
 </div>
 <script>/*VENDOR*/</script>

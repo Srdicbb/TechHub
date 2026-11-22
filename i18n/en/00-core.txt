@@ -1,0 +1,130 @@
+@4ff2c0cbcc
+What happens between the client and the server: layers and packets, TCP and UDP, DNS, HTTP and its versions, methods and idempotency, HTTPS and the TLS handshake.
+@05c6511885
+How a packet arrives
+@4585da6b51
+HTTP and HTTPS
+@80fd987b3f
+How a system survives growth: load balancer, rate limiting, cache, database and scaling. At the top is a simulation that reacts to load, and below it is a description of every component.
+@3f0332faee
+Scaling
+@543aec2184
+Entry into the system
+@c6990e1680
+Data and speed
+@d8b963e5d3
+Reliability
+@51abb7e1e5
+Concurrency
+@150390cbbf
+Concurrency and parallelism
+@9eb382e37b
+From a CPU core to `async/await`: how work is split across threads and cores, how .NET schedules it, and how shared state stays correct when several threads access it.
+@102f44bb85
+Basics
+@6db60ee00a
+.NET: tasks and async
+@c69abd8429
+Synchronization and thread safety
+@d1b875a41d
+Overview
+@f41af57186
+Architecture
+@b0881dcf48
+Architecture and distributed systems
+@ff6847d061
+How services talk through messages, what changes when state lives on several machines, and how a system defends itself when a dependency slows down or fails.
+@d7c4f31c5b
+Data
+@f781716a23
+Databases and caching
+@af3afa4c36
+Indexes, transaction isolation and caching: where data lives and what it costs to reach it.
+@f097539fe3
+Kubernetes and monitoring
+@797c4e2a8c
+Pods and services, zero-downtime delivery, autoscaling, and how to see what the system is really doing.
+@8aa13bdd7e
+.NET and Angular
+@525c7744d7
+Memory and GC, the DI container and the ASP.NET Core request pipeline, then change detection and RxJS on the Angular side.
+@8e6fdf39c7
+AI and LLMs
+@86aa5ee9ca
+Embeddings and semantic search, RAG, and agents that call tools.
+@1130517eaf
+Algorithms
+@cd74c63995
+Algorithms and data structures
+@adc59813e2
+Complexity, sorting, searching, hash tables and graphs, with steps you can follow.
+@22197074da
+This area is in preparation and comes last.
+@7466e81d19
+Layers and packets, TCP and UDP, DNS, HTTP and TLS.
+@aa2915d045
+Messages and brokers
+@5c932f98b7
+How services talk asynchronously: queue, topic, event streaming, delivery guarantees, and what to do with messages that cannot be processed.
+@51d6a1f2a0
+Threads, the ThreadPool and synchronization: what happens when several threads touch the same state and how `async/await` saves threads.
+@792d274104
+Parallel programming
+@16c5e04e5e
+How work is split across cores and how to connect processing stages with channels without losing control over the load.
+@8725374001
+Caching
+@c1a24c6b61
+Where data lives and what it costs to reach it: caching patterns, eviction, miss storms and distributed caches.
+@365cb479c6
+Distributed systems
+@16576f50a1
+What changes when state lives on several machines: network partitions, key distribution and transactions across several services.
+@dc950ca72e
+Databases and SQL
+@bbb4181dc2
+Indexes, transaction isolation and the most common ORM problem, shown on pages and timelines.
+@79cc590789
+Architecture and resilience
+@b480e19696
+How to organize code and how to protect yourself when a dependency slows down or fails.
+@96fd83d89d
+Kubernetes and cloud
+@82f413e578
+Pods, services, rolling out a new version without downtime, and autoscaling.
+@6999066605
+Traces across several services, percentiles and SLOs: how to see what the system is really doing.
+@95a33efe5a
+.NET runtime
+@7088dc1444
+Memory and GC, service lifetimes in the DI container, and the ASP.NET Core request pipeline.
+@bf22f4dd26
+Change detection (Default, OnPush, Signals) and the RxJS operators that combine streams.
+@476762e302
+Algorithms and structures
+@7105453342
+Plate: boundary (process, node, region)
+@0407c839a5
+Cube: service
+@e2a67bdac0
+Tube: queue or channel
+@d055db26e8
+Cylinder: database or cache
+@148905d23b
+Gate and tokens: synchronization
+@ca6f1215fe
+Lane: thread or partition
+@2af491f401
+Success
+@604cc6b303
+Waiting
+@0197f92135
+Error
+@9959013e71
+The same shapes and colors mean the same thing in every scene. The **magenta orb** is what you follow; a green flash means success, yellow means waiting, red means an error.
+@308db5d3e0
+This browser does not support WebGL, so 3D scenes are not available here.
+@89a754c689
+3D view is not available in this browser.
+@ee7dc599c3
+Error in scene:

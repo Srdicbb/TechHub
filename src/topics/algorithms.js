@@ -1,13 +1,13 @@
+import { dec, grp, lang } from '../i18n.js';
 // Algoritmi i strukture podataka
 const cs = (t, src) => ({ t, lang: 'csharp', src });
 
 // ---------- pomoćno ----------
 const SUPD = '⁰¹²³⁴⁵⁶⁷⁸⁹';
 const sup = n => String(n).replace(/\d/g, d => SUPD[d]);
-const grp = v => String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
-const dec = (v, d = 1) => v.toFixed(d).replace('.', ',');
 const num = v => (v < 10 ? dec(v).replace(/,0$/, '') : grp(v));
-const pl = (n, one, few, many) => { const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; };
+// srpska množina ima tri oblika; na engleskom je jednina samo za 1, a množina je oblik "few" (prevod ga daje u množini)
+const pl = (n, one, few, many) => { if (lang === 'en') return n === 1 ? one : few; const a = n % 10, b = n % 100; return a === 1 && b !== 11 ? one : a >= 2 && a <= 4 && (b < 12 || b > 14) ? few : many; };
 const rng = seed => () => {
   seed = (seed + 0x6D2B79F5) | 0;
   let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);

@@ -1,0 +1,36 @@
+@b746189c1f
+committed: balance = 100
+@07aefa9c83
+committed: 100, uncommitted: 50
+@b993906322
+balance = 100
+@79be47a764
+balance = 50 (the old version is kept)
+@ccbedd24fb
+orders above 100: 3
+@2ba3514ab3
+orders above 100: 4
+@6b76d591d5
+ and 
+@2a041dfb48
+answer
+@3123157e62
+operations
+@e0703f29b8
+expired
+@07aa600cba
+running
+@6186e20c5e
+success
+@e98aa074be
+application
+@884c46c5c6
+hardware
+@a1ebeb93f2
+exception
+@e5daba832c
+new
+@a882661db4
+avg
+@5730482da6
+continues

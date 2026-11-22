@@ -1,0 +1,230 @@
+@ad6d11c76b
+Cp
+@0d034ff5ef
+Concurrency means that several jobs are in progress during the same period, so they can also take turns on one core. Parallelism means that several jobs run at the same instant, on several cores. Parallelism is one form of concurrency.
+@b2215b0a42
+Concurrency is a matter of **structure**: the program is written so that several jobs make progress independently. Parallelism is a matter of **execution**: those jobs really run at the same time.
+@ecb1096c94
+On one core, concurrency exists through taking turns (time slicing). Parallelism needs several cores.
+@252291e055
+CPU-bound work (computation, compression, image processing) is sped up by parallelism: `Parallel.For`, PLINQ, `Task.Run`.
+@f20018d00c
+I/O-bound work (database, HTTP, files) gains from concurrency without extra threads: `await` releases the thread while waiting.
+@dab19819f7
+Multithreading is the mechanism under both: several threads in the same process. Asynchronous code can be concurrent even without extra threads.
+@607518a592
+What to use when
+@f782574e1b
+Work
+@6df452cd2e
+Example
+@97e7b2b873
+Tool in .NET
+@828c0b7724
+What you get
+@b836c4041d
+CPU-bound, divisible
+@ca40ab6c3a
+processing 10,000 images
+@769b3a8a0c
+all cores working
+@5f7309c434
+1,000 HTTP calls
+@eb51f08dde
+few threads, many jobs in flight
+@dfa4dec0be
+A stream of messages
+@c0ac65b860
+a producer and several consumers
+@303078d272
+an in-memory queue and backpressure
+@eeed305cc8
+Mixed
+@a68bee4561
+download, then process
+@1ef3bf56e8
+`Parallel.ForEachAsync` with a limit
+@eb8bc3ca3b
+controlled parallelism
+@b6d8c89973
+Background work
+@4920dee61b
+sending emails
+@e93dd09e49
+separate from the request
+@4dd51af4c5
+C# · CPU-bound: parallelism
+@570ad0f8de
+computation: every core takes its own part of the range
+@a1f476eec0
+C# · I/O-bound: concurrency without extra threads
+@916dabbf2a
+100 HTTP calls are in flight at the same time, and no thread stands still while waiting
+@60ab5c8c78
+C# · The same, but wrong: parallelism for I/O
+@197402a0c3
+every thread stands and waits for the network; the pool has to create new threads
+@ab5d9837f6
+`Parallel.For` or PLINQ for I/O keeps threads blocked while they wait. For I/O use `async` or `Parallel.ForEachAsync`.
+@87e7700397
+`async` does not speed up computation. In ASP.NET, `await Task.Run(...)` only moves the work to another thread from the same pool.
+@6989152b14
+CPU (computation)
+@a1ac50816b
+I/O (waiting)
+@a59ae785e5
+Sequential
+@1644c241ef
+1 thread, blocks while waiting
+@d1e8b535fd
+Concurrent (async)
+@10b4d2eeae
+1 thread, does not wait but keeps working
+@ff09d1014d
+Parallel
+@63450da3bc
+4 threads, mostly waiting
+@25ffd6eda0
+1 core, one after another
+@0834e47139
+Concurrent
+@b19c4d6347
+1 core, the OS switches between them
+@b4fba5f386
+4 cores at the same time
+@36d5cfec9c
+running on a core
+@dba7e916a4
+waiting for I/O
+@d129b0d459
+waiting for a core
+@6ae185e49a
+Tasks A, B, C and D
+@d40d20b64b
+time, in units →
+@eb769ef9d6
+Four tasks that mostly **wait for I/O** (database, HTTP): a short burst of CPU work, a long wait, then short work again.
+@50bc261b35
+Four tasks with **4 units of CPU work** each, executed in three ways. Watch when each one finishes.
+@10ec704eec
+Sequential takes 16 because the thread stands still while waiting. **Async on one thread** finishes in 5.5: while one task waits, the thread starts the next. Parallel with 4 threads takes 4, but those threads mostly just wait.
+@f6c03b47d8
+Sequential and concurrent on one core take the same, 16. Switching gives the impression that all of them progress together, but there is only one core. Only **parallel**, on 4 cores, does the work take 4.
+@dc14b5af1e
+Cr
+@2867723acd
+CPU, cores and cache
+@e43e7efa85
+A core runs one thread at a time (two with hyper-threading). Data travels from RAM through the L3, L2 and L1 caches in 64-byte blocks, and that often determines the speed of concurrent code more than the algorithm itself.
+@cead72cd5b
+`Environment.ProcessorCount` returns the number of **logical** cores: with hyper-threading (SMT) one physical core looks like two. In a container it returns the CPU limit.
+@1eb7a15526
+Every core has its own L1 and L2 cache, and L3 is shared. An L1 access takes about 1 ns, RAM about 100 ns. More on that in [[latency]].
+@e566b7cdab
+The cache works in 64-byte blocks (a **cache line**). When one core writes to a line, the copies of that line in other cores become invalid.
+@ed92beb6c4
+**False sharing**: two threads write to different variables that lie in the same line, so the line keeps moving between cores. The code is correct, but several times slower.
+@378ae85ab1
+More threads than cores does not speed up CPU work: the threads take turns, and every switch and a cold cache cost.
+@c088dad639
+C# · How many cores the process sees
+@3b03a35669
+logical cores
+@7acb83babd
+in a container with limits.cpu: "2" you get 2 here, not the machine's core count
+@0ddd6834ef
+DOTNET_PROCESSOR_COUNT=4 changes the value the runtime sees
+@5bcd452e1c
+C# · False sharing and the fix
+@0d8562548c
+Slow: the counters are next to each other, in the same cache line
+@789aa1ad64
+every thread has its own element, but the same line
+@d0fc0e53b5
+Faster: every counter in its own line
+@3d2bdbb570
+C# · Best: a local variable and one write at the end
+@92418e9efd
+lives in a register, nothing is shared
+@b4cd28beb9
+one write
+@52ad8eca0a
+An array of counters per thread (`counts[threadIndex]++`) is classic false sharing.
+@3864c62e02
+A `MaxDegreeOfParallelism` larger than the number of cores only adds switching for CPU work.
+@786eaf7e67
+A measurement on a laptop with 16 cores says nothing about a pod with a limit of 2 cores.
+@f9fca0b9c0
+Layout
+@19a04b1674
+x and y in the same line
+@c908950bf4
+each in its own line
+@da5cae5cff
+Processor: 4 cores
+@fb0505c331
+Core {0}
+@f63b5a9d46
+L3: shared cache
+@2ee53e242b
+Writes
+@989aa44885
+Line moves
+@cbd38624f6
+x, written by T0
+@764e2f25ff
+y, written by T1
+@c5e045aea8
+invalid copy
+@f32a509c9c
+line A: x
+@c705c5d44a
+line B: y
+@c0d2ba1b05
+With padding, x and y are in **different lines**. Every core keeps its own line in L1 and writes without waiting. The same code does several times more writes.
+@f46ff1c28a
+x and y are **different variables** in the same 64-byte cache line. Before every write the core has to take over the whole line, and the copy in the other core becomes invalid (red). The line moves back and forth: that is **false sharing**.
+@a04c7b135f
+The OS scheduler and context switches
+@f124a78dbd
+The operating system decides which thread runs on which core. A thread gets a short time slice (a quantum), then the scheduler interrupts it and lets the next ready one run. A thread waiting for I/O or a lock does not use a core at all.
+@1694c1e1cc
+A thread is in one of three main states: **running** (on a core), **ready** (waiting for a free core) or **blocked** (waiting for I/O, a lock, `Sleep`).
+@f24780d6b0
+The scheduler is preemptive: when the slice expires or a higher-priority thread appears, the current thread is interrupted without asking.
+@c4e1c8c8e3
+**Context switch**: save one thread's registers, load another's. It takes microseconds, but afterwards the cache is cold.
+@53aa328aa8
+The CLR does not assign threads to cores; the OS does. .NET decides only how many threads exist (the ThreadPool) and what they do.
+@46715bc584
+More ready threads than cores means waiting in a queue: CPU work does not speed up, it only switches more often.
+@9c9026f04d
+Thread states
+@b90aaa0dd5
+What it means
+@52545b270c
+Example in .NET
+@b2a1f80e91
+Running
+@92806e7831
+executing on a core
+@940f70743b
+a loop that computes
+@5cf27c9483
+Ready
+@4b0dd10de7
+waiting for a free core
+@b40f15c9f4
+a thread whose slice has expired
+@b28c2abbc2
+Blocked
+@5cbf622f54
+waiting for an event, uses no CPU
+@3bb3590dc2
+`Thread.Sleep`, a held `lock`, synchronous I/O
+@2bec8ec344
+Finished
+@b8ed091482
+the thread's method has returned
+@4d6efe4290
+after `Join`

@@ -1,0 +1,222 @@
+@c0f3c83a82
+In a sorted array, look at the middle and discard the half where the target cannot be. Every step halves the range, so a million elements need at most 20 steps.
+@458c371755
+It works only on sorted data: the comparison with the middle tells which half the target is in.
+@d953a7352c
+At most ⌊log₂ n⌋ + 1 steps: 10 for 1,000 elements, 20 for a million.
+@5cebc0891f
+Compute the middle as `lo + (hi - lo) / 2`, so that the sum `lo + hi` does not overflow the int range.
+@46bc8060ac
+When the element is missing, `Array.BinarySearch` returns a negative number; `~result` is the insertion point.
+@ae2ce5c487
+The same idea is everywhere: a B-tree index in a database, `SortedSet`, `git bisect` for the first version with a bug.
+@88f763bcaf
+C# · Binary search
+@3b06e0ba9b
+not (lo + hi) / 2: the sum can overflow int
+@b0abcf8e8b
+the target is to the right
+@863f7b2464
+the target is to the left
+@12f17b9c69
+negative: ~lo is the insertion point
+@843af64db6
+C# · Built in
+@5a07b1530e
+a negative number
+@fe6cf7ddee
+Binary search over an unsorted array returns a wrong result without any error.
+@bc6d82988b
+A wrong loop condition (`lo < hi` instead of `lo <= hi`) or bound (`hi = mid` instead of `mid - 1`) gives an infinite loop or a missed element.
+@0a05d4810c
+Search
+@87a457ca20
+binary
+@ff91d4854d
+Looking for
+@a625e70a73
+Steps
+@99da9fe3f0
+At most
+@670507723a
+Looking for **{0}** in a sorted array of {1} elements. The range is the whole array: lo = 0, hi = {2}.
+@662d6f0d3a
+Step {0}: a[{1}] = {2}, **found**. Linear search would need {3} {4}.
+@41d3444372
+Step {0}: a[{1}] = {2} < {3}, so the target is to the right. The left half is dropped: lo = {4}.
+@d52147f11b
+Step {0}: a[{1}] = {2} > {3}, so the target is to the left. The right half is dropped: hi = {4}.
+@cde456d34a
+**{0} does not exist**: after {1} steps lo ({2}) has passed hi ({3}). `Array.BinarySearch` then returns a negative number, and `~result` = {4} is where {5} should be inserted.
+@8b360bd29e
+Linear search for **{0}**: it checks element by element, from the start.
+@c02a679b49
+Found after {0} {1}. Binary search would need at most {2}.
+@7f9004baf8
+**{0} does not exist**: the whole array was checked, all {1} elements. Binary search would establish that in at most {2} steps.
+@a881e0aa4d
+Hash table
+@1249267ae0
+A key is turned into a number (a hash), and the remainder of dividing it by the number of buckets says where the key goes. That is why `Dictionary` finds a value in O(1) on average, regardless of size.
+@577eccb5f4
+Bucket index = hash(key) % number of buckets. Access is O(1) on average.
+@9d60323d96
+A collision: two keys get the same bucket. It is solved with a chain (chaining) or by looking for the next free slot; in a chain keys are compared with `Equals`.
+@dde4c3f3ae
+When the load passes a threshold, the array grows and all keys are redistributed. That insertion is O(n), but it is rare, so it is amortized O(1).
+@9b4ff0767f
+.NET `Dictionary` uses chains, grows when it fills up and picks a prime number for the new size. If you know the size in advance, set the `capacity`.
+@01c4630529
+A bad `GetHashCode` (e.g. the same number for everything) turns the table into a list: every access becomes O(n).
+@340b64cd9c
+C# · A good key: immutable and with Equals/GetHashCode
+@f1483aff2a
+a record struct generates Equals and GetHashCode over all fields itself
+@fce5fc6f1d
+no resizing along the way
+@4483fda045
+O(1) on average
+@d431e242c6
+C# · By hand: the same fields in Equals and GetHashCode
+@06789afb68
+C# · A trap: a mutable key
+@dbdc280f38
+GetHashCode uses X and Y
+@ff47bdce18
+the hash is now different
+@c8b0fc4d9c
+False: it looks in the wrong bucket
+@97fe529468
+Equal objects must have the same hash. If you override `Equals`, override `GetHashCode` too.
+@e3b2d10936
+A key that changes after insertion can no longer be found, and it still takes up space.
+@29f76ba439
+Iterating a `Dictionary` has no guaranteed order; for sorted keys use `SortedDictionary`.
+@837acb408f
+Load threshold
+@8b95c894e9
+no growth
+@fb492babe9
+index →
+@ec35e7c355
+new key
+@a3fb0711a6
+hash(key) % number of buckets = <b>index</b>
+@acab246b38
+Load
+@7c53c08c39
+insertion
+@79dd9d1305
+lookup
+@0b15e72118
+comparison (Equals)
+@d9084f26e5
+found
+@d813d516c0
+The load {0}/{1} passed the threshold {2}: an array of **8 buckets** is created and every key is redistributed (hash % 8). This insertion is O(n), but it happens rarely.
+@b078dc14c5
+hash(key) % 8 = <b>new index</b>
+@8e5a4e3438
+After resizing the load is {0}/8 = {1}: the chains are shorter, so lookups are fast again.
+@3830f8d6e0
+Key **{0}** goes into bucket {1}, which already holds {3}: that is a **collision**, so the key goes into the chain.
+@8478edbb65
+Key **{0}**: hash % {1} = {2}. Bucket {3} is empty, the insert is O(1).
+@4dc7bd05fe
+looking for {0}
+@f2d7d635eb
+, and within it key by key (Equals)
+@e40d0250c3
+Looking up **{0}**: hash % {1} = {2}, so only bucket {3} is examined{4}.
+@264cc7df2b
+**{0}** was found in bucket {1} after {2} comparisons. The other buckets are not looked at at all.
+@226a305d8f
+{0}: not found
+@12b2ee9994
+**{0}** is not in the table: we went through the whole chain of bucket {1} ({2} {3}) and there is no match.
+@7adc34d684
+**{0}** is not in the table: bucket {1} is empty, so the answer is "not found" right away, without a single comparison.
+@5d3ca50b4c
+The table starts with 4 buckets. When the load (keys / buckets) passes {0}, the array doubles.
+@6596c96d61
+The table stays at 4 buckets and does not grow: with more keys the chains get longer and lookups slower.
+@e0e3129bb0
+BFS, DFS and Dijkstra
+@752a34a7c8
+The same maze, three strategies. BFS spreads a wave and finds the fewest steps, DFS goes deep, and Dijkstra looks at cost: mud costs 5, a normal cell 1.
+@b9e8b631e2
+A graph is nodes and edges; a grid is a graph in which every cell is connected to its neighbors.
+@ad397e2ca4
+BFS (Queue) processes in waves and gives the fewest steps when all edges cost the same. O(V + E).
+@35194fdd97
+DFS (Stack or recursion) goes deep: good for connectivity, cycles and topological sorting, not for the shortest path.
+@8b32464b01
+Dijkstra (PriorityQueue) gives the cheapest path when edges have different costs, but no negative costs. O((V + E) log V).
+@51571e1b0d
+A* is Dijkstra with an estimate of the distance to the goal: it processes fewer cells, and the path is still the cheapest if the estimate does not overestimate.
+@e0a4c8f933
+Which algorithm when
+@08e69fd4e7
+Structure
+@8f1f829acf
+Shortest path
+@7937888740
+Complexity
+@ee1a05ef3e
+by number of steps
+@c3e565e019
+`Stack` or recursion
+@1529711666
+by cost, no negatives
+@387cc841aa
+`PriorityQueue` and an estimate
+@3780837c4c
+by cost, with a good estimate
+@906e27b09b
+depends on the estimate
+@c71c82dae2
+C# · BFS on a grid: the fewest steps
+@f3a431d4fd
+a wall or already seen
+@66cbeae352
+the goal is unreachable
+@66f7cc03de
+C# · Dijkstra with PriorityQueue
+@50016e8f70
+a stale entry: we already have a better path
+@0e08add468
+Without a set of visited nodes, the search goes around in circles on a graph with cycles.
+@76edac4cc3
+A recursive DFS on a large graph can cause a `StackOverflowException`; use an explicit `Stack`.
+@a2ea1d6d24
+Dijkstra does not work with negative costs; then you need Bellman-Ford.
+@ec1662b492
+New maze
+@759d4d772d
+Goal
+@08b5c76ea4
+mud, cost 5
+@933eb2abc2
+waiting in the queue
+@7dec6b8f7b
+processed
+@6973cbada8
+path found
+@0b7e1a4e0b
+Cells processed
+@88702fbea4
+Cost
+@1fedac01dc
+**BFS** processes cells in the order they were discovered (Queue), in waves: first all cells 1 step from the start, then 2... It finds the path with the fewest steps, but it does not know that mud costs more.
+@8833afbad7
+**DFS** goes as deep as it can (Stack) and backs up only when it gets stuck. It finds a path, but usually not the shortest.
+@492c048a66
+**Dijkstra** always processes the cell with the lowest total cost so far (PriorityQueue). Mud costs 5, so it goes around it when the detour is cheaper.
+@67a579be47
+BFS: a path of {0} steps, cost {1}, {2} {3} processed. The fewest steps, but if the path goes through mud, the cost is higher than with Dijkstra.
+@dbd57e5f7e
+DFS: a path of {0} steps, cost {1}. DFS does not guarantee the shortest path.
+@f169d82888
+Dijkstra: the lowest-cost path ({0}), {1} steps long. {2} {3} processed; with an estimate of the distance to the goal, A* would process fewer.
+@dd80f01f1d
+ Switch to {0} to see the same maze with another algorithm.

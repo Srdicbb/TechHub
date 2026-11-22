@@ -1,0 +1,30 @@
+@d13cdcb67c
+How do I return an order?
+@5186705a87
+Returns and refunds
+@dc7a15b3f3
+Answer only from the context and cite the [source]. If the answer is not in the context, say that you don't know.
+@2dba5b8b77
+Context:\n{context}\n\nQuestion: {question}
+@75ea0f7c22
+Order status by number
+@b8de34d061
+Delivery estimate for an order
+@b39deac6dd
+Where is my order 1042 and when will it arrive?
+@878da162ee
+min: {minWorkers}, threads: {ThreadPool.ThreadCount}, queued: {ThreadPool.PendingWorkItemCount}
+@bf0db98a31
+Alive at {Time}
+@2dd92383bd
+Processing error
+@7e6735b2db
+Active: {q.ActiveMessageCount}, in DLQ: {q.DeadLetterMessageCount}
+@45b871f65b
+The application is already running.
+@fdf30a9b28
+Saga {OrderId} failed, starting compensations
+@0007a2fadf
+Idempotency-Key is required
+@24aad43f52
+Insert at index {~j}

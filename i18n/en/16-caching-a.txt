@@ -1,0 +1,180 @@
+@6a84388e1b
+The memory and latency hierarchy
+@200e2892c0
+The farther data is from the processor, the more expensive it is to reach: from a nanosecond in the L1 cache to hundreds of milliseconds across an ocean. Caching moves data to a faster level.
+@5b2e89f874
+The differences are orders of magnitude: RAM is about 100× slower than L1, and a call to Redis in the same region about 5,000× slower than RAM.
+@37c5db493b
+That is why one extra database call inside a loop costs more than thousands of operations in memory.
+@0febfadafe
+Every cache level is a trade-off: a faster level is smaller and more expensive, and it keeps a copy that can go stale.
+@f1236b26c8
+Locality: data that is accessed together should be stored together (an array of structs instead of a web of objects across the heap).
+@e5d8faac62
+Human scale
+@8a454acb40
+Level
+@969aaa24c8
+Approximately
+@137998d1e5
+If L1 took 1 s
+@1e14d34d6d
+L1 cache
+@8d7299b6a7
+L2 cache
+@8698427231
+L3 cache
+@49c78bf380
+1.7 min
+@353b01eaf9
+NVMe SSD, read
+@4766b0998a
+Redis in the same region
+@8944f7a3e5
+0.5 ms
+@7975e75a59
+6 days
+@efb87386b6
+SQL query using an index
+@748cf2a810
+23 days
+@a93733191f
+A call to another region
+@94a4a39b13
+2.5 years
+@1a26ea7eea
+A call across an ocean
+@d89ca8843c
+4.8 years
+@de11658b25
+Orders of magnitude, not exact values: they depend on hardware, network and load.
+@2c32b02229
+C# · BenchmarkDotNet: measure instead of guessing
+@c837555ba9
+C# · Locality: an array of structs versus a list of objects
+@6df5813492
+one contiguous block: the CPU cache helps
+@e08ebfcf32
+a million references scattered across the heap
+@7738241119
+A microbenchmark in Debug mode or without warm-up measures the JIT, not your code.
+@f6816b41f8
+"Just one call" inside a loop of 1,000 elements is 1,000 calls: add up latencies, not operations.
+@ec32a38ea2
+Bar height
+@af7946a0be
+Logarithmic scale
+@7107d8f379
+Linear scale
+@cc88a8ed40
+2.5 yrs
+@c669eea295
+Ocean
+@74c67416f3
+4.8 yrs
+@e0b5e147a3
+Linear: everything up to the SSD is practically zero
+@febf334d0f
+Logarithmic: every unit of height is 10× slower
+@dc62113d4d
+**{0}: {1}.** If L1 took one second, this would take **{2}**.
+@5898a37cae
+Cache-aside and TTL
+@0e33c07166
+The application asks the cache first. If the data is not there (a **miss**), it reads from the database and writes it into the cache with an expiry time (**TTL**), so the next request gets a fast response (a **hit**).
+@6e251d5bcf
+Cache-aside (lazy loading): the application fills the cache, and only with data that is actually requested.
+@9481a997f0
+The TTL limits how long data may be stale. A shorter TTL is fresher, but more requests go to the database.
+@0ed041ba52
+On a change: write to the database, then **delete** the key from the cache (invalidation). The next read fills in the fresh value.
+@63e5d7ecef
+The hit ratio (hits divided by all requests) is the main metric: 95% means the database sees 5% of the traffic.
+@0caff5aff9
+Write strategies
+@d90f6de5bd
+How it works
+@93ca44c7ef
+Advantage
+@ced1936028
+Risk
+@4ffd6c1200
+On a miss the application reads the database and fills the cache
+@383b75be9e
+Simple; the cache holds only what was requested
+@962211c4a5
+The first request is slow; staleness up to the TTL
+@a03048a223
+The write goes through the cache into the database, synchronously
+@02108a4b8e
+The cache is always fresh
+@9a6021ffbb
+Slower writes; the cache also fills with data nobody reads
+@dd807476fb
+Write to the cache, the database later in the background
+@350a12c5ce
+The fastest write
+@ff34e96751
+Data loss if the cache fails before the write
+@d7c0e45616
+Write directly to the database, the cache is not touched
+@0c74591e9b
+One-off writes do not pollute the cache
+@461ccfc90b
+The first read after a write is a miss
+@c92d0af921
+C# · A change: the database first, then invalidation
+@5395772b0b
+the next read fills in the fresh value
+@abf3cdc194
+C# · Output caching for the whole HTTP response
+@7b45dc069f
+after a change:
+@3594501026
+Cache "does not exist" (null) too, with a short TTL. Otherwise requests for nonexistent IDs always go to the database.
+@269fbd4044
+The same TTL for thousands of keys filled at the same moment: they all expire together (see [[stampede]]). Add a random offset.
+@15057ce7d9
+A cache without a size limit (`SizeLimit`) is a memory leak that looks like an optimization.
+@d9f924cf7d
+Change A in the database
+@93270548e8
+Application
+@e77a203198
+Database (slow)
+@c32df9c661
+A was changed in the database, and the key **A was deleted from the cache**. The next request for A is a miss and fills in the fresh value.
+@c7d115f71d
+Popular keys (A, B) are almost always in the cache. Every entry lives **{0} s** (TTL), then it expires and the next request goes to the database.
+@c192ee49fa
+Eviction: LRU and LFU
+@0441e4ab8a
+A cache has limited capacity. When it fills up, something has to go: **LRU** evicts what has not been used for the longest time, and **LFU** what is used least often.
+@4344e1c1d0
+LRU quickly follows changes in what is popular, but a single scan of all keys evicts the whole working set.
+@dfe61403e6
+LFU keeps the steady favorites and resists scans, but slowly forgets keys that were once popular.
+@64994d799a
+Redis has both policies (`allkeys-lru`, `allkeys-lfu`) and variants only for keys with a TTL (`volatile-*`).
+@2c10efd478
+LRU in O(1): a hash map plus a doubly linked list. On access the node goes to the front, and eviction happens from the back.
+@e9a30ac422
+C# · An LRU cache in O(1)
+@543c4dab78
+front = most recent
+@4f27c3af52
+just used: to the front
+@66d3e31822
+least recently used
+@ef640835f8
+Redis · eviction policy
+@87087d08ee
+or allkeys-lru, volatile-lru, volatile-ttl
+@870413d4ef
+C# · MemoryCache with a size limit
+@8b13b26f1e
+required when there is a SizeLimit
+@50dd35b7a3
+the first candidate for eviction
+@ffcbe66922
+`MemoryCache` with `SizeLimit`: an entry without a `Size` throws an exception.

@@ -1,0 +1,232 @@
+@6f868da3ef
+`await` does not block the thread: the method pauses, and the thread goes back to the pool and does other work while waiting.
+@3885d5d8f0
+C# · Thread states
+@be90dd1160
+WaitSleepJoin: blocked, uses no CPU
+@2e4b6bbb41
+C# · Yielding the core (rarely needed)
+@dc63ef9bfd
+give the rest of the slice to another ready thread on the same core
+@880a2f9dc3
+give way to some ready thread of the same priority
+@6416e7b7f3
+SpinWait: a short spin instead of blocking, for waits of a few microseconds
+@2038f73bf9
+after a few rounds it switches to Yield and Sleep by itself
+@75577dcd6d
+Shell · How often threads switch
+@94dacbd310
+Linux: voluntary (cswch/s) and involuntary (nvcswch/s) switches of the process per second
+@cbcb6d2eca
+Windows: Performance Monitor, the System\Context Switches/sec counter
+@a40ef950dd
+A busy-wait loop (`while (!done) { }`) holds a whole core while it waits.
+@e5cccf4417
+`Thread.Sleep` to wait for something (polling) holds the thread. Use an event, `await Task.Delay` or `PeriodicTimer`.
+@87375ba130
+A high thread priority (`ThreadPriority.Highest`) can starve the other threads and is almost never the solution.
+@64db0da82a
+Cores
+@74538152a0
+Threads
+@e78a35277d
+CPU only
+@9fd3f8931e
+CPU and I/O
+@e6f67f5f4a
+Ready threads (run queue)
+@71147be227
+Blocked: waiting for I/O, a lock, Sleep
+@643766014b
+Processor
+@a7f4c63107
+slice
+@bad5d71160
+Ready
+@3572ea8780
+Blocked
+@2270c011a0
+Cores busy
+@030d74de76
+**T{0}** waits for I/O: it moves to the blocked ones and uses no core, so the core immediately gets the next ready thread. When the I/O completes, T{1} goes back into the queue.
+@7677cc4fc9
+**T{0}** has used up its slice: the scheduler puts it at the end of the queue, and the core gets the next ready thread. That is a **context switch**.
+@7978a2daac
+{0} threads, {1} {2}. Odd threads compute all the time, while even threads work briefly and then wait for I/O (yellow).
+@0dc9b6326c
+{0} threads, {1} {2}, all computing all the time. At any moment at most {3} run, the others wait in the queue and take turns when a slice expires.
+@26fded7cbb
+The ThreadPool: from Task.Run to a core
+@223a1b6743
+`Task.Run` does not create a thread. It puts the work into the ThreadPool queue, where one of the threads the pool keeps ready picks it up, and the OS schedules that thread on a core. The pool makes sure there are neither too few nor too many threads.
+@a1d3a0dae3
+The path of the work: `Task.Run` → the ThreadPool queue → a free pool thread → the OS scheduler → a core.
+@6628943445
+The pool has a **global queue** and a **local queue for every thread**. A task started from a pool thread goes into its local queue, and a thread without work steals from another one's queue (work stealing).
+@4dca758649
+Up to the minimum (by default the number of cores) threads are created immediately. Beyond that, the pool adds threads gradually and measures whether that increases throughput (hill climbing).
+@ccef7d4452
+Blocking pool threads (`.Result`, `.Wait()`, synchronous I/O) causes **thread starvation**: the queue grows, new threads arrive slowly, and the CPU sits idle.
+@9be5a3c89a
+With `await`, the work leaves the thread while it waits for I/O, and any free thread picks up the continuation later. That is why the same pool serves many more requests.
+@47c74f68b4
+The path of the work: `Task.Run` puts the delegate into the queue, a free pool thread picks it up, and the operating system schedules that thread on a core. .NET decides how many threads exist, and the OS when each one runs.
+@cda0531044
+your code
+@6838e7f850
+ThreadPool queue
+@39e8215cb3
+global and local
+@ff3104edcf
+A pool thread
+@e87cbe6c86
+a worker in .NET
+@8ecc709e03
+chooses who runs
+@63c7b3d724
+A CPU core
+@6466842e2f
+executes
+@90c797955b
+operating system
+@4171cf974c
+How to start work
+@379cf8bed8
+Way
+@716e790efa
+Where it runs
+@f7456fda54
+When
+@b2cf17179d
+`await` on I/O methods
+@5033636d70
+nowhere while it waits; the continuation runs on a pool thread
+@d534b8c402
+database, HTTP, files
+@f3fa21df5b
+a pool thread
+@3a55c94358
+short CPU work off the UI thread
+@7dda22b300
+several pool threads
+@97282b3e52
+CPU work over a collection
+@68fc784e00
+a dedicated thread
+@0373bc8eb8
+an endless loop, listening to a queue
+@c2e381f024
+a dedicated thread under your control
+@af7c58df5c
+rarely: priority, STA, stack size
+@3c7490e615
+`TaskScheduler.Default` is the ThreadPool. UI applications also have a `SynchronizationContext` that returns the continuation to the UI thread.
+@2ed865076c
+C# · A task goes into the pool queue, it does not create a thread
+@bfc4072f08
+a delegate into the ThreadPool queue
+@ddeb0a0e5c
+C# · Long-running work on a dedicated thread
+@4677df47d5
+a dedicated thread, does not occupy the pool
+@e65a5d829c
+Shell · Watch the pool in production
+@43f1ff6829
+threadpool-thread-count and threadpool-queue-length that keep growing = starvation
+@23509aa58b
+`new Thread()` for every request: expensive and with no upper bound.
+@ebb95cb9ab
+Raising `SetMinThreads` hides the blocking instead of removing it.
+@d53064ec80
+State tied to a thread (`[ThreadStatic]`) does not follow the async flow, because after `await` you may be on another thread. Use `AsyncLocal<T>`.
+@e6dba0349d
+Short CPU
+@7b1b872076
+Blocks (.Result)
+@72150a5084
+Threads at start
+@261044e093
+Finished
+@7872fb9092
+Waiting for I/O without a thread
+@7c7f14f928
+Process: the ThreadPool
+@2028a9d2af
+Waiting for I/O, the thread is free
+@6b23b6e7f6
+continuation
+@6fe89531b6
+All threads are busy and the queue grows: the ThreadPool **adds thread {0}**, but slowly. This is thread starvation.
+@8c23b16111
+At `await` the work leaves the thread and waits for I/O **without it** (left). When the I/O completes, the continuation goes into the queue and any free thread picks it up. The same threads get through all the work.
+@6aaff996ae
+Every job **blocks** its thread while it waits for I/O (yellow). The queue grows, and the pool adds threads only after a delay.
+@86c46d87f9
+A free thread takes the next job from the queue. Threads are not created for every job; they are reused.
+@24ba609f8d
+Code is thread-safe when it works correctly even when several threads use it at the same time. That is achieved in four ways: do not share state, share only immutable state, protect access with a lock, or use atomic operations and concurrent collections.
+@62ac29b9eb
+**No sharing**: local variables, parameters and objects created in a method are safe by themselves.
+@9fd84f732f
+**Immutable**: an object that does not change after construction (`record`, `ImmutableList`, `FrozenDictionary`) can be read by any number of threads.
+@fdf5816fe8
+**Synchronized**: shared mutable state is changed only under a `lock` or through a concurrent collection.
+@dca75c39ec
+**Bound to a thread or flow**: `ThreadLocal<T>` gives every thread its own copy, and `AsyncLocal<T>` follows the async flow.
+@a1371b35db
+Safe individual operations do not make a safe whole: check-then-write is a race even on a safe collection.
+@d97742f8e2
+Is it thread-safe?
+@d19ceca501
+Type
+@0969c74949
+Simultaneous reads
+@deebc0809b
+Simultaneous writes
+@52856d53ea
+yes, if nobody writes
+@0b545ce8ef
+they break rarely and strangely
+@d6c4c3e997
+each operation separately; reads without a lock
+@d1a00305b8
+no writes
+@202309b57f
+a change creates a new version
+@3016b9caa0
+shared; do not change `DefaultRequestHeaders` in flight
+@648335ad31
+one per request (scoped)
+@3cb697a89a
+from several threads use `Random.Shared`
+@057bdcf743
+only locally in a method
+@bd2682b80f
+C# · Load exactly once, even from several threads
+@498fc1e894
+GetOrAdd may call the factory several times under contention, but Lazy guarantees a single load
+@a288421955
+C# · Immutable state: replace the whole reference
+@421dcf1f5e
+an atomic swap
+@0ef9399e2b
+a reader always sees a whole, consistent version
+@319f70100c
+C# · Check-then-write: a race even with a safe collection
+@078fe7acdb
+two threads can both pass the check
+@d2edaa9b6f
+one atomic operation
+@01739e51ae
+A static field or a singleton with mutable state is shared between all requests.
+@51e48c7830
+Iterating a `ConcurrentDictionary` does not lock the collection: you see a mix of old and new state.
+@a1c58be5e3
+A thread-safe class does not mean thread-safe usage: two safe operations in a row are not one safe operation.
+@e5601b4877
+Table
+@aa55059f9e
+Dictionary without protection
+@28657e4579
+one lock

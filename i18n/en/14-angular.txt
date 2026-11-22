@@ -1,0 +1,120 @@
+@8bcfe88792
+Change detection and signals
+@87f67c3032
+When something happens (a click, an HTTP response, a timer), Angular checks components and updates the DOM. **Default** checks the whole tree, **OnPush** skips branches whose inputs did not change, and **signals** update only what reads them.
+@1aef887741
+Default (zone.js): every event triggers a check of all components, from the root down.
+@e98f448620
+OnPush: a component is checked when the reference of an input (`input`) changes, when an event happens inside it, or when the `async` pipe gets a value.
+@400f73d64d
+Signals: a template that reads `count()` records a dependency, so a change of the signal marks only those components.
+@063c446f49
+Zoneless (`provideZonelessChangeDetection`) removes zone.js; changes are reported by signals, template events and the `async` pipe.
+@9ceff8120c
+Mutating an array or object (`items.push`) does not change the reference, so OnPush does not see it. Create a new reference.
+@1738813fa4
+TypeScript · An OnPush component with signals
+@22ca72546e
+a new reference, computed is recalculated
+@6daa84cce9
+TypeScript · An application without zone.js
+@33e2478a5a
+TypeScript · The OnPush trap
+@b28f038c9b
+not seen with OnPush: the same array reference
+@1f1473cafb
+works: a new reference
+@32006cb410
+Calling a plain function in a template (`{{ calc() }}` that is not a signal) runs on every check, so many times.
+@a120bf424b
+`ChangeDetectorRef.detectChanges()` scattered around the code hides a data-flow problem instead of solving it.
+@41530f38ad
+Strategy
+@28c237b6ff
+Signals
+@850bcf0356
+Components checked
+@c383f89a91
+checked
+@b4426b1a8a
+source of the change
+@b81448e551
+skipped
+@17c5d6ca08
+a click on "Add" in the **Cart** component
+@3e32fb97d1
+an HTTP response arrives in **ProductList**
+@23075969e8
+Event: {0}. **Default** checks **the whole tree** from the root down.
+@384f3ac733
+Event: {0}. **OnPush** checks only the path to the source and the children with changed inputs.
+@b93efd94dd
+Event: {0}. With **signals**, only the component that reads the changed signal is updated.
+@0ac3939a8a
+Checked **{0} of {1}** components.
+@f5ab50ee94
+ On a large screen that is hundreds of checks per click.
+@0b8580dd2c
+When every outer value starts an inner stream (e.g. an HTTP call), the operator decides what to do with the overlap: **switchMap** cancels the previous one, **mergeMap** runs all of them in parallel, **concatMap** queues them one after another, and **exhaustMap** ignores new ones while the current one runs.
+@a8f067e785
+**switchMap**: search as you type. Only the last query matters, and old HTTP calls are cancelled.
+@6f680d892e
+**mergeMap**: independent jobs in parallel (e.g. uploading several files); the order of results is not guaranteed.
+@66663c0eaf
+**concatMap**: the order matters (saving changes one by one), so the next one waits for the previous to finish.
+@774db18f8b
+**exhaustMap**: a login or "Save" button. Double clicks while the request is running are ignored.
+@2adfac0542
+Cancellation in switchMap really aborts the HTTP request with `HttpClient` (unsubscribe).
+@74f7cc696f
+TypeScript · Search with switchMap
+@033186a609
+the old request is cancelled
+@28363d1604
+TypeScript · The other three operators
+@343a14347b
+save changes in order
+@3ee722b73f
+login: ignore double clicks while it runs
+@169ebe3b44
+parallel upload, at most 3 at a time
+@4d1e8b1cf1
+TypeScript · A signal from an Observable
+@5cbc197928
+in the template: results()
+@8d30b88437
+mergeMap for saving a form: responses arrive out of order and an older one overwrites a newer one.
+@e37419999b
+switchMap for a POST: the cancelled request may already have reached the server, while the client thinks it did not.
+@ade6683025
+A nested `subscribe` inside a `subscribe`: leaking subscriptions and lost cancellation. Use operators.
+@fe76194b9c
+source
+@6434af3f03
+inner {0}
+@337c4a6970
+result
+@703b50d6c3
+{0} ignored
+@b0404304eb
+**{0}** arrives while the inner stream is still running: exhaustMap **ignores** it.
+@4a7af298ac
+{0} waits in line
+@0c7196bee7
+**{0}** arrives, but concatMap puts it **in a queue** until the previous one finishes.
+@ea5402f605
+cancelled
+@195fb853b7
+**{0}** has arrived: switchMap **cancels** the inner stream {1} and moves to the new one.
+@5e292dda98
+The result has only the values until a stream was cancelled, and the last stream in full. Ideal for search.
+@9d88460e0e
+All inner streams run **in parallel**, so their values interleave in the result.
+@7851af959b
+The streams go **one after another**: the order is preserved, but c and d wait.
+@0ea0a3b42c
+Only a and d were processed; b and c arrived while a was running and were **ignored**.
+@4f3a04eff8
+ The ⟲ button plays it again.
+@25dc2db45d
+Time flows from left to right. The top lane is the outer values, the middle ones are the inner streams (e.g. HTTP), and the bottom one is the result.

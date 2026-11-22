@@ -1,5 +1,6 @@
 import * as esbuild from 'esbuild';
 import fs from 'node:fs';
+import { i18nPlugin } from './tools/i18n.mjs';
 
 const ICONS = ['send', 'lock', 'cpu', 'zap', 'network', 'database', 'blocks', 'container', 'activity', 'braces', 'component', 'brain-circuit', 'route',
   'play', 'pause', 'rotate-ccw', 'maximize', 'copy', 'search', 'menu', 'chevron-left', 'chevron-right', 'arrow-left', 'arrow-right', 'triangle-alert',
@@ -15,7 +16,9 @@ fs.writeFileSync('src/icons.js', 'export const ICONS = ' + JSON.stringify(icons)
 fs.mkdirSync('build', { recursive: true });
 fs.mkdirSync('dist', { recursive: true });
 await esbuild.build({ entryPoints: ['src/vendor.js'], bundle: true, minify: true, format: 'iife', outfile: 'build/vendor.js', legalComments: 'none', target: 'es2020', logLevel: 'warning' });
-await esbuild.build({ entryPoints: ['src/app.js'], bundle: true, minify: false, format: 'iife', outfile: 'build/app.js', target: 'es2020', charset: 'utf8', logLevel: 'warning' });
+const i18nReport = [];
+await esbuild.build({ entryPoints: ['src/app.js'], bundle: true, minify: false, format: 'iife', outfile: 'build/app.js', target: 'es2020', charset: 'utf8', logLevel: 'warning', plugins: [i18nPlugin(i18nReport)] });
+if (i18nReport.length) console.warn('i18n:\n  ' + i18nReport.join('\n  '));
 const safe = s => s.replace(/<\/script/gi, '<\\/script').replace(/<!--/g, '<\\!--');
 let html = fs.readFileSync('src/index.html', 'utf8');
 html = html.replace(/<!--ICON:([a-z0-9-]+)-->/g, (m, n) => (icons[n] || '').replace('<svg', '<svg aria-hidden="true" class="i"'));

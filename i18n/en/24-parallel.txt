@@ -1,0 +1,104 @@
+@2324d7fb78
+Parallel.For and splitting the work
+@63f0b04059
+`Parallel.For`, `Parallel.ForEachAsync` and PLINQ split a collection into parts and run them on several cores. How the work is split decides how long the cores sit idle.
+@d53d2eb0e3
+The speedup is limited by the part that cannot run in parallel (Amdahl's law): if 10% of the work is sequential, the maximum is 10×, no matter how many cores there are.
+@3e8c6d1943
+A static split (every core gets its chunk in advance) is cheap, but uneven jobs leave cores waiting for the slowest one.
+@49dbcd4cb0
+A dynamic split and **work stealing**: a core that runs out of work takes some from the end of another core's queue.
+@9c84509843
+`Parallel.ForEachAsync` is for I/O with limited parallelism; `Parallel.For` and PLINQ are for CPU work.
+@1ed78cc134
+Parallelism has a cost: distribution, synchronization and the CPU cache. For small collections a sequential loop is often faster.
+@093415a079
+Amdahl's law: speedup = 1 / ((1 − p) + p / n), where p is the parallel part of the work. Even with 95% parallel work, 64 cores give about 15×.
+@1232619e77
+<text x="{0}" y="{1}" text-anchor="end" dx="{2}">cores</text>
+@950de17587
+C# · CPU work across all cores
+@ebdfef8466
+C# · I/O with limited parallelism
+@41ceb7c56b
+C# · A local sum per thread, merged at the end
+@70b2ec3d08
+the thread's initial local state
+@b874e13210
+no locking inside the loop
+@e00d21c848
+once per thread
+@9bee5a746c
+`Parallel.ForEach` with an `async` lambda returns immediately, and the jobs run uncontrolled (async void). Use `ForEachAsync`.
+@b340a92d6b
+A shared collection without protection inside the loop (`list.Add`) gives lost elements or exceptions.
+@6328239b91
+A parallel loop inside an ASP.NET request takes threads away from other requests.
+@9df6b06eb4
+Split
+@a5f3ef22d7
+Static
+@b2019b811c
+Time
+@fff06868a4
+Core utilization
+@df7818fed3
+Stolen
+@032f13e442
+An idle core steals from the end of another core's queue
+@2383457d9b
+Every core gets 6 jobs in advance
+@b18fb2edb2
+Done in **{0} s**. The cores helped the overloaded core 1, so all of them worked almost to the end.
+@ad823af76b
+Done in **{0} s**. Core 1 got the heavy jobs, and the others finished early and sat idle. Try work stealing.
+@387b57cba7
+The length of a cube is the job's duration. Core 1 got four heavy jobs.
+@445688f993
+Producer–consumer and Channel<T>
+@4b593bc672
+`Channel<T>` is an asynchronous in-memory queue between the part that produces and the part that consumes. A **bounded** channel slows the producer down when it fills up: that is backpressure.
+@bec7df0c2d
+An unbounded channel never waits, but it uses memory without limit when the consumer is slower.
+@a1486c0a94
+A bounded channel with `FullMode = Wait`: `WriteAsync` waits until space frees up, so the producer naturally slows down.
+@c410f6c87d
+Other modes for a full channel: drop the oldest, drop the newest, drop the write. For telemetry that is often better than waiting.
+@367240d4b0
+Several consumers on the same channel: each item goes to exactly one of them, like competing consumers in memory.
+@96c071829c
+`Writer.Complete()` signals the end, and then the `ReadAllAsync` loop finishes.
+@b5a72391ed
+C# · A bounded channel and backpressure
+@c38e77e67f
+waits when the channel is full
+@521e9f8ef5
+C# · Several consumers
+@b99b19844b
+C# · A BackgroundService as a consumer in ASP.NET Core
+@07379b0995
+The channel lives in the process's memory: a restart or a crash wipes everything in it. Durability needs a broker.
+@d99806238b
+`TryWrite` on a full channel returns `false`. An ignored result means silently lost items.
+@063e25a6bd
+A forgotten `Complete()` leaves the consumers waiting forever.
+@5ccfb11288
+Channel
+@9fa28ee928
+Bounded
+@ac63e0d6ec
+Unbounded
+@0990ff51e0
+In the channel
+@de48229848
+Producer waited
+@5ee09ffafb
+A full channel stops the producer
+@7502b7d7a5
+An unbounded channel grows without end
+@7030d52b9c
+WriteAsync waits
+@8bc53dc4aa
+The producer is faster than the consumer. When the channel fills up ({0}), `WriteAsync` **waits** and the producer slows down to the consumer's speed.
+@8fbb4bf886
+An unbounded channel never says "stop": items pile up and **memory grows** until the consumer catches up.

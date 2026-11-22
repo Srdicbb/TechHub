@@ -9,67 +9,67 @@ const fin = (steps, bad, name) => Object.assign(steps, {
 const SCEN = {
   dirty: lv => {
     const s = [
-      { t: 1, l: ['BEGIN TRAN'], d: 'potvrđeno: stanje = 100' },
-      { t: 1, l: ['UPDATE', 'stanje = 50', 'bez COMMIT-a'], d: 'potvrđeno: 100, nepotvrđeno: 50', say: 'T1 menja stanje na 50, ali još nije uradila COMMIT.' },
+      { t: 1, l: ['BEGIN TRAN'], db: 'potvrđeno: stanje = 100' },
+      { t: 1, l: ['UPDATE', 'stanje = 50', 'bez COMMIT-a'], db: 'potvrđeno: 100, nepotvrđeno: 50', say: 'T1 menja stanje na 50, ali još nije uradila COMMIT.' },
     ];
     if (lv === 'RU') return fin([...s,
       { t: 2, l: ['SELECT stanje', '→ 50'], k: 'bad', say: 'Read Uncommitted: T2 čita **nepotvrđenih 50**.' },
-      { t: 1, l: ['ROLLBACK'], d: 'potvrđeno: stanje = 100', say: 'T1 poništava izmenu. Vrednost 50 nikad nije postojala, a T2 ju je već iskoristila.' },
+      { t: 1, l: ['ROLLBACK'], db: 'potvrđeno: stanje = 100', say: 'T1 poništava izmenu. Vrednost 50 nikad nije postojala, a T2 ju je već iskoristila.' },
     ], true, 'prljavo čitanje');
     if (lv === 'SNAP') return fin([...s,
       { t: 2, l: ['SELECT stanje', '→ 100', 'stara verzija'], k: 'good', say: 'Snapshot: T2 čita **poslednju potvrđenu verziju**, bez čekanja.' },
-      { t: 1, l: ['ROLLBACK'], d: 'potvrđeno: stanje = 100' },
+      { t: 1, l: ['ROLLBACK'], db: 'potvrđeno: stanje = 100' },
     ], false);
     return fin([...s,
       { t: 2, l: ['SELECT stanje', 'čeka lock'], k: 'wait', say: `${NAME[lv]}: T2 **čeka**, jer je red zaključan dok T1 ne završi.` },
-      { t: 1, l: ['ROLLBACK'], d: 'potvrđeno: stanje = 100', say: 'T1 poništava izmenu i pušta lock.' },
-      { t: 2, l: ['SELECT', 'nastavlja', '→ 100'], k: 'good', say: 'T2 dobija potvrđenu vrednost.' },
+      { t: 1, l: ['ROLLBACK'], db: 'potvrđeno: stanje = 100', say: 'T1 poništava izmenu i pušta lock.' },
+      { t: 2, l: ['SELECT', 'nastavlja', '→ 100'], k: 'good', go: 1, say: 'T2 dobija potvrđenu vrednost.' },
     ], false);
   },
   nonrep: lv => {
     const s = [
-      { t: 1, l: ['BEGIN TRAN'], d: 'stanje = 100' },
+      { t: 1, l: ['BEGIN TRAN'], db: 'stanje = 100' },
       { t: 1, l: ['SELECT stanje', '→ 100'], say: 'T1 čita stanje: 100.' },
     ];
     if (lv === 'RR' || lv === 'SER') return fin([...s,
       { t: 2, l: ['UPDATE', 'stanje = 50', 'čeka lock'], k: 'wait', say: `${NAME[lv]}: T1 drži deljeni lock na pročitanom redu do kraja, pa T2 **čeka**.` },
       { t: 1, l: ['SELECT stanje', '→ 100'], k: 'good', say: 'T1 čita ponovo i dobija istu vrednost.' },
       { t: 1, l: ['COMMIT'], say: 'T1 završava i pušta lock.' },
-      { t: 2, l: ['UPDATE prolazi', 'i COMMIT'], d: 'stanje = 50' },
+      { t: 2, l: ['UPDATE prolazi', 'i COMMIT'], go: 1, db: 'stanje = 50' },
     ], false);
     if (lv === 'SNAP') return fin([...s,
       { t: 2, l: ['UPDATE', 'stanje = 50'] },
-      { t: 2, l: ['COMMIT'], d: 'stanje = 50 (stara verzija se čuva)' },
+      { t: 2, l: ['COMMIT'], db: 'stanje = 50 (stara verzija se čuva)' },
       { t: 1, l: ['SELECT stanje', '→ 100', 'stara verzija'], k: 'good', say: 'Snapshot: T1 vidi bazu kakva je bila **na početku svoje transakcije**.' },
       { t: 1, l: ['COMMIT'] },
     ], false);
     return fin([...s,
       { t: 2, l: ['UPDATE', 'stanje = 50'], say: `${NAME[lv]}: T1 ne drži lock posle čitanja, pa T2 menja red.` },
-      { t: 2, l: ['COMMIT'], d: 'stanje = 50' },
+      { t: 2, l: ['COMMIT'], db: 'stanje = 50' },
       { t: 1, l: ['SELECT stanje', '→ 50'], k: 'bad', say: 'Isti upit u istoj transakciji vraća **drugu vrednost**.' },
       { t: 1, l: ['COMMIT'] },
     ], true, 'neponovljivo čitanje');
   },
   phantom: lv => {
     const s = [
-      { t: 1, l: ['BEGIN TRAN'], d: 'porudžbina većih od 100: 3' },
+      { t: 1, l: ['BEGIN TRAN'], db: 'porudžbina većih od 100: 3' },
       { t: 1, l: ['COUNT(*)', 'iznos > 100', '→ 3'], say: 'T1 broji porudžbine veće od 100: ima ih 3.' },
     ];
     if (lv === 'SER') return fin([...s,
       { t: 2, l: ['INSERT 500', 'čeka na', 'range lock'], k: 'wait', say: 'Serializable zaključava i **opseg ključeva**, pa INSERT u taj opseg čeka.' },
       { t: 1, l: ['COUNT(*)', 'iznos > 100', '→ 3'], k: 'good' },
       { t: 1, l: ['COMMIT'] },
-      { t: 2, l: ['INSERT prolazi', 'i COMMIT'], d: 'porudžbina većih od 100: 4' },
+      { t: 2, l: ['INSERT prolazi', 'i COMMIT'], go: 1, db: 'porudžbina većih od 100: 4' },
     ], false);
     if (lv === 'SNAP') return fin([...s,
       { t: 2, l: ['INSERT 500'] },
-      { t: 2, l: ['COMMIT'], d: 'porudžbina većih od 100: 4' },
+      { t: 2, l: ['COMMIT'], db: 'porudžbina većih od 100: 4' },
       { t: 1, l: ['COUNT(*)', 'iznos > 100', '→ 3 (verzija)'], k: 'good', say: 'Snapshot: T1 i dalje vidi svoju verziju podataka.' },
       { t: 1, l: ['COMMIT'] },
     ], false);
     return fin([...s,
       { t: 2, l: ['INSERT 500'], say: lv === 'RR' ? 'Repeatable Read zaključava pročitane redove, ali **ne i prazan prostor** između njih.' : 'Ništa ne sprečava novi red u opsegu koji T1 čita.' },
-      { t: 2, l: ['COMMIT'], d: 'porudžbina većih od 100: 4' },
+      { t: 2, l: ['COMMIT'], db: 'porudžbina većih od 100: 4' },
       { t: 1, l: ['COUNT(*)', 'iznos > 100', '→ 4'], k: 'bad', say: 'Isti upit sada vidi **red koji ranije nije postojao**.' },
       { t: 1, l: ['COMMIT'] },
     ], true, 'fantomsko čitanje');
@@ -279,7 +279,7 @@ catch (DbUpdateConcurrencyException) { /* neko je promenio red u međuvremenu: u
                 const tx = x.txt(cx, cy - (s.l.length - 1) * 9 + j * 18 + 5, ln, { 'text-anchor': 'middle', class: j ? 'sm' : '' }, bx);
                 if (last && k !== 'op') tx.setAttribute('style', `fill:${COL[k]};font-weight:700`);
               });
-              const resumeOf = s.l[0].includes('prolazi') || s.l[1] === 'nastavlja';
+              const resumeOf = !!s.go;   // korak u kome nit nastavlja posle čekanja (oznaka, ne tekst, da radi i u prevodu)
               if (resumeOf) {
                 const wi = steps.findIndex(q => q.k === 'wait');
                 if (wi >= 0) {
@@ -289,7 +289,7 @@ catch (DbUpdateConcurrencyException) { /* neko je promenio red u međuvremenu: u
               }
               await x.tween(.35, q => bx.setAttribute('opacity', q));
               if (s.say) x.say(s.say);
-              if (s.d) data.textContent = s.d;
+              if (s.db) data.textContent = s.db;
               await x.wait(1.6);
             }
             verdict.textContent = steps.verdict.text;

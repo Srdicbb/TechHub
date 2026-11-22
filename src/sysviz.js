@@ -3,6 +3,7 @@
 // Model je "fluidni": po instanci se vode red čekanja, CPU i memorija; kad red pojede memoriju, instanca pada (OOM).
 // Čestice su uzorak saobraćaja: svaka bira ishod po trenutnim verovatnoćama modela.
 import { C } from './viz.js';
+import { lang } from './i18n.js';
 
 export const RPS = [100, 500, 2000, 5000, 15000, 40000];
 export const SIZES = {
@@ -21,11 +22,11 @@ const MAXI = { mono: 12, micro: 5 };
 const COL = { cpu: 0x3987e5, ram: 0x199e70, bot: 0xc3a6ff, fw: 0xb5583a, dead: 0x5c2230, boot: 0x8d97a8 };
 const HB = 1.2;           // najveća visina stuba CPU/RAM
 const sp = ' ';
-export const nf = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, sp);
+export const nf = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g, lang === 'en' ? ',' : sp);
 const pc = v => Math.round(Math.max(0, v) * 100) + '%';
 const sz = s => `${s} (${SIZES[s].vcpu}${sp}vCPU, ${SIZES[s].ram}${sp}GB)`;
-const inst = n => n % 10 === 1 && n % 100 !== 11 ? 'instanca' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'instance' : 'instanci';
-const instL = n => n % 10 === 1 && n % 100 !== 11 ? 'instanci' : inst(n);   // "na 1 instanci", "na 2 instance"
+const inst = n => lang === 'en' ? (n === 1 ? 'instance' : 'instances') : n % 10 === 1 && n % 100 !== 11 ? 'instanca' : (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'instance' : 'instanci';
+const instL = n => lang !== 'en' && n % 10 === 1 && n % 100 !== 11 ? 'instanci' : inst(n);   // "na 1 instanci", "na 2 instance"
 
 export const sysViz = {
   warm: 1.2,

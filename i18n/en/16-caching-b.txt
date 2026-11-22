@@ -1,0 +1,134 @@
+@87e0686826
+A cache smaller than the working set keeps evicting what will be needed again right away (thrashing), so the hit ratio drops almost to zero.
+@c2bb4fb433
+Policy
+@84667b1242
+Scan all keys
+@ec74770e88
+Evicted
+@40eceadd82
+Left = least frequently used, first to be evicted
+@f2b537711b
+Left = least recently used, first to be evicted
+@0bce2253b7
+← next to be evicted
+@dd85e660c3
+Requests
+@8e583f99bd
+Miss for **{0}**. **{1}** was evicted: the fewest uses ({2}).
+@999a660d5b
+Miss for **{0}**. **{1}** was evicted: it has not been used for the longest time.
+@7988653292
+A scan: every key once. LFU **keeps A and B** because they have many accesses.
+@2a8b41081c
+A scan: every key once. LRU **evicts both A and B**, even though they are the most popular.
+@1fa8d6c280
+The counter next to a key is the number of accesses. The one with the lowest count is evicted.
+@373e627c99
+Every hit moves the key to the right (most recent). The one at the far left is evicted.
+@a74e10f233
+When a popular key expires, many requests get a miss at the same time and all of them go to the database for the same value. The database gets a wave of identical queries right when the cache is empty.
+@d4fdc17b21
+The cause: many requests for the same key, simultaneous expiry and an expensive query to refill it.
+@ba1dc2740e
+**Single-flight** (a lock per key): only the first request fills the cache, and the others wait for its result.
+@983de71f8a
+**Early refresh**: the value is refreshed in the background before it expires, so users never see an empty cache.
+@b7c836bf7a
+**Jitter on the TTL**: keys filled together do not expire in the same second.
+@189f0e9fcb
+`HybridCache` in .NET 9 has built-in protection: parallel requests for the same key wait for a single fill.
+@59a2be39d1
+C# · HybridCache: one fill for all parallel requests
+@5519a4b61e
+runs once
+@a65750c492
+C# · Single-flight by hand
+@f9c88c5154
+everyone waits for the same Task
+@c886c54d04
+C# · A TTL with a random offset
+@e5e17df47d
+A lock per key works only inside one process: ten instances still send ten queries. Stricter protection needs early refresh or a distributed lock.
+@f8d797b2d2
+Restarting the whole fleet with an empty cache is a stampede for all keys at once: warm the cache or bring instances in gradually.
+@7ab6e85258
+Protection
+@d38d1c8659
+No protection
+@dafcf82dd6
+Early refresh
+@0e9a8ff721
+Queries in the last wave
+@38a1a049ed
+Database queries
+@5875333853
+Cache: home page
+@15c8bb7ace
+load: 0
+@ea8b3d7ccc
+load: {0}
+@04eb5248c8
+refresh
+@c4719d24ab
+Every 5 s the key expires and **all clients that come along** go to the database for the same value. Watch the load bar.
+@1885c69609
+Single-flight: the first request after expiry goes to the database, and the others **wait for its result** (yellow). The database sees one query.
+@94811c72a3
+The value is **refreshed in the background** before it expires, so the cache is never empty and there is no wave.
+@1919eccbe0
+Distributed cache
+@2d0c189a5e
+With several application instances, each instance's local cache drifts apart: after a change, some instances return the old value. **Redis** is one shared cache for all, and **HybridCache** combines a fast local level (L1) with a shared one (L2).
+@b9a33ba741
+A local cache (`IMemoryCache`) is the fastest, but every instance has its own copy and its own staleness.
+@ff1b2f8d9e
+A distributed cache (Redis) gives one truth for all instances, at the cost of a network call (about 0.5 ms) and serialization.
+@e86d489e23
+A two-level cache: memory, then Redis, then the database. L1 copies on other instances live until their short TTL, which is why the L1 TTL is short.
+@1273e5815a
+Redis Cluster splits keys into 16,384 slots (CRC16 of the key). Azure Cache for Redis does that for you.
+@0bc9838e6e
+C# · Redis as IDistributedCache
+@554c4af620
+C# · HybridCache: L1 + L2 and tags
+@c3ff02baab
+L1: short
+@f04c996089
+after a change
+@7254d82e3e
+a value with a 5-minute TTL
+@1be454f230
+seconds remaining
+@7a1bacb6a5
+real latency to the server
+@92facc8fd0
+A local cache on several instances without invalidation: the user refreshes the page and sees the old price one moment and the new one the next, depending on the instance.
+@4ea16aebb1
+Huge values in Redis (tens of MB) block the single-threaded server and clog the network.
+@c674eff1d5
+Redis as the only source of truth without persistence: a restart wipes the data.
+@e4d5e892fa
+Local only
+@c9a501b961
+Redis only
+@4f3eeeb3be
+Change the price (+20)
+@1155c954df
+Stale responses
+@e947ca8a08
+Calls to Redis
+@1fd7404e41
+Database calls
+@03f759ddee
+Database: price {0}
+@bd5d10e3d9
+Instance {0}
+@4ca102dd0f
+The price is now **{0}**. Instance 1 cleared its cache, but instances 2 and 3 **still return the old price** until their local TTL expires.
+@c3d52c40ba
+The price is now **{0}** and the key was deleted from Redis. All instances read the same fresh value, but every request goes over the network.
+@9ed296b700
+The price is now **{0}**. Redis and instance 1's L1 were cleared; instances 2 and 3 return the old price for at most {1} more s (a short L1 TTL).
+@8e50cda6f9
+A green orb is a correct response, a red one is a **stale price**. The price changes every 11 s.

@@ -1,3 +1,4 @@
+import { dec } from '../i18n.js';
 // AI i LLM
 const cs = (t, src) => ({ t, lang: 'csharp', src });
 const txt = (t, src) => ({ t, lang: 'plaintext', src });
@@ -72,16 +73,17 @@ ORDER BY Distance;            -- manja kosinusna distanca = sličnije` },
           });
         }
         x.chip(C.white, { round: true, s: .22, at: [0, 0, 0], fit: true, label: '0' });
-        const Q = [['kuče', { pas: .75, mačka: .25 }], ['lazanje', { pasta: .6, sir: .4 }], ['TypeScript', { Angular: .65, 'C#': .35 }],
-          ['maraton', { trčanje: .8, plivanje: .2 }], ['mače', { mačka: .8, zec: .2 }], ['testenina', { pasta: .8, hleb: .2 }]];
+        // reči su niske (ne ključevi objekta), pa prevod menja i reči u oblaku i reči u upitu isto
+        const Q = [['kuče', [['pas', .75], ['mačka', .25]]], ['lazanje', [['pasta', .6], ['sir', .4]]], ['TypeScript', [['Angular', .65], ['C#', .35]]],
+          ['maraton', [['trčanje', .8], ['plivanje', .2]]], ['mače', [['mačka', .8], ['zec', .2]]], ['testenina', [['pasta', .8], ['hleb', .2]]]];
         const cos = (a, b) => a.dot(b) / (a.length() * b.length());
-        const f2 = v => v.toFixed(2).replace('.', ',');
+        const f2 = v => dec(v, 2);
         x.spawn(async () => {
           let i = 0;
           while (x.alive) {
             const [word, mix] = Q[i++ % Q.length];
             let qa = 0, qb = .25, F;
-            for (const [w, wt] of Object.entries(mix)) { F = tc[w][0]; qa += tc[w][1] * wt; qb += tc[w][2] * wt; }
+            for (const [w, wt] of mix) { F = tc[w][0]; qa += tc[w][1] * wt; qb += tc[w][2] * wt; }
             const qp = dirAt(F, qa, qb).multiplyScalar(R + .2);
             sQ.set(word);
             const o = x.orb(C.mag, { r: .3, label: word, lcls: 'tag mag' });

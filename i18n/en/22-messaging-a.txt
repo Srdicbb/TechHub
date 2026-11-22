@@ -1,0 +1,192 @@
+@f5d5096097
+Queue and topic
+@a5944a2863
+A **queue** delivers each message to exactly one consumer, so instances of the same service share the work. A **topic** sends a copy to every subscription, so different services react to the same event.
+@7a4794ae53
+Queue (point-to-point): a message disappears from the queue only when one consumer acknowledges it (`Complete`, ack).
+@10ea5a4a59
+Several instances on the same queue are **competing consumers**: that is how processing scales horizontally.
+@9764b266a5
+Topic (publish/subscribe): every subscription is a separate queue with its own copy of the message.
+@d80dd73bec
+A subscription can have a filter (e.g. `Country = 'RS'`), so not every subscription gets everything.
+@c3451f5007
+The producer does not know who listens to the topic: a new service subscribes and receives events without changes to the producer.
+@0833dd2a21
+Comparison
+@8e49e1426e
+Who gets the message
+@94c02d790e
+Exactly one consumer
+@c9571705b3
+Every subscription gets a copy
+@2ed98511d5
+Typical message
+@118587eb59
+A command: "process the order"
+@b98a276228
+An event: "the order was created"
+@118dc3abdb
+A queue on the default exchange
+@9cd451f731
+A fanout or topic exchange, a queue per service
+@4fbff5aacc
+Several instances read the same queue
+@a6c69ab6de
+Several instances read the same subscription
+@737a99d09d
+C# · Azure Service Bus: sending (the same for a queue and a topic)
+@f0b630cbf8
+the name of the queue or topic
+@580aa781b7
+for duplicate detection
+@cea3f3bac3
+C# · A worker on a queue (competing consumers)
+@0c23c781b8
+only now does the message disappear
+@52f3c20777
+C# · A subscription to a topic with a filter
+@4f7c41c7cb
+every service reads ITS OWN subscription; all instances of that service share it
+@818516cc7d
+A topic without a single subscription silently drops messages: no error, no data.
+@05a6764e89
+If every instance of the same service creates its own subscription, a message is processed as many times as there are instances. The instances of one service share one subscription.
+@0fe7685f90
+When several consumers read the same queue, the order is not guaranteed. If it matters, use sessions (`SessionId`) or partitions by key.
+@913d4b7ad0
+Consumers
+@f5d82af15b
+Sent
+@684163966c
+Queue: each message goes to one worker
+@cc37b5a607
+Delivery from the queue
+@b3783f0d46
+Topic: every subscription gets a copy
+@5e49129096
+Delivery from the topic
+@dbe979190c
+The same message (the same color) goes into the **queue** and into the **topic**. In the queue only one worker gets each color, while in the topic every subscriber gets a copy.
+@0695db092a
+A queue as a shock absorber
+@f9f3d01be0
+A queue between two services absorbs bursts. The producer sends at its own pace, and the workers process as much as they can. When there is more work than capacity, the queue grows instead of the number of errors.
+@5ef4b2e2d6
+Capacity is the number of workers divided by the time to process one message. If more than that arrives, the queue grows at a steady rate.
+@5345dd6a6f
+Little's law: the average number of messages in the system = arrival rate × average time spent (`L = λ · W`).
+@407be2b235
+Queue length and the age of the oldest message are the best signals for autoscaling workers (KEDA, Azure Functions, Container Apps).
+@b9f18156c5
+A queue does not speed up processing: it turns overload into delay. That is why the delay must have a limit (a TTL, an alert on message age).
+@20586efd30
+YAML · KEDA: scaling workers by queue length
+@51387e5ac1
+the Deployment being scaled
+@b23027b362
+target: about 50 messages per replica
+@0439c78523
+C# · The throughput of one instance
+@96bb162a19
+messages one instance processes in parallel
+@1a3f43ecd4
+messages fetched into memory in advance: fewer trips to the broker
+@565539de36
+C# · How long it waits in the queue
+@398f364967
+Autoscaling without an upper bound only moves the problem: 50 new workers can bring down the database behind them.
+@7f18655628
+Prefetch with slow processing: the locks of messages held in one instance's memory expire, and they go back into the queue.
+@13243bbfca
+A queue that keeps growing is not a shock absorber but a leak: capacity is permanently lower than arrivals.
+@9e55699326
+Arrivals
+@d1fd20be92
+Workers
+@7f1b027ff2
+A burst of 15 messages
+@16e42367be
+Processed
+@821e1e6e10
+**{0}/s** arrive, and the workers process **{1}/s**: the queue grows. Nothing is lost, but the delay grows. Add a worker.
+@81cfc4a05b
+The queue is draining at about **{0}/s**. The queue absorbed the burst instead of bringing the service down.
+@9dc2ee8a71
+The workers keep up with everything and messages wait briefly. Send a **burst** or increase the arrival rate.
+@db62c060d5
+Kafka: partitions and offsets
+@38bafc6471
+Kafka keeps events in a **log split into partitions**. A message that has been read is not deleted: every **consumer group** remembers its own offset and reads at its own pace, so the same stream can be read again.
+@d6e3797340
+A partition is an append-only log. Ordering holds within a partition, not across the whole topic.
+@b1663b2a06
+The message key selects the partition (a hash of the key), so all events of one customer stay in order.
+@56f1b95f8f
+Within a group, a partition is read by at most one consumer: more consumers than partitions means some sit idle.
+@bc4908490a
+Different groups are independent: each has its own offset and its own lag.
+@2b082e6a17
+An offset can be moved back: reprocessing (replay) after a bug or for a new service.
+@57f0ae7df3
+Azure Event Hubs supports the Kafka protocol: the same client, a different configuration.
+@8cbb2bc72b
+Azure: which service for what
+@38d43cd5d9
+A message broker (queue, topic)
+@234b273c37
+An event log (stream)
+@b38e6aeb78
+Event routing (push)
+@f1ca35d699
+After reading
+@b4941a91d5
+The message is deleted
+@1d924220ae
+It stays until retention expires
+@ced6ec73c2
+It is delivered and gone
+@38d6229dcd
+Per session
+@7e93151464
+Per partition
+@a3f5fda7fc
+Not guaranteed
+@18cc22b44a
+Typical
+@3d1dc68dd6
+Commands, business workflows
+@3f66a65fa4
+Telemetry, analytics, event sourcing
+@235b7e7ef3
+Reacting to changes of Azure resources
+@bafa07e430
+C# · Confluent.Kafka: a producer with a key
+@2602655f72
+wait for the acknowledgement of all replicas
+@6c9be051bd
+no duplicates on resend
+@75c50dc6d5
+the same customer -> the same partition -> ordering
+@369ea036f6
+C# · A consumer in a group, commit after processing
+@04605bf5c0
+the offset moves only after processing
+@8dbc9f219c
+Shell · Lag and rewinding a group
+@d00e33bd34
+read everything again from the start (the group must be stopped)
+@46d96726e5
+The number of partitions limits a group's parallelism. Increasing it later changes how keys map to partitions, so ordering breaks for old keys.
+@a985e07cff
+A hot key (one customer with a huge number of events) chokes one partition while the others sit idle.
+@ca8965b8f8
+Auto-commit before processing has finished loses messages when the consumer crashes.
+@01864300c5
+Consumers in the Billing group
+@d06d967ae1
+Analytics: read from the start
+@23c9a7a30c
+Records
+@3294056f47
+pods
