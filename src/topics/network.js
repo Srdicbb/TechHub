@@ -1,4 +1,4 @@
-// Mreža: od paketa i DNS-a do HTTP-a i TLS-a
+// Network: od paketa i DNS-a do HTTP-a i TLS-a
 const cs = (t, src) => ({ t, lang: 'csharp', src });
 const sh = (t, src) => ({ t, lang: 'bash', src });
 const txt = (t, src) => ({ t, lang: 'plaintext', src });

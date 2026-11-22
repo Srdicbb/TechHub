@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700;800&family=Red+Hat+Mono:wght@400;500&family=Red+Hat+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>/*CSS*/</style>
-<script>try{var t=localStorage.getItem('prirucnik.tema');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;if(localStorage.getItem('prirucnik.meni')==='uzak')document.documentElement.classList.add('mini')}catch(e){}</script>
+<script>try{var t=localStorage.getItem('prirucnik.tema');if(t==='light'||t==='dark')document.documentElement.dataset.tema=t;if(localStorage.getItem('prirucnik.meni')==='uzak')document.documentElement.classList.add('mini')}catch(e){}</script>
 </head>
 <body>
 <div class="app">
@@ -31,7 +31,6 @@
       <button class="sb-qb" id="qbtn" type="button" aria-label="Pretraži teme" data-tip="Pretraga"><!--ICON:search--></button>
       <p class="qn" id="qn" aria-live="polite"></p>
       <nav id="toc" aria-label="Sadržaj"></nav>
-      <div class="sb-foot" id="sbfoot"></div>
     </div>
   </aside>
   <div class="fly" id="fly" hidden></div>
@@ -40,7 +39,7 @@
     <header class="top">
       <button class="btn ic menu" id="menu" type="button" aria-label="Meni" aria-controls="side"><!--ICON:menu--></button>
       <nav class="crumbs" id="crumbs" aria-label="Putanja"></nav>
-      <div class="pn"><a class="btn ic" id="prev" aria-label="Prethodna tema"><!--ICON:chevron-left--></a><a class="btn ic" id="next" aria-label="Sledeća tema"><!--ICON:chevron-right--></a></div>
+      <button class="btn ic tema" id="tema" type="button" aria-label="Uključi tamnu temu" title="Uključi tamnu temu"><span class="sun"><!--ICON:sun--></span><span class="moon"><!--ICON:moon--></span></button>
     </header>
     <main id="view" tabindex="-1"></main>
     <footer class="foot"><p>Scenu rotiraš prevlačenjem, a zumiraš točkićem ili sa dva prsta. Tastatura: <kbd>/</kbd> pretraga, <kbd>←</kbd> i <kbd>→</kbd> prethodna i sledeća tema.</p></footer>

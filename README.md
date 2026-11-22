@@ -1,6 +1,6 @@
 # Priručnik koncepata
 
-Lični priručnik za pripremu intervjua i obnavljanje osnova: mreža i protokoli, system design, konkurentnost i paralelizam, arhitektura, podaci, cloud, .NET i Angular, AI i algoritmi. Svaka tema ima živu scenu (three.js ili SVG), ključne tačke, primere koda i zamke. System design ima interaktivnu simulaciju sistema pod opterećenjem.
+Lični priručnik za pripremu intervjua i obnavljanje osnova: network, system design, konkurentnost i paralelizam, arhitektura, podaci, cloud, .NET i Angular, AI i algoritmi. Svaka tema ima živu scenu (three.js ili SVG), ključne tačke, primere koda i zamke. System design ima interaktivnu simulaciju sistema pod opterećenjem.
 
 ## Pokretanje
 
@@ -20,7 +20,7 @@ Posle izmene u `src/` ponovo pokreni `npm run build` i osveži stranicu.
 | Putanja | Šta je |
 |---|---|
 | `src/index.html` | Kostur stranice: meni i gornja traka. Build ubacuje CSS, kod i ikone. |
-| `src/style.css` | Svi stilovi, svetla i tamna tema (`data-theme` na `<html>`). |
+| `src/style.css` | Svi stilovi, svetla i tamna tema (`data-tema` na `<html>`, izbor sa dugmeta u gornjem desnom uglu; bez izbora važi `data-theme` okruženja ili tema sistema). |
 | `src/app.js` | Rutiranje (`#id-teme`), meni, roadmap na početnoj, stranice tema i stranica System design. |
 | `src/viz.js` | Mali engine za scene: renderer, kamera i labele (Stage), simulirani sat (`wait`, `tween`, `move`, `spawn`) i primitivi (`box`, `db`, `orb`, `plate`...). |
 | `src/sysviz.js` | Simulacija sistema na vrhu oblasti System design: red čekanja, CPU i memorija po instanci, skaliranje, rate limiter, keš. |

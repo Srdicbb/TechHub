@@ -55,15 +55,13 @@ import { sysViz } from './sysviz.js';
   let curTab = null, auto = null;
   const q = $('#q');
   const opened = new Set(), manual = new Set();
-  const VKEY = 'prirucnik.pregledano', RKEY = 'prirucnik.nedavno', TKEY = 'prirucnik.tema', MKEY = 'prirucnik.meni';
+  const TKEY = 'prirucnik.tema', MKEY = 'prirucnik.meni';
   const ls = {
     get(k) { try { return localStorage.getItem(k); } catch { return null; } },
     set(k, v) { try { localStorage.setItem(k, v); } catch { /* skladište nije dostupno */ } },
   };
-  const seen = (() => { try { return new Set(JSON.parse(ls.get(VKEY) || '[]')); } catch { return new Set(); } })();
-  const saveSeen = () => { ls.set(VKEY, JSON.stringify([...seen])); renderFoot(); };
-  let recent = (() => { try { return JSON.parse(ls.get(RKEY) || '[]').filter(id => byId.has(id)); } catch { return []; } })();
-  function visit(id) { recent = [id, ...recent.filter(x => x !== id)].slice(0, 6); ls.set(RKEY, JSON.stringify(recent)); renderRecent(); }
+  // priručnik ne prati pregledane ni nedavne teme; brišu se zapisi iz ranijih verzija
+  try { localStorage.removeItem('prirucnik.pregledano'); localStorage.removeItem('prirucnik.nedavno'); } catch { /* skladište nije dostupno */ }
   const item = t => `<li><a href="#${t.id}" data-t="${t.id}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a></li>`;
   // stablo oblasti: naslovi sekcija i teme, spojeni linijom kao grane
   const tree = tab => `<ul class="tree">${tab.sections.map(sc => `<li class="th">${esc(sc.title)}</li>${sc.topics.map(id => item(byId.get(id))).join('')}`).join('')}</ul>`;
@@ -75,37 +73,17 @@ import { sysViz } from './sysviz.js';
           <div class="nav-row"><a class="nav-t" href="#${tab.id}" data-tab="${tab.id}">${icon(tab.icon)}<span class="tt">${esc(tab.title)}</span><span class="n">${n || 'uskoro'}</span></a>${n ? `<button class="nav-x" type="button" data-x="${tab.id}" aria-expanded="${on}" aria-label="${on ? 'Sakrij' : 'Prikaži'} teme: ${esc(tab.title)}">${icon('chevron-down')}</button>` : '<span class="nav-x ph" aria-hidden="true"></span>'}</div>
           ${on ? tree(tab) : ''}
         </section>`;
-      }).join('') + '<div id="rec"></div>';
-    renderRecent();
+      }).join('');
   }
-  // poslednje otvorene teme, bez one koja je sada na ekranu
-  function renderRecent() {
-    const el = $('#rec');
-    if (!el) return;
-    const h = decodeURIComponent(location.hash.slice(1));
-    const list = recent.filter(id => id !== h).slice(0, 3).map(id => byId.get(id));
-    el.innerHTML = list.length ? `<p class="sb-h">Nedavno</p><ul class="rec">${list.map(t => `<li><a href="#${t.id}" data-tip="${esc(t.title)}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a></li>`).join('')}</ul>` : '';
+  // tema: dugme u gornjem desnom uglu. Izbor se piše u data-tema, jer data-theme na <html> postavlja i okruženje
+  // (claude.ai ga postavlja po svojoj temi i vraća ga nazad), pa bi pregazilo izbor.
+  const theme = () => { const r = document.documentElement; return r.dataset.tema || r.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); };
+  function markTheme() {
+    const b = $('#tema'), dark = theme() === 'dark', lab = dark ? 'Uključi svetlu temu' : 'Uključi tamnu temu';
+    b.dataset.on = dark ? 'dark' : 'light';
+    b.setAttribute('aria-label', lab);
+    b.title = lab;
   }
-  // podnožje menija: tema i kartica za nastavak
-  const theme = () => document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-  function renderFoot() {
-    const el = $('#sbfoot');
-    if (!el) return;
-    const next = ORDER.find(t => !seen.has(t.id)) || ORDER[0];
-    const d = ORDER.filter(t => seen.has(t.id)).length, tot = ORDER.length;
-    el.innerHTML = `<div class="sb-theme" role="group" aria-label="Tema">
-        <button type="button" data-th="light" data-tip="Svetla tema">${icon('sun')}<span>Svetla</span></button>
-        <button type="button" data-th="dark" data-tip="Tamna tema">${icon('moon')}<span>Tamna</span></button>
-      </div>
-      <div class="sb-card">
-        <b>${d ? 'Nastavi učenje' : 'Kreni od početka'}</b>
-        <p>${d} od ${tot} tema pregledano. Sledeće: ${esc(next.title)}</p>
-        <span class="bar" aria-hidden="true"><i style="width:${(d / tot * 100).toFixed(1)}%"></i></span>
-        <a class="sb-go" href="#${next.id}" data-tip="${d ? 'Nastavi' : 'Počni'}: ${esc(next.title)}">${icon('play')}<span>${d ? 'Nastavi' : 'Počni'}</span></a>
-      </div>`;
-    markTheme();
-  }
-  function markTheme() { const th = theme(); $$('[data-th]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.th === th))); }
   function search(qs) {
     const words = norm(qs.trim()).split(/\s+/).filter(Boolean);
     if (!words.length) { $('#qn').textContent = ''; renderToc(); markCurrent(); return; }
@@ -142,12 +120,9 @@ import { sysViz } from './sysviz.js';
   }
 
   // ---------- delovi stranice ----------
-  const pn = (prev, next) => {
-    for (const [el, t, lab] of [[$('#prev'), prev, 'Prethodna'], [$('#next'), next, 'Sledeća']]) {
-      if (t) { el.href = '#' + t.id; el.removeAttribute('aria-disabled'); el.title = `${lab}: ${t.title}`; }
-      else { el.removeAttribute('href'); el.setAttribute('aria-disabled', 'true'); el.title = ''; }
-    }
-  };
+  // susedne strane za tastaturu (← i →)
+  let adj = { prev: null, next: null };
+  const pn = (prev, next) => { adj = { prev: prev?.id ?? null, next: next?.id ?? null }; };
   const tile = t => `<a class="tile" href="#${t.id}"><span class="tsym">${esc(t.sym)}</span><span class="tnm">${esc(t.title)}</span></a>`;
 
   function params(key, viz) {
@@ -299,8 +274,6 @@ import { sysViz } from './sysviz.js';
     const i = IDX.get(t.id), prev = ORDER[i - 1], next = ORDER[i + 1], tab = TAB_OF.get(t.id);
     setTab(tab);
     crumbs([[tab.title, '#' + tab.id, true], [t.title]]);
-    if (!seen.has(t.id)) { seen.add(t.id); saveSeen(); }
-    visit(t.id);
     pn(prev, next);
     const tables = t.table ? [].concat(t.table) : [];
     $('#view').innerHTML = `<article class="topic pad"><div class="wrap">
@@ -333,19 +306,12 @@ import { sysViz } from './sysviz.js';
   const shape = k => `<svg viewBox="0 0 32 32" aria-hidden="true">${SHAPES[k]}</svg>`;
 
   function roadmapHtml() {
-    const next = ORDER.find(t => !seen.has(t.id)) || ORDER[0];
-    const done = ORDER.filter(t => seen.has(t.id)).length;
     const card = (sc, k) => `<div class="rm-sec" style="order:${k}"><p class="rm-sh">${esc(sc.title)}</p><ul>${sc.topics.map(id => {
-      const t = byId.get(id), d = seen.has(id), nx = t === next;
-      return `<li><a class="rm-t${d ? ' done' : ''}${nx ? ' next' : ''}" href="#${id}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span>${d ? icon('check') : nx ? '<span class="nx">sledeće</span>' : ''}</a></li>`;
+      const t = byId.get(id);
+      return `<li><a class="rm-t" href="#${id}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a></li>`;
     }).join('')}</ul></div>`;
-    return `<div class="rm-top">
-        <p class="rm-prog"><b>${done}</b><span>od ${ORDER.length} tema pregledano</span><span class="bar" aria-hidden="true"><i style="width:${(done / ORDER.length * 100).toFixed(1)}%"></i></span></p>
-        <a class="btn act" href="#${next.id}">${icon('arrow-right')}<span>${done ? 'Nastavi' : 'Počni'}: ${esc(next.title)}</span></a>
-        ${done ? `<button class="btn" type="button" id="rm-reset">${icon('rotate-ccw')}<span>Poništi oznake</span></button>` : ''}
-      </div>
-      <ol class="rm">${TABS.map((tab, ti) => {
-        const ts = tabTopics(tab), d = ts.filter(t => seen.has(t.id)).length;
+    return `<ol class="rm">${TABS.map((tab, ti) => {
+        const ts = tabTopics(tab);
         if (!ts.length) return `<li class="rm-tab soon"><a class="rm-node" href="#${tab.id}"><span class="ic">${icon(tab.icon)}</span><span><b>${esc(tabName(tab))}</b><small>u pripremi</small></span></a></li>`;
         const cols = [[], []], h = [0, 0];
         tab.sections.forEach((sc, k) => {
@@ -353,7 +319,7 @@ import { sysViz } from './sysviz.js';
           cols[c].push(card(sc, k)); h[c] += sc.topics.length + 1.6;
         });
         return `<li class="rm-tab">
-          <a class="rm-node" href="#${tab.id}"><span class="ic">${icon(tab.icon)}</span><span><b>${esc(tabName(tab))}</b><small>${d ? `${d} od ${ts.length} pregledano` : `${ts.length} ${plural(ts.length)}`}</small></span></a>
+          <a class="rm-node" href="#${tab.id}"><span class="ic">${icon(tab.icon)}</span><span><b>${esc(tabName(tab))}</b><small>${ts.length} ${plural(ts.length)}</small></span></a>
           <div class="rm-cols"><div class="rm-col l">${cols[0].join('')}</div><div class="rm-col r">${cols[1].join('')}</div></div>
         </li>`;
       }).join('')}</ol>`;
@@ -365,8 +331,8 @@ import { sysViz } from './sysviz.js';
     pn(null, ORDER[0]);
     $('#view').innerHTML = `<section class="pad home"><div class="wrap">
       <header class="t-head"><h1>Priručnik koncepata</h1>
-      <p class="lede">Put kroz ${ORDER.length} tema u ${TABS.filter(t => tabTopics(t).length).length} oblasti: od niti i jezgara i skaliranja sistema, preko poruka, baza i Kubernetes-a, do AI-ja i algoritama. Svaka tema ima scenu koja radi, ključne tačke, primere koda i zamke. Teme koje otvoriš ovde se obeležavaju.</p></header>
-      <div id="rm-box">${roadmapHtml()}</div>
+      <p class="lede">Put kroz ${ORDER.length} tema u ${TABS.filter(t => tabTopics(t).length).length} oblasti: od mreže i skaliranja sistema, preko niti, poruka, baza i Kubernetes-a, do AI-ja i algoritama. Svaka tema ima scenu koja radi, ključne tačke, primere koda i zamke.</p></header>
+      ${roadmapHtml()}
       <section class="sec legend-sec"><h2>Kako čitati scene</h2>
         <p class="note">Isti oblici i boje znače isto u svakoj temi.</p>
         <ul class="keys">
@@ -382,12 +348,6 @@ import { sysViz } from './sysviz.js';
         ${vizCard(legendViz, 'legend')}
       </section>
     </div></section>`;
-    const box = $('#rm-box');
-    box.addEventListener('click', e => {
-      if (!e.target.closest('#rm-reset')) return;
-      seen.clear(); saveSeen();
-      box.innerHTML = roadmapHtml();
-    });
     mountViz($('.viz', $('#view')), legendViz, 'legend');
   }
 
@@ -425,7 +385,7 @@ import { sysViz } from './sysviz.js';
       ${t.rel?.length ? `<p class="part-rel"><span>Detaljnije:</span>${t.rel.filter(id => byId.has(id)).map(id => `<a href="#${id}">${esc(byId.get(id).title)}</a>`).join('')}</p>` : ''}
     </section>`;
   }
-  // putanja, susedi i oznaka "pregledano" za trenutni deo stranice
+  // putanja i susedi za trenutni deo stranice
   function sysSet(id) {
     if (sysCur === id) return;
     sysCur = id;
@@ -434,13 +394,11 @@ import { sysViz } from './sysviz.js';
       crumbs([[tabName(SYS), '#' + SYS.id, true], [t.title]]);
       const i = IDX.get(id);
       pn(ORDER[i - 1], ORDER[i + 1]);
-      if (!seen.has(id)) { seen.add(id); saveSeen(); }
     } else { crumbs([[tabName(SYS)]]); pn(...around(SYS)); }
     markCurrent();
   }
   function sysGo(id, smooth) {
     const t = byId.get(id), soft = smooth && !REDUCED ? 'smooth' : 'auto';
-    if (t?.part) visit(id);
     const el = t?.part ? $('#p-' + id) : SM.get(id) === SYS ? $('#s-' + id) : null;
     sysSet(t?.part ? id : SYS.id);
     spyLock = performance.now() + (soft === 'smooth' ? 1100 : 200);
@@ -506,7 +464,7 @@ import { sysViz } from './sysviz.js';
     const h = decodeURIComponent(location.hash.slice(1));
     document.body.classList.remove('nav-open');
     hideFly(true);
-    if (isSys(h) && $('#view .sys')) { sysGo(h, true); renderRecent(); return; }   // ista stranica: samo skrol, simulacija radi dalje
+    if (isSys(h) && $('#view .sys')) { sysGo(h, true); return; }   // ista stranica: samo skrol, simulacija radi dalje
     observers.forEach(o => o.disconnect());
     observers = [];
     sysCur = null;
@@ -544,16 +502,14 @@ import { sysViz } from './sysviz.js';
   $('#menu').addEventListener('click', () => document.body.classList.toggle('nav-open'));
 
   // tema: izbor se pamti; bez izbora važi tema okruženja ili sistema
-  $('#sbfoot').addEventListener('click', e => {
-    const b = e.target.closest('[data-th]');
-    if (!b) return;
-    document.documentElement.dataset.theme = b.dataset.th;
-    ls.set(TKEY, b.dataset.th);
+  $('#tema').addEventListener('click', () => {
+    const th = theme() === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.tema = th;
+    ls.set(TKEY, th);
     markTheme();
-    if (isMini()) { hideFly(true); $(`[data-th]:not([aria-pressed=true])`)?.focus(); }
   });
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', markTheme);
-  new MutationObserver(markTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  new MutationObserver(markTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-tema'] });
 
   // uzak meni: samo ikonice, a teme oblasti iskaču pored ikonice
   const isMini = () => document.documentElement.classList.contains('mini');
@@ -620,11 +576,10 @@ import { sysViz } from './sysviz.js';
       return;
     }
     if (typing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
-    const go = el => { const h = el.getAttribute('href'); if (h) location.hash = h; };
-    if (e.key === 'ArrowLeft') go($('#prev'));
-    if (e.key === 'ArrowRight') go($('#next'));
+    const to = e.key === 'ArrowLeft' ? adj.prev : e.key === 'ArrowRight' ? adj.next : null;
+    if (to) location.hash = to;
   });
   window.addEventListener('hashchange', route);
-  renderFoot();
+  markTheme();
   route();
 }

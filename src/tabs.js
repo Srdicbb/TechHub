@@ -3,7 +3,7 @@
 // page: 'system' znači da su teme delovi jedne stranice sa simulacijom; soon: oblast još nema tema.
 export const TABS = [
   {
-    id: 'mreza', title: 'Mreža', name: 'Mreža i protokoli', icon: 'globe',
+    id: 'network', title: 'Network', name: 'Network', icon: 'globe',
     blurb: 'Šta se dešava između klijenta i servera: slojevi i paketi, TCP i UDP, DNS, HTTP i njegove verzije, metode i idempotentnost, HTTPS i TLS handshake.',
     sections: [
       { id: 'n-osnove', title: 'Kako paket stiže', icon: 'network', topics: ['net-layers', 'tcp-udp', 'dns'] },
@@ -61,7 +61,7 @@ export const TABS = [
     domains: ['algorithms'],
   },
   {
-    id: 'bezbednost', title: 'Bezbednost', name: 'Bezbednost', icon: 'shield', soon: true,
+    id: 'security', title: 'Security', name: 'Security', icon: 'shield', soon: true,
     blurb: 'Oblast je u pripremi i stiže na kraju.',
     sections: [],
   },
