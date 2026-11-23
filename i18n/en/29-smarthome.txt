@@ -1,0 +1,875 @@
+@b975bb1d1d
+Every smart-home system has the same roles: **sensors** and buttons report what happened, the **controller** decides, **actuators** (relays, dimmers, blind motors) carry it out, and panels and the app serve people. Systems differ in where the logic lives and what happens when one part fails.
+@58e7c60c13
+**Sensors and buttons** are inputs: motion, temperature, humidity, an open window, a button press. They report an event; they don't decide what happens next.
+@67c6335dca
+**Actuators** are outputs: a relay switches a light, a dimmer changes its level, a module moves a blind, a valve controls heating. They usually sit in the distribution board or in a box behind the switch.
+@1acacbc5f3
+The **controller** holds the logic: scenes, schedules and rules. In a centralised system every command passes through it.
+@69d87fe726
+In a **decentralised** system (KNX is the typical example) every device has its own processor and parameters, so a button sends its command straight to the actuator, with no controller in between.
+@434c1662b3
+**Wired** systems (KNX, Modbus, DALI, wired controller inputs) are more reliable and use no batteries; **wireless** ones (Zigbee, Thread, Wi‑Fi) are easier to add to a finished apartment.
+@b526f8f94d
+A good system has a **fallback path**: basic functions, such as switching a light with a button, keep working when the controller, the network or the internet fails.
+@d333dde2dd
+Roles in the system
+@709f85be2a
+Sensor, button
+@07b8825305
+motion sensor, thermostat, window contact, wall button
+@06ae2223e4
+in the room
+@4f739d7373
+relay module, dimmer, blind module, heating valve
+@ebfe54c4fb
+distribution board or a box behind the switch
+@4a8a07cd94
+Controller
+@04a3f0517f
+smart-home controller, Home Assistant, KNX logic module
+@9f2186f3f9
+distribution board or network cabinet
+@41ff192119
+wall panel, app, voice assistant
+@1d0890b491
+Plan · who does what in the living room
+@83b0971ae3
+
+Living room
+  inputs:    button by the door (2 buttons), motion sensor, window contact
+  outputs:   relay K1 (ceiling light), dimmer D1 (LED strip), module R1 (blind)
+  logic:     button 1 short  → K1 on or off
+             button 2 hold   → D1 changes level
+             window open     → heating in the room stops
+  fallback:  button 1 also wired directly to K1, works even when the controller is down
+@9905f2b917
+Everything through one controller with no fallback path: when it stops, not even the bathroom light works. Basic functions should work without it.
+@9f0512a815
+Wireless sensors where the signal doesn't reach, or batteries nobody replaces: the system quietly stops reacting.
+@9daa370a20
+Logic scattered across three places (in the device, in the controller and in the cloud): a year later nobody knows why the light came on.
+@1853cba409
+An actuator with no manual override and no labels in the board: when something doesn't work, there is no quick way to tell whether the fault is in the logic or in the wiring.
+@3c991d608a
+decentralised (bus)
+@26559f0d29
+House
+@4d0d9606fa
+Button
+@ba5fdd3994
+Motion sensor
+@1620c54352
+Light 1
+@856b13e5b2
+Light 2
+@c9b2a85aec
+Logic module
+@123f717748
+Bus
+@34a751377d
+Lights on
+@41f3e08f5a
+Lost commands
+@553cad41f6
+Pressing the **button** is only an event. The button sends it to the **controller**, because in a centralised system only the controller knows what should happen.
+@e7773ac083
+The button sends a **telegram** onto the bus. Every device sees it, but only the one set to listen to that address reacts: **Relay 1**.
+@b2cf21bb18
+The controller finds the rule “button 1 → light 1” and sends a command to the **relay**. The relay closes its contact and the light gets power.
+@b0ffc246d1
+The relay switches the light on by itself. The logic module is not in the path, so its failure doesn't matter.
+@5dd749e5c3
+**The controller is down**: nobody processes the event and the light stays off. That's why basic buttons should also have a direct path to the relay.
+@73c50eff1e
+The sensor reports **motion**. A rule in the controller says: after 10 pm, light 2 at 30 %, so it doesn't dazzle.
+@687dfbed9d
+The motion sensor is set to send a telegram to relay 2: it works even without the logic module.
+@66d939e85f
+The sensor doesn't help either: without the controller there are no rules and no commands.
+@dad2b8c729
+Whatever lives only in the logic module stops working: the **“Good night”** scene and schedules. Buttons and sensors still work.
+@3cf216e693
+The **“Good night”** scene lives in the logic module: it sends the telegrams that switch both lights off.
+@78ae735288
+The same command can take a short path, through the home network to the controller, or a long one, over the internet to the manufacturer's server and back. The **local** path is faster and works without internet; the **cloud** brings remote access and integrations, but becomes one more point of failure.
+@040fcff1de
+**Local**: the button, the wall panel and the app on the home Wi‑Fi talk to the controller in the house. Latency is tens of milliseconds.
+@8ae9aced1d
+**Cloud**: the command goes to the manufacturer's server and back, through the router and the internet. Latency is hundreds of milliseconds, and without internet nothing that depends on the cloud works.
+@1360cbae41
+Voice assistants usually process speech in the cloud, so without internet voice doesn't work even when everything else is local.
+@2bdf5a821b
+Remote access without the manufacturer's cloud: a **VPN** into the home network, for example WireGuard on the router. The phone is then as if it were at home and uses the local path.
+@219d9fb5bb
+A controller failure is worse than an internet outage. That's why wired buttons should also have a direct path to the output.
+@f2bbb15792
+Security: smart-home devices on a separate network (VLAN), with no ports open to the internet, and with up-to-date firmware.
+@c72da6320e
+What works when something fails
+@100e0225c6
+Wall button, wired
+@579ebec707
+works if it has a direct path to the relay
+@6395db4091
+Wall panel and app at home
+@f47c69bfc5
+App away from home, through the cloud or a VPN
+@d7022fe9c6
+WireGuard · the phone as part of the home network
+@de41a5e543
+
+[Interface]                      # phone
+PrivateKey = <phone private key>
+Address = 10.8.0.2/32
+DNS = 192.168.1.1                # home router, so device names work
+
+[Peer]                           # home router
+PublicKey = <router public key>
+Endpoint = kuca.example.net:51820
+AllowedIPs = 192.168.1.0/24      # only the home network goes through the tunnel
+PersistentKeepalive = 25
+@b10574d246
+A device that works only through the manufacturer's cloud: when the service changes its terms or shuts down, the device can no longer be controlled.
+@73d2fba4c6
+A controller or recorder port open to the internet: scanners find it within hours. Remote access goes through a VPN or a trusted cloud service.
+@8fe21d31f3
+An automation that depends on data from the internet (forecast, electricity price) must behave sensibly when the data is missing.
+@183d7e417f
+Home Wi‑Fi as the only link for everything: when the router restarts, the house stops too. Key devices go over a cable or a network that doesn't depend on the router.
+@6430bdbcb7
+Light
+@fb1f64a040
+Wall panel
+@de827ee59e
+Phone at home
+@cd654d30b8
+Manufacturer's cloud
+@4bcee57020
+Phone away from home
+@4c6c68152f
+Done
+@67218e0d52
+Didn't arrive
+@b271c452dd
+Latency
+@6863cf2628
+No internet: the message can't get past the router, so this path doesn't work.
+@3572dbef4a
+**The controller is down**: nobody can carry out the command.
+@c33b66bdc6
+The **button** is wired to the controller: the shortest path, independent of both Wi‑Fi and the internet.
+@b83409824c
+The controller is down, but the button also has a **direct path** to the relay: the basic function works.
+@3d6d8ac254
+The **wall panel** sends the command over the home Wi‑Fi and the router to the controller. No internet needed.
+@f6404836d9
+The **phone at home** uses the local path, just like the panel.
+@76cbe92ff2
+The **phone away from home** goes through the manufacturer's cloud: the cloud forwards the command over a connection the controller keeps open.
+@e16e053b20
+The **voice assistant** sends a recording of speech to the cloud, and the cloud returns a command to the controller. Without internet, voice doesn't work.
+@58b35232b5
+Zigbee is a wireless **mesh** network at 2.4 GHz, built for small messages and low power. The **coordinator** forms the network, mains-powered devices (bulbs, sockets, switches with a neutral) are **routers** that relay other devices' messages, and battery sensors are **end devices** that mostly sleep.
+@b3ffee80dc
+The **coordinator** (a USB stick or a module in the controller) forms the network, picks the channel and keeps the network key. A network has exactly one.
+@148128c136
+**Routers** are devices that are always powered. They relay messages for others and hold messages for sleeping end devices.
+@04132e9178
+Battery-powered **end devices** (sensors, remotes) wake up only to send an event or to ask their parent whether there are messages for them, so a battery lasts months or years.
+@d0cfbbfd36
+Range doesn't come from a stronger signal but from **more routers**: a message hops from device to device. When a router disappears, the network finds another path by itself, if one exists.
+@da9d5c6f66
+Zigbee shares the 2.4 GHz band with Wi‑Fi, so the Zigbee channel is chosen away from the Wi‑Fi channels.
+@fac9740ba3
+**Zigbee2MQTT** and **ZHA** connect the coordinator to Home Assistant: the first turns devices into MQTT topics, the second is a built-in integration.
+@7b2d107c5d
+Roles in a Zigbee network
+@2c655e1741
+Power
+@16253cdd41
+Relays messages
+@679ac82ee5
+USB stick, module in the controller
+@7982e713fa
+bulb, socket, switch with a neutral
+@3a270d6564
+End device
+@01ce2e5f8b
+battery
+@766a367e59
+motion sensor, door contact, remote
+@739135bf2c
+MQTT · watching Zigbee devices
+@dec083612a
+all Zigbee2MQTT messages
+@9d1ff03f30
+switch the light on at about 70 %
+@5ee163a348
+away from Wi-Fi channels 1, 6 and 11
+@112e6ac1dd
+the network key is generated on first start
+@a84bb179f4
+devices show up in Home Assistant by themselves
+@cda31a8182
+A network made only of battery sensors, with no routers: sensors far from the coordinator lose their connection. A few mains-powered devices spread around the house help.
+@0bc5d33ca0
+Smart bulbs behind a wall switch that cuts their power: a router leaves the network every time someone switches the light off, and messages that went through it are delayed or lost.
+@defadabd5a
+A coordinator in a USB port right next to the computer or a disk: USB 3 interference in the 2.4 GHz band cuts the range a lot. A USB extension cable helps.
+@66a4b8db0f
+An end device attaches to the router that was nearby when it was paired. Move it far away and the link stays poor until it picks a new parent.
+@031353b1fb
+Routers
+@19165f6047
+all working
+@0f107a5dc0
+bulb 2 switched off
+@715716a0fc
+bulb 2 and socket 3 switched off
+@2bffea4c26
+Socket 1
+@e02e656d29
+Socket 3
+@e493eab476
+Window contact
+@b84a3d1020
+<small>forms the network</small>
+@bb85e2c336
+<small>router, mains-powered</small>
+@4aebdffcaf
+<small>battery, sleeps</small>
+@95331cfb1c
+Delivered
+@60180a2d2d
+**{0}** sends “{1}” to its parent, but there is no path beyond it: the routers in range are switched off. The message is lost.
+@6faeaf38f8
+**{0}** sends “{1}”, but its parent is switched off and no other router is in range. The message is lost.
+@10b1296583
+**{0}** wakes up and sends “{1}” to its parent. Path to the coordinator: {2}.
+@1f2e741f26
+Bulb 2 has been switched off at the wall, so it leaves the network. The mesh finds **another path** by itself, through socket 3: one hop more, but the message gets there.
+@eabefe874e
+KNX is an open standard for home and building automation. Devices sit on a shared two-wire **bus**, each has its own processor and parameters, and commands travel as **telegrams** addressed to **group addresses**. A button doesn't know which relay it switches: it sends to a group address, and every device listening to it reacts.
+@b8d35ab7d6
+The **bus** (TP) is a two-wire cable that carries both power and data. The line power supply provides about 30 V DC that the devices share, so the number of devices and consumption per line are planned in advance.
+@4d7c36cdbb
+The **physical address** (e.g. `1.1.12`) says where a device is: area, line, device. It is used for programming and diagnostics.
+@f2bc376aaa
+A **group address** (e.g. `1/0/3`) is a function, for example “living room light, switch on”. The button sends to it, and every actuator listening to it reacts; one device can listen to several group addresses.
+@8362e78137
+The same function usually has two addresses: **command** and **status**. The actuator reports the real state on the status address, and panels and visualisation read that one.
+@c0a884ab91
+Everything is configured in **ETS**: the project, addresses and device parameters. The devices are then programmed over the bus or an IP interface.
+@31777746f2
+A **KNX IP** interface or router connects the bus to the network: for ETS, for visualisation and for integration with Home Assistant or other systems.
+@706e5feaac
+The logic lives in the devices, so basic functions work even without a server or controller.
+@88a96576b8
+Addresses in KNX
+@03f1f56172
+Physical
+@afb570c9ac
+area 1, line 1, device 12: where the device is
+@2e9a295a39
+Group, command
+@1d05460e23
+lights, on-off, living room ceiling
+@ff62a9f3f6
+Group, status
+@f0e55161d5
+
+1 Lights
+  1/0  On-off                1/0/1 Hallway        1/0/3 Living room ceiling
+  1/1  Dimming               1/1/3 Living room ceiling
+  1/2  Level (%)             1/2/3 Living room ceiling
+  1/4  Status                1/4/1 Hallway        1/4/3 Living room ceiling
+2 Blinds
+  2/0  Up-down               2/0/1 Living left    2/0/2 Living right
+  2/1  Stop                  2/1/1 Living left    2/1/2 Living right
+3 Scenes
+  3/0  House scenes          3/0/1 All off        3/0/2 Good morning
+@2464450a03
+Home Assistant · KNX light with status
+@c417522259
+on-off command
+@cd753654a7
+level in percent
+@3ebc613ad0
+Without status addresses a panel shows what it sent, not what happened: after a manual switch or a power cut the display is wrong.
+@a1f191a17c
+A group address plan made up as you go: a year later nobody knows what `4/7/23` is. The plan is made before ETS, by function and by room.
+@7e41151db1
+An ETS project that exists only on the installer's laptop: without it the installation can't be changed. The project is handed over to the owner.
+@9f9d904109
+Too many devices on one line: the line power supply can't cope and errors appear that are hard to track down. Lines are planned with headroom.
+@510373615c
+KNX IP without protection on the home network: anyone on the network can send telegrams. KNX Secure helps, or at least a separate network.
+@5047bfde96
+Button sends
+@fc131c9751
+1/0/3 · living room
+@ce3e79806c
+1/0/1 · hallway
+@27a7bae145
+3/0/1 · all off
+@b7bf1152b9
+KNX TP bus
+@141bcb6cc5
+Line power supply<small>about 30 V DC</small>
+@41a57c9067
+Button<small>sends {0}</small>
+@1df8d29466
+Actuator 1<small>listens to 1/0/3, 3/0/1</small>
+@997b4194f4
+Living room ceiling
+@bd0438fbaa
+Dimmer<small>listens to 1/0/3, 3/0/1</small>
+@aadb8dcad0
+LED strip
+@8d849df53d
+Actuator 2<small>listens to 1/0/1, 3/0/1</small>
+@0dc42c4a6c
+Hallway
+@021b791f01
+Panel<small>reads status</small>
+@08796712ed
+on
+@23ba7cafda
+off
+@9c6a88f1bc
+Living room: {0} · Hallway: {1}
+@7fff268234
+Telegrams
+@460e95f5db
+Devices reacted
+@d1b9efa7d2
+The button sends a **scene** to `3/0/1`. All three actuators listen to that address, so a single telegram switches everything off. No central device takes part.
+@2797c619ed
+The actuators report their **status** on their status addresses (blue). The panel reads them and shows the real state.
+@72cb38b5d6
+: actuator 1 and the dimmer, from a single press.
+@c48f6daacc
+The button sends the telegram **{0} = 1** onto the bus. Every device sees it; only those listening to {1} react{2}
+@e2bcd22c83
+A second press sends **{0} = 0** and the same group switches off.
+@d39b34ba80
+The actuator reports its **status** on the status address (blue), and the panel shows the real state rather than what someone sent.
+@2a37a4645c
+Home Assistant is an open platform that runs on a computer in the house (a mini PC, a Raspberry Pi or a virtual machine) and brings together devices from different manufacturers through **integrations**. Every device becomes a set of **entities** with a state, and **automations** react to state changes: trigger, condition, action.
+@7d8555cf5e
+An **integration** knows how to talk to one kind of device or service: Zigbee (ZHA or Zigbee2MQTT), MQTT, KNX, Modbus, ESPHome, manufacturers' cloud services.
+@0644ffc981
+An **entity** is one state or one control: `light.hodnik`, `binary_sensor.hodnik_pokret`, `sensor.kupatilo_vlaga`. A device usually has several entities.
+@8d970452b5
+An **automation** has a trigger (what happened), conditions (whether it may run) and actions (what to do). A **script** is a sequence of actions without a trigger, and a **scene** stores the desired states of several entities.
+@64b3290671
+**ESPHome** builds firmware for the ESP32 from a YAML description, and the device shows up in Home Assistant by itself and works locally, without a cloud.
+@32efb08c54
+Automations run inside the house and work without internet, except for integrations that depend on a manufacturer's cloud.
+@35f6fbc8be
+The configuration is kept in **backups**; a copy off that computer (NAS, cloud) is the only rescue when the card or disk fails.
+@639c89d942
+Home Assistant · hallway light on motion
+@04e040fd45
+when it's dark: light on motion, off 2 minutes after the last motion
+@f5df390b05
+new motion restarts the countdown
+@c87e579735
+ESPHome · temperature, humidity and a relay on an ESP32
+@f5a142d585
+local connection to Home Assistant
+@f57a4354ac
+new firmware over the network
+@8bd2032421
+relay for the fan
+@897c899166
+Home Assistant on an SD card in a Raspberry Pi: after a few months of database writes the card fails. An SSD or a mini PC is better, with regular backups.
+@77d1680d30
+An automation without the right `mode`: every motion starts a new copy, so the light flickers or switches off while someone is in the room.
+@e041cf266d
+Everything depends on one computer: when it stops, all automations stop. Basic functions should work without it.
+@2f0076c61a
+Updating as soon as a new version is out, without a backup: an integration changes just when nobody is at home.
+@c53387c009
+Hallway illuminance
+@d9bd31b512
+dark · 8 lx
+@ce4d8a2975
+day · 240 lx
+@67202533da
+Home Assistant<small>computer in the house</small>
+@de136b074d
+Zigbee<small>motion sensor</small>
+@a5306886ae
+ESPHome<small>illuminance</small>
+@9452c55b9e
+MQTT<small>temperature</small>
+@baddacb904
+Hallway light
+@6d53aef1a1
+Trigger
+@69061d3fe4
+Condition
+@fa30b6e742
+Action
+@4c84882862
+State changes
+@9e295c8563
+Automation runs
+@ff7ad9ba0b
+Actions run
+@3092aaefaf
+**Integrations** bring in state changes: MQTT reports temperature, ESPHome illuminance. Every change updates the state of one **entity**.
+@a9cc451de1
+The Zigbee sensor reports **motion**: `binary_sensor.hodnik_pokret` goes to `on`. That is the automation's **trigger**.
+@4ea5b513ea
+The **condition** requires illuminance below 20 lx, and it is {0} lx now. The automation stops and the light stays off.
+@0177049882
+**Condition**: illuminance is {0} lx, below the 20 lx limit, so the automation carries on.
+@39212bf9a8
+**Action** `light.turn_on` at 60 % brightness. Home Assistant sends the command to the light through its integration.
+@9f0e115a05
+The motion has stopped. The automation waits for 2 minutes without motion (`wait_for_trigger`) and then switches the light off. New motion during that time restarts the countdown (`mode: restart`).
+@637b92edd2
+A light is switched with a relay and dimmed in several ways: by **phase-cutting** the mains voltage, with a **0–10 V** signal, with **DALI** commands or with **PWM** on an LED strip. With LED strips the most common problem is not control but **voltage drop**: at the end of a long strip the light is weaker.
+@2f192dc53c
+A **phase dimmer** cuts part of the 230 V sine wave. **Leading edge** (cutting at the start of each half-cycle) is for classic bulbs and inductive loads, **trailing edge** (at the end) for LED drivers and electronic transformers.
+@8b647e352d
+An LED luminaire must be marked as dimmable and match the dimmer type; otherwise it flickers, hums or can't go down to a low level.
+@eb1356ee31
+**0–10 V** and **1–10 V** are analogue signals to the driver: simple, but with no feedback, and every output needs its own wires.
+@57110399d2
+**DALI** gives every luminaire an address and reports its state and faults.
+@eaf320f7e4
+**LED strips** at 12 V or 24 V are dimmed with PWM. Current through the thin copper tracks of the strip causes a voltage drop, so a long strip needs power from both ends or a 24 V strip.
+@50d04fe9ed
+**Colour temperature** (2700 K warm, 4000 K neutral): a tunable-white strip has two channels and RGBW has four, each with its own PWM output.
+@a3f81fb880
+Ways of dimming
+@64799582c0
+230 V mains
+@7105aa2197
+the dimmer type must match the luminaire
+@3efbaf6abd
+driver, separate wires
+@071ffbccb8
+one circuit per output
+@4e3cecdbdf
+driver, two-wire bus
+@efa8592881
+addresses, groups and scenes
+@0b246fdc40
+12 V or 24 V LED strip
+@4dda968145
+voltage drop on long strips
+@9769b0c6a4
+Calculation · current and voltage drop on an LED strip
+@75a81e2412
+
+Strip:   5 m, 14.4 W/m, fed from one end
+Power:   5 m × 14.4 W/m = 72 W
+Current: at 12 V → 72 W / 12 V = 6 A        at 24 V → 72 W / 24 V = 3 A
+
+Voltage drop grows with current (I · R), and power loss with the square of the current (I² · R).
+At 24 V the current is halved, so the voltage drop is halved too,
+and the loss in the strip's tracks is four times smaller.
+Feed a long strip from both ends or from the middle, and choose the cable
+from the power supply to the strip by current and length.
+@4bab4f22b2
+A dimmer for classic bulbs on an LED luminaire: flicker, hum and a shorter driver life.
+@92e8b9ef67
+A long LED strip fed from one end only: the far end is visibly dimmer. Feeding it from both ends, from the middle, or using a 24 V strip helps.
+@6b5a09a710
+A strip power supply loaded to its limit: it heats up and fails. A margin of about 20 % is usual.
+@49d0c99b97
+A thin cable from the power supply to a distant strip: the voltage drops before the current even reaches the strip.
+@9703a240f2
+Strip voltage
+@abc6fd2bfe
+Length
+@a2e8713d71
+from one end
+@6545870427
+from both ends
+@2a1d044da2
+LED strip · {0} m · {1} V
+@57db233f5f
+in the middle
+@30340ee47a
+at the end
+@ad0272e69a
+Power supply {0} V
+@719bf770aa
+Voltage in the middle
+@753a371c06
+Voltage at the end
+@1220cf5d33
+Voltage drop
+@b5c3a7eda9
+Supply current
+@7c2cadf586
+The strip draws **{0} A**. The strip's tracks lose {1} V ({2} %), so the LEDs {3} are visibly dimmer. Try 24 V or feeding it from both ends.
+@1c58e4cdff
+A {0} % drop is noticeable on a white wall, but acceptable. The current is {1} A.
+@5c7a4fbe8e
+The drop is only {0} %: the strip lights evenly. A lower current ({1} A) and a shorter current path work together.
+@468c56dc8e
+A **scene** is a set of desired states applied at once: “Movie” lowers the blind, switches off the ceiling light and sets the LED strip to 20 %. An **automation** is a rule the house carries out by itself: when a trigger happens and the conditions are met, run the actions. A good automation goes unnoticed; a bad one switches the light on when nobody wants it.
+@362bd3f442
+A scene doesn't store steps but **states**: every device goes to its state, regardless of what it was before.
+@196e26e1e8
+A **trigger** is an event: motion, an open door, sunset, a time, a button press. A **condition** checks the state at that moment: is it dark, is anyone home. An **action** changes states or calls a scene.
+@14ff224822
+**Presence** is harder than motion: a motion sensor doesn't see a person sitting still. mmWave presence sensors and a longer switch-off delay help.
+@0f9432b174
+A manual command takes priority: the wall button always works, and an automation must not immediately redo what a person has just undone.
+@b46ac787b8
+Switch-off delay and sensitivity are set per room: a few minutes in the hallway, longer in the bathroom.
+@620dd6dd3b
+The same scene is called from several places: a button, the panel, the app, voice or another automation.
+@c5b7dc41fc
+Home Assistant · the “Movie” scene (scenes.yaml)
+@10d968ecb2
+a scene stores the desired states; it is called by a button, from the panel or from an automation
+@9a19826436
+about 20 %
+@131a382844
+An automation that switches off the light while someone sits still or reads: a motion sensor is not a presence sensor.
+@77091bbd68
+The same function in two automations that undo each other: the light switches on and off in a loop.
+@11c99c45f3
+An automation that ignores a manual change: a person switches the light off, and a minute later it switches it back on.
+@835d4b510d
+Scenes with levels nobody adjusts: after a few months the household works around them and switches everything by hand.
+@15852ba10f
+Show
+@a1b62d9e59
+“Movie” scene
+@8f23636a98
+hallway automation
+@34832495be
+dark
+@2591e5f46f
+day
+@f4e4087314
+Living room
+@0fa75f800c
+Panel<small>“Movie” scene</small>
+@7b121209c8
+Commands
+@332719c1f1
+Runs
+@ece112582b
+Evening in the living room: the ceiling light is on, the blind is up, the TV is off.
+@f3f0c5913a
+The **“Movie”** scene is chosen on the panel. The panel sends the controller just one thing: “scene Movie”.
+@fff3e8b886
+The controller knows the **states** for that scene and sends four commands at once: ceiling off, LED strip 20 %, blind down, TV on.
+@bd0767e3bb
+Condition: dark · met
+@3b9e0c8146
+Condition: dark · not met
+@5858f89acc
+**Trigger**: the hallway sensor reports motion.
+@7e9dc07b2e
+The **condition** “dark” is not met: in daytime the hallway is bright enough. The automation stops and the light stays off.
+@417f09abfa
+The **condition** is met (dark), so the **action** runs: the hallway light at 30 %, so it doesn't dazzle at night.
+@a2bddd0abb
+After 2 minutes without motion the automation switches the light off. New motion in the meantime restarts the countdown.
+@b8d421021a
+**Matter** is a common application standard for smart-home devices: the same device works with several ecosystems and is controlled locally, over the IP network. **Thread** is a low-power wireless IP mesh network that Matter devices often use, and it joins the home network through a **border router**.
+@bcd180fd89
+Matter runs over IP: Wi‑Fi, Ethernet or Thread. Commands stay in the home network, so internet is not needed for control.
+@9d422ac52e
+**Thread** is a mesh like Zigbee, but every device has its own IPv6 address. Mains-powered devices are routers, and battery ones are end devices that mostly sleep.
+@2d4a1ee805
+A **border router** connects the Thread mesh to the home network. There can be several; when one disappears, traffic goes through another.
+@c6fda79ff9
+**Commissioning**: a device is added by scanning a QR code or entering a pairing code; it then gets a certificate and joins the controller's **fabric**.
+@f7337dd8a8
+**Multi-admin**: the same device can be in several fabrics at once, so two ecosystems control it, for example the manufacturer's app and Home Assistant.
+@16170cb4a9
+Matter describes devices through **clusters** (On/Off, Level Control, Color Control). Whatever the standard doesn't cover stays in the manufacturer's app, so support is not the same everywhere.
+@1f394b5ac1
+Matter · adding a device (commissioning)
+@57bd1358d4
+
+1. The device advertises over BLE (or on the network) and waits for a pairing code.
+2. The controller scans the QR code and gets the code and the device details.
+3. The device certificate is checked: that it is a genuine, certified product.
+4. The controller gives the device its network credentials: the Wi-Fi password or the Thread network details.
+5. The device gets an operational certificate and joins the controller's fabric.
+6. For a second ecosystem: open a pairing window in the first one and repeat the procedure.
+@18faf315d3
+A Thread device in a house with no border router has no way to reach the home network. A border router is usually built into a hub, a smart speaker or a router.
+@446219ce7a
+Several separate Thread networks from different manufacturers: devices are split, and each mesh is weaker. It helps when border routers share the same Thread network.
+@9076be6631
+Expecting Matter to bring every feature of a device: advanced settings often stay only in the manufacturer's app.
+@b723ab29eb
+IPv6 or multicast blocked on the home network: Matter devices aren't found or drop out now and then.
+@4e0c919ac1
+Border routers
+@fbe66bcbe4
+both working
+@653aa6465c
+border router 1 off
+@8c0fec4a21
+Home network (Wi‑Fi, Ethernet)
+@1d94692fe6
+Internet<small>not needed</small>
+@42ed2b53f8
+Internet<small>down, doesn't matter</small>
+@211e11c2ec
+Border router 1
+@d7147c2f4c
+Border router 2
+@25d3b575e5
+Controller A<small>manufacturer's app</small>
+@25774b62c5
+Controller B<small>Home Assistant</small>
+@f20f4d041e
+Bulb<small>Thread router</small>
+@fb0da650df
+Socket<small>Thread router</small>
+@14228575d2
+Sensor<small>battery</small>
+@17b7c6c32d
+Via
+@1064adfa34
+border router 2
+@fdb91d1476
+border router 1
+@bfec9e21c9
+is not used
+@d29dcb02e5
+is down, but that changes nothing here
+@fb8899f0fc
+**Controller A** (the manufacturer's app) sends “on”. The command goes through the home network to the border router, and then through the Thread mesh to the bulb. Internet {0}.
+@49a8b2fd39
+**Controller B** (Home Assistant) sends “50 %” to the same bulb. That is **multi-admin**: the bulb is in two fabrics and listens to both controllers.
+@95d70cc791
+The sensor reports an event. **Border router 1 is off**, so the mesh sends the message through the socket and border router 2. Both controllers receive it.
+@3b3cecb585
+The sensor wakes up and reports an event. The message goes through the mesh to the border router, and both controllers receive it because both have subscribed.
+@4cf4482fc8
+**DALI** is a two-wire digital bus for lighting. Every driver gets a short address from 0 to 63, can belong to up to 16 groups and stores up to 16 scenes. The controller sends a command to one address, a group or everyone at once, and drivers can also answer: state, level, lamp failure.
+@a617390a40
+The bus has its own power supply (usually about 16 V DC) and runs slowly, at 1,200 bit/s, which is enough for lighting: a command takes a few tens of milliseconds.
+@64fea82dad
+DALI is not safety extra-low voltage (SELV): the bus wires may run in the same cable as the luminaire supply, but they are treated as mains voltage. Polarity doesn't matter for most devices.
+@041d86afbd
+A **short address** is for one luminaire, a **group** for several (for example everything in an office), and **broadcast** for everyone on the line.
+@ccafaa1929
+A **scene** is stored in the driver itself: the controller says “scene 2”, and each driver knows its own level for that scene.
+@e5e49a83fa
+**DALI-2** also standardises input devices (buttons, sensors) and compatibility testing; **DT8** is the device type for light colour (tunable white, RGBW).
+@a8369a8acf
+One line takes up to 64 drivers; for more, lines are added, and the system connects to KNX or a smart-home controller through a gateway.
+@c1aaca7156
+Who a command goes to
+@3f41512d61
+one driver
+@c9cc40e4df
+Group (0–15)
+@0acebd3803
+all group members
+@ee4843db90
+all luminaires in the office
+@35d5ffeed8
+everyone on the line
+@0bad0859fb
+switching off the whole line
+@32c4d5f8d9
+Scene (0–15)
+@637c2a6e8a
+each at its own value
+@c01cd1fdf0
+DALI · line plan for an office
+@8377193157
+
+Line 1, bus power supply about 16 V DC
+  A0–A5   60×60 panels above the desks   group 0 (office), A0–A1 also group 1 (by the window)
+  A6–A7   downlights at the entrance     group 0, group 2 (entrance)
+Scenes:   0 work = 100 %    1 meeting = 70 %    2 presentation: entrance 0 %, rest 30 %
+Sensors:  presence switches group 0 on; daylight sensor regulates group 1 (by the window)
+@4a7fc4eb12
+Addresses assigned at random, with no plan and no labels on the luminaires: later nobody knows which is which. The address goes on the plan and on the luminaire.
+@6f0eba8202
+Too many drivers or too long a cable on one line: voltage drop on the bus causes intermittent errors. A line is limited both by the number of devices and by its length.
+@c135fa4539
+Drivers from different manufacturers with different dimming curves: the same command gives different light. Using the same driver series within a room helps.
+@6ae68261b2
+DALI treated as low-voltage signal wiring: the bus is not SELV and is insulated like mains.
+@1cd8fc01c9
+Command
+@3573b3be72
+group 2 (entrance) · 50 %
+@d362767d49
+address 3 · off
+@c5bbd05041
+scene 2 · presentation
+@196f6c05dd
+DALI bus
+@f950645b91
+DALI gateway<small>controller</small>
+@d9c4e6ed34
+A{0}<small>groups {1}</small>
+@09541f880d
+group 2 · 50 %
+@8b6a4ea023
+A3 · off
+@9221e9979d
+scene 2
+@99b9f70332
+**Broadcast**: one command for every driver on the line. All go to 100 %.
+@0b4915bae5
+**Group 2** (entrance): the command goes to everyone, but only A6 and A7 react, because they are members of group 2. Each driver itself knows which groups it is in.
+@9b9b7b3de7
+**Short address 3**: only driver A3 reacts. The others see the telegram and ignore it.
+@376f7bb7d1
+**Scene 2** (“presentation”): the gateway sends only the scene number. Each driver has its own stored value: 30 % by the desks, 0 % at the entrance.
+@0caff2b965
+The gateway asks **A3 for its status**. The driver answers with a short backward frame (blue): the current level and whether the lamp is working.
+@cae12f211d
+The household controls the house through **buttons**, **wall screens**, the **app** and **voice**. A good interface is fast, always shows the **real state** and doesn't need a phone for basic things: the light is switched by the button on the wall, while the screen and the app are for scenes, overview and settings.
+@676085cefb
+The wall **button** remains the main input: it works instantly, without a screen or a phone, even in the dark. A smart button sends a command rather than breaking the light circuit.
+@6ff57cebf2
+A **wall screen** is good for scenes, an overview of the house and heating. It reads the state from the actuators' status, not from what it sent itself.
+@ad50210f3c
+The **app** is for remote access and settings; at home it shouldn't be the only way to switch something on.
+@c3072e3011
+**Voice** is handy when your hands are full, but it depends on the internet and on well-named rooms and devices.
+@c382e9eb2a
+A good layout: rooms instead of a long list of devices, large touch areas, a clear state (on, off, level) and a response right after the tap.
+@49b717d454
+All interfaces read the **same state** from the controller, so a change made with a button shows up at once on the screen and in the app.
+@7e1c902d1b
+Home Assistant · the living room on a wall screen
+@6959ee6fb5
+one room on the screen: lights, blind and a scene; the state is read from the entities
+@182429879e
+A panel that shows the last command sent instead of the state: after someone uses the button, the screen is wrong.
+@41cf52ae11
+A phone as the only way to use basic functions: for a guest, a child or when the battery is flat, the house becomes unusable.
+@c9abd49a1a
+A wall screen that switches off to save energy and takes seconds to reconnect after waking up: the household stops using it.
+@efd31255b3
+Too many buttons on one screen: the household uses two functions and has to find them among twenty.
+@5c26b99ad3
+State shown
+@21179cbc3f
+from actuator status
+@91203eee69
+command sent
+@df5385f462
+Wall button
+@1ffd587af0
+Correct display
+@ee45294238
+Wrong display
+@53209f5a86
+A tap on the **wall screen**: “switch the light on”. The command goes to the controller and then to the actuator.
+@e78b1a7a9d
+The actuator reports its **status** (blue). The controller passes it to the screen and the app, so both show the real state.
+@079d92b361
+Without status, the screen shows what it **sent**, and the app knows nothing: it still shows “off”.
+@e190c0a19f
+Someone switches the light off with the **wall button**. The button is wired to the actuator, so the screen and the app are not in the path.
+@ed62b6dd78
+The status reaches both the screen and the app: every display is correct.
+@3036236522
+Without status the screen still shows **“on”**, while the light is off. The household stops trusting the screen.
+@c502c79c6d
+Role
+@9af2eb6a12
+Where it sits
+@7c4d6313c0
+Actuator
+@21985eaf12
+Interface
+@67d3038f55
+wall, phone
+@991f31a64b
+System
+@dec581bdb3
+centralised
+@18308d2588
+Distribution board
+@e35b111a8d
+Relay 1
+@cc6ec49f14
+Relay 2
+@7fd768e4fe
+Path
+@a3a20121c9
+Without internet
+@19a8a2685c
+Without the controller
+@6ee06d80d9
+Voice assistant
+@956979ca5b
+Relay
+@a1d7f63243
+Coordinator
+@6ad3936e1e
+always on
+@7151409395
+coordinator, USB stick
+@e1b120e4e1
+Bulb 2
+@3dc127db81
+Bulb 4
+@34aed604d7
+window open
+@26b2ac9112
+real state of the same light; reported by the actuator
+@b08a87f1c8
+KNX · group address plan
+@e92508848d
+real state, reported by the actuator
+@c10248b270
+KNX IP<small>ETS, visualisation</small>
+@e757cc6946
+: actuator 2.
+@2d96e3a518
+lux
+@4416ef7db4
+Automation
+@2f9ff051c6
+Where
+@d6e104e463
+Feedback
+@706b18f888
+Phase cut
+@1b96c79f7e
+Outside
+@2361e63311
+Blind
+@92c770c0cf
+Addressing
+@def601ec56
+Who reacts
+@067633608b
+Short address (0–63)
+@2a0f99fb8b
+luminaire above a desk
+@95b4c8f871
+work, meeting, presentation
+@bb1df47645
+Drivers reacted
+@694fea8130
+A3 reply
+@95d27ee3d8
+{0} %, working
+@20d1fcf2e3
+Wall screen
+@08e6b72abc
+Screen
+@0551fc9c8b
+motion
+@40314f8828
+Phone

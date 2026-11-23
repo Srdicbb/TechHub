@@ -15,8 +15,9 @@ import algorithms from './algorithms.js';
 import sysdesign from './sysdesign.js';
 import network from './network.js';
 import hardware from './hardware.js';
+import smarthome from './smarthome.js';
 
-const ALL = [...messaging, ...concurrency, ...concurrency2, ...parallel, ...caching, ...distributed, ...sql, ...architecture, ...kubernetes, ...observability, ...dotnet, ...angular, ...ai, ...algorithms, ...sysdesign, ...network, ...hardware];
+const ALL = [...messaging, ...concurrency, ...concurrency2, ...parallel, ...caching, ...distributed, ...sql, ...architecture, ...kubernetes, ...observability, ...dotnet, ...angular, ...ai, ...algorithms, ...sysdesign, ...network, ...hardware, ...smarthome];
 
 // tema u pripremi (soon) ustupa mesto punoj temi sa istim id-jem, gde god da je napisana
 const pick = new Map();
