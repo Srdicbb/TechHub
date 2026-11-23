@@ -2,7 +2,7 @@
 import { hljs } from './lib.js';
 import { Stage, hex } from './viz.js';
 import { DOMAINS } from './domains.js';
-import { TABS } from './tabs.js';
+import { TABS, WORLDS } from './tabs.js';
 import { TOPICS } from './topics/index.js';
 import { ICONS } from './icons.js';
 import { legendViz } from './legend.js';
@@ -27,14 +27,23 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
   for (const tab of TABS) for (const s of tab.sections) for (const id of s.topics) { TAB_OF.set(id, tab); SEC_OF.set(id, s); }
   const DOM_TAB = new Map(DOMAINS.map(d => [d.id, TABS.find(tb => tb.domains?.includes(d.id)) || TAB_OF.get(TOPICS.find(t => t.d === d.id)?.id) || TABS[0]]));
   const SM = new Map(TABS.flatMap(tab => tab.sections.map(sec => [sec.id, tab])));
-  const ORDER = TABS.flatMap(tab => tab.sections.flatMap(s => s.topics.map(id => byId.get(id))));
-  const IDX = new Map(ORDER.map((t, i) => [t.id, i]));
+  // svetovi: Software i Hardware imaju svoje oblasti, redosled tema, početnu stranu i Skillset
+  const WM = new Map(WORLDS.map(w => [w.id, w]));
+  const wOf = tab => tab?.world || 'sw';
+  const TW = w => TABS.filter(tab => wOf(tab) === w);
+  const ORDER_W = Object.fromEntries(WORLDS.map(w => [w.id, TW(w.id).flatMap(tab => tab.sections.flatMap(s => s.topics.map(id => byId.get(id))))]));
+  const IDX = new Map(Object.values(ORDER_W).flatMap(o => o.map((t, i) => [t.id, i])));
   const tabTopics = tab => tab.sections.flatMap(s => s.topics).map(id => byId.get(id));
   const tabName = tab => tab.name || tab.title;
   const SYS = TABS.find(t => t.page === 'system');
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   // susedne teme za oblast: poslednja pre nje i prva u njoj (ili posle nje, ako je prazna)
-  const around = tab => { const ti = TABS.indexOf(tab), b = TABS.slice(0, ti).flatMap(tabTopics); return [b[b.length - 1], tabTopics(tab)[0] || TABS.slice(ti + 1).flatMap(tabTopics)[0]]; };
+  const around = tab => { const ts = TW(wOf(tab)), ti = ts.indexOf(tab), b = ts.slice(0, ti).flatMap(tabTopics); return [b[b.length - 1], tabTopics(tab)[0] || ts.slice(ti + 1).flatMap(tabTopics)[0]]; };
+  // adresa stranice: Hardware ima prefiks hw/ (#hw je njegova početna), pa se svet vidi iz adrese
+  const tabFor = id => TM.get(id) || TAB_OF.get(id) || SM.get(id) || (DM.has(id) ? DOM_TAB.get(id) : null);
+  const hr = id => '#' + (wOf(tabFor(id)) === 'hw' ? 'hw/' + id : id);
+  const homeHref = w => w === 'hw' ? '#hw' : '#';
+  let world = 'sw';
   { const lost = TOPICS.filter(t => !TAB_OF.has(t.id)); if (lost.length) console.warn('Teme bez taba:', lost.map(t => t.id).join(', ')); }
   const norm = s => String(s ?? '').toLowerCase().replace(/đ/g, 'dj').normalize('NFD').replace(/[̀-ͯ]/g, '');
   const fmt = (s, plain = false) => esc(s)
@@ -43,7 +52,7 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     .replace(/\[\[([a-z0-9-]+)\]\]/g, (m, id) => {
       const t = byId.get(id);
       if (!t) return m;
-      return plain ? esc(t.title) : `<a href="#${id}">${esc(t.title)}</a>`;
+      return plain ? esc(t.title) : `<a href="${hr(id)}">${esc(t.title)}</a>`;
     });
   const sayFmt = s => String(s ?? '').replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
   const plural = n => T((n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14)) ? 'teme' : 'tema', n === 1 ? 'topic' : 'topics');
@@ -64,15 +73,15 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
   };
   // priručnik ne prati pregledane ni nedavne teme; brišu se zapisi iz ranijih verzija
   try { localStorage.removeItem('prirucnik.pregledano'); localStorage.removeItem('prirucnik.nedavno'); } catch { /* skladište nije dostupno */ }
-  const item = t => `<li><a href="#${t.id}" data-t="${t.id}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a></li>`;
+  const item = t => `<li><a href="${hr(t.id)}" data-t="${t.id}"${t.soon ? ' class="plan"' : ''}><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a></li>`;
   // stablo oblasti: naslovi sekcija i teme, spojeni linijom kao grane
   const tree = tab => `<ul class="tree">${tab.sections.map(sc => `<li class="th">${esc(sc.title)}</li>${sc.topics.map(id => item(byId.get(id))).join('')}`).join('')}</ul>`;
   function renderToc() {
-    $('#toc').innerHTML = `<a class="nav-home" href="#" data-tip="${T('Početna', 'Home')}">${icon('house')}<span class="tt">${T('Početna', 'Home')}</span></a><p class="sb-h">${T('Oblasti', 'Areas')}</p>` +
-      TABS.map(tab => {
+    $('#toc').innerHTML = `<a class="nav-home" href="${homeHref(world)}" data-tip="${T('Početna', 'Home')}">${icon('house')}<span class="tt">${T('Početna', 'Home')}</span></a><p class="sb-h">${T('Oblasti', 'Areas')}</p>` +
+      TW(world).map(tab => {
         const n = tabTopics(tab).length, on = n > 0 && opened.has(tab.id);
         return `<section class="nav-tab${on ? ' open' : ''}${tab === curTab ? ' here' : ''}${n ? '' : ' soon'}">
-          <div class="nav-row"><a class="nav-t" href="#${tab.id}" data-tab="${tab.id}">${icon(tab.icon)}<span class="tt">${esc(tab.title)}</span><span class="n">${n || T('uskoro', 'soon')}</span></a>${n ? `<button class="nav-x" type="button" data-x="${tab.id}" aria-expanded="${on}" aria-label="${on ? T('Sakrij', 'Hide') : T('Prikaži', 'Show')} ${T('teme', 'topics')}: ${esc(tab.title)}">${icon('chevron-down')}</button>` : '<span class="nav-x ph" aria-hidden="true"></span>'}</div>
+          <div class="nav-row"><a class="nav-t" href="${hr(tab.id)}" data-tab="${tab.id}">${icon(tab.icon)}<span class="tt">${esc(tab.title)}</span><span class="n">${n || T('uskoro', 'soon')}</span></a>${n ? `<button class="nav-x" type="button" data-x="${tab.id}" aria-expanded="${on}" aria-label="${on ? T('Sakrij', 'Hide') : T('Prikaži', 'Show')} ${T('teme', 'topics')}: ${esc(tab.title)}">${icon('chevron-down')}</button>` : '<span class="nav-x ph" aria-hidden="true"></span>'}</div>
           ${on ? tree(tab) : ''}
         </section>`;
       }).join('');
@@ -86,17 +95,27 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     b.setAttribute('aria-label', lab);
     b.title = lab;
   }
+  // svet: boja i prekidač u meniju; izbor se pamti
+  const WKEY = 'prirucnik.svet';
+  function setWorld(w) {
+    world = w;
+    document.documentElement.dataset.svet = w;
+    ls.set(WKEY, w);
+    $('.sb-me').setAttribute('href', homeHref(w));
+    $$('.wld').forEach(a => { const on = a.dataset.w === w; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current'); });
+  }
+  // pretraga ide kroz oba sveta: prvo oblasti trenutnog sveta, a uz svaku grupu piše iz kog je sveta
   function search(qs) {
     const words = norm(qs.trim()).split(/\s+/).filter(Boolean);
     if (!words.length) { $('#qn').textContent = ''; renderToc(); markCurrent(); return; }
     let cnt = 0;
-    $('#toc').innerHTML = TABS.map(tab => {
+    $('#toc').innerHTML = [...TW(world), ...TABS.filter(tab => wOf(tab) !== world)].map(tab => {
       const hits = tabTopics(tab).filter(t => {
-        const hay = norm([t.title, t.sym, (t.tags || []).join(' '), SEC_OF.get(t.id).title, tab.title, tabName(tab), t.desc].join(' '));
+        const hay = norm([t.title, t.sym, (t.tags || []).join(' '), SEC_OF.get(t.id).title, tab.title, tabName(tab), t.desc, (t.plan || []).join(' ')].join(' '));
         return words.every(w => hay.includes(w));
       });
       cnt += hits.length;
-      return hits.length ? `<div class="grp found"><p class="grp-h">${icon(tab.icon)}<span>${esc(tab.title)}</span></p><ul class="tree flat">${hits.map(item).join('')}</ul></div>` : '';
+      return hits.length ? `<div class="grp found"><p class="grp-h">${icon(tab.icon)}<span>${esc(tab.title)}</span><em class="wtag">${esc(WM.get(wOf(tab)).title)}</em></p><ul class="tree flat">${hits.map(item).join('')}</ul></div>` : '';
     }).join('');
     $('#qn').textContent = cnt ? `${cnt} ${plural(cnt)}` : T('Nema rezultata', 'No results');
     markCurrent();
@@ -115,8 +134,11 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     curTab = tab;
     if (q.value.trim()) search(q.value); else renderToc();
   }
+  // putanja počinje svetom: kućica i naziv sveta vode na njegovu početnu stranu
   function crumbs(parts) {
-    $('#crumbs').innerHTML = `<a class="home" href="#" aria-label="${T('Početna', 'Home')}">${icon('house')}</a>` +
+    const wl = WM.get(world).title, hh = homeHref(world);
+    parts = [[wl, hh, parts.length > 0], ...parts];
+    $('#crumbs').innerHTML = `<a class="home" href="${hh}" aria-label="${T('Početna', 'Home')}: ${esc(wl)}">${icon('house')}</a>` +
       parts.map(([label, href, mid], i) => `<span class="sep${mid ? ' m' : ''}" aria-hidden="true">${icon('chevron-right')}</span>` +
         (href && i < parts.length - 1 ? `<a class="${mid ? 'mid' : ''}" href="${href}">${esc(label)}</a>` : `<b>${esc(label)}</b>`)).join('');
   }
@@ -125,7 +147,10 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
   // susedne strane za tastaturu (← i →)
   let adj = { prev: null, next: null };
   const pn = (prev, next) => { adj = { prev: prev?.id ?? null, next: next?.id ?? null }; };
-  const tile = t => `<a class="tile" href="#${t.id}"><span class="tsym">${esc(t.sym)}</span><span class="tnm">${esc(t.title)}</span></a>`;
+  // pločica teme; tema iz drugog sveta nosi oznaku tog sveta
+  const tile = t => { const tw = wOf(TAB_OF.get(t.id)); return `<a class="tile${t.soon ? ' plan' : ''}" href="${hr(t.id)}"><span class="tsym">${esc(t.sym)}</span><span class="tnm">${esc(t.title)}</span>${tw !== world ? `<span class="wtag">${esc(WM.get(tw).title)}</span>` : ''}</a>`; };
+  const relHtml = t => t.rel?.some(id => byId.has(id)) ? `<section class="sec"><h2>${T('Povezano', 'Related')}</h2><div class="tiles rel">${t.rel.filter(id => byId.has(id)).map(id => tile(byId.get(id))).join('')}</div></section>` : '';
+  const pagerHtml = (prev, next) => `<nav class="pager" aria-label="${T('Susedne teme', 'Neighboring topics')}">${prev ? `<a href="${hr(prev.id)}" class="pg prev">${icon('arrow-left')}<span><small>${T('Prethodna', 'Previous')}</small>${esc(prev.title)}</span></a>` : '<span></span>'}${next ? `<a href="${hr(next.id)}" class="pg next"><span><small>${T('Sledeća', 'Next')}</small>${esc(next.title)}</span>${icon('arrow-right')}</a>` : ''}</nav>`;
 
   function params(key, viz) {
     if (!store.has(key)) {
@@ -273,10 +298,11 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
 
   // ---------- stranice ----------
   function showTopic(t) {
-    const i = IDX.get(t.id), prev = ORDER[i - 1], next = ORDER[i + 1], tab = TAB_OF.get(t.id);
+    const tab = TAB_OF.get(t.id), ord = ORDER_W[wOf(tab)], i = IDX.get(t.id), prev = ord[i - 1], next = ord[i + 1];
     setTab(tab);
-    crumbs([[tab.title, '#' + tab.id, true], [t.title]]);
+    crumbs([[tab.title, hr(tab.id), true], [t.title]]);
     pn(prev, next);
+    if (t.soon) { showPlan(t, prev, next); return; }
     const tables = t.table ? [].concat(t.table) : [];
     $('#view').innerHTML = `<article class="topic pad"><div class="wrap">
       <header class="t-head"><h1>${esc(t.title)}</h1><p class="lede">${fmt(t.desc)}</p></header>
@@ -286,13 +312,24 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
       ${tables.map(tableHtml).join('')}
       ${t.code?.length ? `<section class="sec"><h2>${T('Primeri', 'Examples')}</h2>${t.code.map(codeHtml).join('')}</section>` : ''}
       ${t.pitfalls?.length ? `<section class="sec"><h2>${T('Zamke', 'Pitfalls')}</h2><ul class="pits">${t.pitfalls.map(p => `<li>${icon('triangle-alert')}<span>${fmt(p)}</span></li>`).join('')}</ul></section>` : ''}
-      ${t.rel?.length ? `<section class="sec"><h2>${T('Povezano', 'Related')}</h2><div class="tiles rel">${t.rel.filter(id => byId.has(id)).map(id => tile(byId.get(id))).join('')}</div></section>` : ''}
-      <nav class="pager" aria-label="${T('Susedne teme', 'Neighboring topics')}">${prev ? `<a href="#${prev.id}" class="pg prev">${icon('arrow-left')}<span><small>${T('Prethodna', 'Previous')}</small>${esc(prev.title)}</span></a>` : '<span></span>'}${next ? `<a href="#${next.id}" class="pg next"><span><small>${T('Sledeća', 'Next')}</small>${esc(next.title)}</span>${icon('arrow-right')}</a>` : ''}</nav>
+      ${relHtml(t)}
+      ${pagerHtml(prev, next)}
     </div></article>`;
     const v = $('#view');
     if (t.code) hookCode(v, t.code);
     hookFigs(v, t);
     mountViz($('.viz', v), t.viz, t.id);
+  }
+
+  // tema u pripremi: naslov, kratak opis i plan sadržaja
+  function showPlan(t, prev, next) {
+    stage.detach();
+    $('#view').innerHTML = `<article class="topic pad plan-page"><div class="wrap">
+      <header class="t-head"><p class="t-soon">${icon('construction')}<span>${T('U pripremi', 'In preparation')}</span></p><h1>${esc(t.title)}</h1><p class="lede">${fmt(t.desc)}</p></header>
+      <section class="sec"><h2>${T('Šta će biti obrađeno', 'What this topic will cover')}</h2><ol class="plan-list">${(t.plan || []).map(p => `<li><span>${fmt(p)}</span></li>`).join('')}</ol></section>
+      ${relHtml(t)}
+      ${pagerHtml(prev, next)}
+    </div></article>`;
   }
 
   const SHAPES = {
@@ -312,12 +349,13 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     return `<div class="orb" id="orb">
       <p class="orb-hint">${icon('sparkles')}<span class="d">${T('Pređi mišem preko oblasti i njene teme se rašire oko nje.', 'Hover an area and its topics fan out around it.')}</span><span class="m">${T('Izaberi oblast da vidiš njene teme.', 'Pick an area to see its topics.')}</span></p>
       <svg class="orb-path" aria-hidden="true"><path class="base"/><path class="flow"/></svg>
-      <ol class="orb-list">${TABS.map((tab, i) => {
-        const ts = tabTopics(tab), nm = esc(tabName(tab));
-        return `<li class="orb-n${ts.length ? '' : ' soon'}" style="--i:${i}">
-          <a class="orb-core" href="#${tab.id}" aria-label="${nm}"><span class="orb-ring" aria-hidden="true"><i></i></span>${icon(tab.icon)}</a>
-          <span class="orb-name"><b>${nm}</b><small>${ts.length ? `${ts.length} ${plural(ts.length)}` : T('u pripremi', 'coming soon')}</small></span>
-          ${ts.length ? `<div class="orb-burst" role="group" aria-label="${T('Teme', 'Topics')}: ${nm}"><svg class="orb-rays" aria-hidden="true"></svg>${ts.map((t, k) => `<a class="orb-t" href="#${t.id}" style="--k:${k}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a>`).join('')}<a class="orb-t orb-all" href="#${tab.id}" style="--k:${ts.length}"><span class="tt">${T('Cela oblast', 'Whole area')}</span>${icon('arrow-right')}</a></div>` : ''}
+      <ol class="orb-list">${TW(world).map((tab, i) => {
+        const ts = tabTopics(tab), nm = esc(tabName(tab)), n = ts.length, np = ts.filter(t => t.soon).length;
+        const cnt = !n ? T('u pripremi', 'coming soon') : np === n ? T(`${n} ${plural(n)} u pripremi`, `${n} planned ${plural(n)}`) : np ? T(`${n} ${plural(n)}, ${np} u pripremi`, `${n} ${plural(n)}, ${np} planned`) : `${n} ${plural(n)}`;
+        return `<li class="orb-n${n ? '' : ' soon'}" style="--i:${i}">
+          <a class="orb-core" href="${hr(tab.id)}" aria-label="${nm}"><span class="orb-ring" aria-hidden="true"><i></i></span>${icon(tab.icon)}</a>
+          <span class="orb-name"><b>${nm}</b><small>${cnt}</small></span>
+          ${n ? `<div class="orb-burst" role="group" aria-label="${T('Teme', 'Topics')}: ${nm}"><svg class="orb-rays" aria-hidden="true"></svg>${ts.map((t, k) => `<a class="orb-t${t.soon ? ' plan' : ''}" href="${hr(t.id)}" style="--k:${k}"><span class="sym">${esc(t.sym)}</span><span class="tt">${esc(t.title)}</span></a>`).join('')}<a class="orb-t orb-all" href="${hr(tab.id)}" style="--k:${n}"><span class="tt">${T('Cela oblast', 'Whole area')}</span>${icon('arrow-right')}</a></div>` : ''}
         </li>`;
       }).join('')}</ol>
     </div>`;
@@ -411,14 +449,19 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
 
   function showHome() {
     setTab(null);
-    crumbs([[T('Početna', 'Home')]]);
-    pn(null, ORDER[0]);
+    crumbs([]);
+    const hw = world === 'hw', ord = ORDER_W[world], na = TW(world).filter(t => tabTopics(t).length).length, np = ord.filter(t => t.soon).length;
+    pn(null, ord[0]);
+    const lede = hw
+      ? T(`Struja i razvodni ormani, elektronika i IoT, smart home i video nadzor: ${ord.length} tema u ${na} oblasti, od osnova do sistema na terenu.${np ? ' Oblasti se popunjavaju jedna po jedna, a teme u pripremi već imaju plan sadržaja.' : ''}`,
+        `Power and distribution boards, electronics and IoT, smart home and video surveillance: ${ord.length} topics in ${na} areas, from fundamentals to systems in the field.${np ? ' Areas are filled one at a time; topics still in preparation already show what they will cover.' : ''}`)
+      : T(`Put kroz ${ord.length} tema u ${na} oblasti: od mreže i skaliranja sistema, preko niti, poruka, baza i Kubernetes-a, do AI-ja i algoritama. Svaka tema ima scenu koja radi, ključne tačke, primere koda i zamke.`,
+        `A route through ${ord.length} topics in ${na} areas: from networking and scaling systems, through threads, messaging, databases and Kubernetes, to AI and algorithms. Every topic has a working scene, key points, code examples and pitfalls.`);
     $('#view').innerHTML = `<section class="pad home"><div class="wrap">
-      <header class="t-head"><h1>${T('Priručnik koncepata', 'Concept Handbook')}</h1>
-      <p class="lede">${T(`Put kroz ${ORDER.length} tema u ${TABS.filter(t => tabTopics(t).length).length} oblasti: od mreže i skaliranja sistema, preko niti, poruka, baza i Kubernetes-a, do AI-ja i algoritama. Svaka tema ima scenu koja radi, ključne tačke, primere koda i zamke.`,
-        `A route through ${ORDER.length} topics in ${TABS.filter(t => tabTopics(t).length).length} areas: from networking and scaling systems, through threads, messaging, databases and Kubernetes, to AI and algorithms. Every topic has a working scene, key points, code examples and pitfalls.`)}</p></header>
+      <header class="t-head"><p class="eyebrow">${T('Priručnik koncepata', 'Concept Handbook')}</p><h1>${esc(WM.get(world).title)}</h1>
+      <p class="lede">${lede}</p></header>
       ${roadmapHtml()}
-      <section class="sec legend-sec"><h2>${T('Kako čitati scene', 'How to read the scenes')}</h2>
+${hw ? '' : `      <section class="sec legend-sec"><h2>${T('Kako čitati scene', 'How to read the scenes')}</h2>
         <p class="note">${T('Isti oblici i boje znače isto u svakoj temi.', 'The same shapes and colors mean the same thing in every topic.')}</p>
         <ul class="keys">${[
           ['box', 'Kocka', 'servis, proces, komponenta', 'Cube', 'service, process, component'],
@@ -433,24 +476,24 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
         </ul>
         ${vizCard(legendViz, 'legend')}
       </section>
-    </div></section>`;
+`}    </div></section>`;
     hookOrb();
-    mountViz($('.viz', $('#view')), legendViz, 'legend');
+    if (hw) stage.detach(); else mountViz($('.viz', $('#view')), legendViz, 'legend');
   }
 
   function showTab(tab, secId) {
     setTab(tab);
     crumbs([[tabName(tab)]]);
-    const ti = TABS.indexOf(tab);
+    const ts = TW(wOf(tab)), ti = ts.indexOf(tab);
     pn(...around(tab));
     stage.detach();
-    const row = t => `<li><a class="drow" href="#${t.id}"><span class="tsym">${esc(t.sym)}</span><span><b>${esc(t.title)}</b><span class="dd">${fmt(t.desc, true)}</span></span></a></li>`;
-    const nb = (o, cls, lab) => o ? `<a href="#${o.id}" class="pg ${cls}">${cls === 'prev' ? icon('arrow-left') : ''}<span><small>${lab}</small>${esc(tabName(o))}</span>${cls === 'next' ? icon('arrow-right') : ''}</a>` : '<span></span>';
+    const row = t => `<li><a class="drow${t.soon ? ' plan' : ''}" href="${hr(t.id)}"><span class="tsym">${esc(t.sym)}</span><span><b>${esc(t.title)}${t.soon ? `<span class="soon-chip">${T('u pripremi', 'planned')}</span>` : ''}</b><span class="dd">${fmt(t.desc, true)}</span></span></a></li>`;
+    const nb = (o, cls, lab) => o ? `<a href="${hr(o.id)}" class="pg ${cls}">${cls === 'prev' ? icon('arrow-left') : ''}<span><small>${lab}</small>${esc(tabName(o))}</span>${cls === 'next' ? icon('arrow-right') : ''}</a>` : '<span></span>';
     $('#view').innerHTML = `<section class="pad"><div class="wrap dom">
       <header class="t-head"><h1>${esc(tabName(tab))}</h1><p class="lede">${fmt(tab.blurb)}</p></header>
       ${tab.sections.length ? tab.sections.map(s => `<section class="sec" id="s-${s.id}"><h2>${esc(s.title)}</h2><ol class="dlist">${s.topics.map(id => row(byId.get(id))).join('')}</ol></section>`).join('')
         : `<div class="soon-box">${icon(tab.icon)}<p>${T('Još nema tema u ovoj oblasti.', 'No topics in this area yet.')}</p></div>`}
-      <nav class="pager" aria-label="${T('Susedne oblasti', 'Neighboring areas')}">${nb(TABS[ti - 1], 'prev', T('Prethodna oblast', 'Previous area'))}${nb(TABS[ti + 1], 'next', T('Sledeća oblast', 'Next area'))}</nav>
+      <nav class="pager" aria-label="${T('Susedne oblasti', 'Neighboring areas')}">${nb(ts[ti - 1], 'prev', T('Prethodna oblast', 'Previous area'))}${nb(ts[ti + 1], 'next', T('Sledeća oblast', 'Next area'))}</nav>
     </div></section>`;
     if (secId) { const el = document.getElementById('s-' + secId); if (el) requestAnimationFrame(() => el.scrollIntoView({ block: 'start' })); }
   }
@@ -469,7 +512,7 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
       ${tables.map(tb => tableHtml(tb, 'h4', 'ptab')).join('')}
       ${(t.code || []).map((c, i) => codeHtml(c, ci + i)).join('')}
       ${t.sim ? `<p class="part-sim"><b>${T('U simulaciji', 'In the simulation')}</b><span>${fmt(t.sim)}</span></p>` : ''}
-      ${t.rel?.length ? `<p class="part-rel"><span>${T('Detaljnije:', 'More detail:')}</span>${t.rel.filter(id => byId.has(id)).map(id => `<a href="#${id}">${esc(byId.get(id).title)}</a>`).join('')}</p>` : ''}
+      ${t.rel?.length ? `<p class="part-rel"><span>${T('Detaljnije:', 'More detail:')}</span>${t.rel.filter(id => byId.has(id)).map(id => `<a href="${hr(id)}">${esc(byId.get(id).title)}</a>`).join('')}</p>` : ''}
     </section>`;
   }
   // putanja i susedi za trenutni deo stranice
@@ -480,7 +523,7 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     if (t?.part) {
       crumbs([[tabName(SYS), '#' + SYS.id, true], [t.title]]);
       const i = IDX.get(id);
-      pn(ORDER[i - 1], ORDER[i + 1]);
+      pn(ORDER_W.sw[i - 1], ORDER_W.sw[i + 1]);
     } else { crumbs([[tabName(SYS)]]); pn(...around(SYS)); }
     markCurrent();
   }
@@ -525,8 +568,8 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
   }
   function showSystem(target) {
     setTab(SYS);
-    const ti = TABS.indexOf(SYS), code = [];
-    const nb = (o, cls, lab) => o ? `<a href="#${o.id}" class="pg ${cls}">${cls === 'prev' ? icon('arrow-left') : ''}<span><small>${lab}</small>${esc(tabName(o))}</span>${cls === 'next' ? icon('arrow-right') : ''}</a>` : '<span></span>';
+    const ts = TW('sw'), ti = ts.indexOf(SYS), code = [];
+    const nb = (o, cls, lab) => o ? `<a href="${hr(o.id)}" class="pg ${cls}">${cls === 'prev' ? icon('arrow-left') : ''}<span><small>${lab}</small>${esc(tabName(o))}</span>${cls === 'next' ? icon('arrow-right') : ''}</a>` : '<span></span>';
     const secs = SYS.sections.map(s => `<section class="sec sys-sec" id="s-${s.id}" aria-labelledby="sh-${s.id}"><h2 id="sh-${s.id}">${esc(s.title)}</h2>${s.topics.map(id => {
       const t = byId.get(id), ci = code.length;
       code.push(...(t.code || []));
@@ -537,7 +580,7 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
       ${vizCard(sysViz, SYS.id)}
       <nav class="sys-toc" aria-label="${T('Delovi stranice', 'Page sections')}">${SYS.sections.map(s => `<a href="#${s.id}">${icon(s.icon)}<span>${esc(s.title)}</span></a>`).join('')}</nav>
       ${secs}
-      <nav class="pager" aria-label="${T('Susedne oblasti', 'Neighboring areas')}">${nb(TABS[ti - 1], 'prev', T('Prethodna oblast', 'Previous area'))}${nb(TABS[ti + 1], 'next', T('Sledeća oblast', 'Next area'))}</nav>
+      <nav class="pager" aria-label="${T('Susedne oblasti', 'Neighboring areas')}">${nb(ts[ti - 1], 'prev', T('Prethodna oblast', 'Previous area'))}${nb(ts[ti + 1], 'next', T('Sledeća oblast', 'Next area'))}</nav>
     </div></article>`;
     const v = $('#view');
     hookCode(v, code);
@@ -549,7 +592,11 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
 
   function route() {
     closeSkills(false);
-    const h = decodeURIComponent(location.hash.slice(1));
+    const raw = decodeURIComponent(location.hash.slice(1)), hwHome = raw === 'hw' || raw === 'hw/';
+    const h = hwHome ? '' : raw.startsWith('hw/') ? raw.slice(3) : raw, tab = h ? tabFor(h) : null;
+    // adresa bez prefiksa sveta (ili sa pogrešnim) ispravlja se bez novog koraka u istoriji
+    if (tab && '#' + raw !== hr(h)) history.replaceState(null, '', hr(h));
+    setWorld(tab ? wOf(tab) : hwHome || raw.startsWith('hw/') ? 'hw' : 'sw');
     document.body.classList.remove('nav-open');
     hideFly(true);
     if (isSys(h) && $('#view .sys')) { sysGo(h, true); return; }   // ista stranica: samo skrol, simulacija radi dalje
@@ -639,12 +686,12 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     const tab = a.dataset.tab ? TM.get(a.dataset.tab) : null;
     if (tab && tabTopics(tab).length) {
       fly.className = 'fly tree-fly';
-      fly.innerHTML = `<a class="fly-h" href="#${tab.id}">${esc(tabName(tab))}<span class="n">${tabTopics(tab).length}</span></a>${tree(tab)}`;
+      fly.innerHTML = `<a class="fly-h" href="${hr(tab.id)}">${esc(tabName(tab))}<span class="n">${tabTopics(tab).length}</span></a>${tree(tab)}`;
       const h = '#' + decodeURIComponent(location.hash.slice(1));
       $$('a', fly).forEach(x => x.classList.toggle('cur', x.getAttribute('href') === h));
     } else {
       fly.className = 'fly tip-fly';
-      fly.textContent = a.dataset.tip || (tab ? `${tabName(tab)} (u pripremi)` : a.textContent.trim());
+      fly.textContent = a.dataset.tip || (tab ? tabName(tab) + T(' (u pripremi)', ' (coming soon)') : a.textContent.trim());
     }
     fly.hidden = false;
     const r = a.getBoundingClientRect(), sr = $('.sb').getBoundingClientRect(), fh = fly.offsetHeight;
@@ -680,26 +727,41 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     }
     if (typing || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
     const to = e.key === 'ArrowLeft' ? adj.prev : e.key === 'ArrowRight' ? adj.next : null;
-    if (to) location.hash = to;
+    if (to) location.hash = hr(to);
   });
   // ---------- Skillset: iskačući prozor sa radarom oblasti ----------
   const skm = $('#skm');
   let skmRo = null, skmBack = null;
+  // radar ima tab za svaki svet; Projects i slične oblasti (skill: false) nisu ose
+  let skW = 'sw';
+  const skAreas = w => TW(w).filter(tab => tab.skill !== false).map(tab => ({ title: tab.title, level: levelOf(tab.id) }));
+  function skDraw() {
+    const areas = skAreas(skW);
+    drawSkills($('.sk-fig svg', skm), areas);
+    $('.sk-empty', skm).hidden = areas.some(a => a.level);
+  }
+  function skTab(w, focus) {
+    skW = w;
+    $$('.sk-tab', skm).forEach(b => { const on = b.dataset.w === w; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; if (on && focus) b.focus(); });
+    $('.sk-fig', skm).setAttribute('aria-labelledby', 'skt-' + w);
+    skDraw();
+  }
   function openSkills() {
-    const areas = TABS.map(tab => ({ title: tab.title, level: levelOf(tab.id) }));
+    skW = world;
     skm.innerHTML = `<div class="modal-back" data-close></div>
       <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="skm-h">
         <header class="modal-h"><div><h2 id="skm-h">Skillset</h2><p>${T('Nivo znanja po oblastima iz mape, od 1 do 5.', 'Knowledge level for each roadmap area, from 1 to 5.')}</p></div>
           <button class="btn ic modal-x" type="button" data-close aria-label="${T('Zatvori', 'Close')}">${icon('x')}</button></header>
-        <div class="sk-fig"><svg role="img" aria-label="${T('Radar znanja po oblastima', 'Knowledge radar by area')}"></svg></div>
+        <div class="sk-tabs" role="tablist" aria-label="${T('Svet', 'World')}">${WORLDS.map(w => `<button class="sk-tab" type="button" role="tab" id="skt-${w.id}" data-w="${w.id}" aria-controls="skp" aria-selected="false" tabindex="-1">${icon(w.icon)}<span>${esc(w.title)}</span></button>`).join('')}</div>
+        <div class="sk-fig" id="skp" role="tabpanel"><svg role="img" aria-label="${T('Radar znanja po oblastima', 'Knowledge radar by area')}"></svg></div>
         <ol class="sk-levels">${LEVELS.map((l, i) => `<li><b>${i + 1}</b>${esc(l)}</li>`).join('')}</ol>
-        ${areas.some(a => a.level) ? '' : `<p class="sk-empty">${T('Nivoi još nisu popunjeni. Kad odlučimo kako se popunjavaju, ovde će se pojaviti oblik znanja.', 'Levels are not filled in yet. Once we decide how they are filled, the shape of your knowledge will appear here.')}</p>`}
+        <p class="sk-empty">${T('Nivoi još nisu popunjeni. Kad odlučimo kako se popunjavaju, ovde će se pojaviti oblik znanja.', 'Levels are not filled in yet. Once we decide how they are filled, the shape of your knowledge will appear here.')}</p>
       </section>`;
     skm.hidden = false;
     document.documentElement.classList.add('modal-on');
-    const svg = $('.sk-fig svg', skm);
-    skmRo = new ResizeObserver(() => drawSkills(svg, areas));
-    skmRo.observe(svg);
+    skTab(skW);
+    skmRo = new ResizeObserver(skDraw);
+    skmRo.observe($('.sk-fig svg', skm));
     skmBack = document.activeElement;
     $('.modal-x', skm).focus();
   }
@@ -713,14 +775,30 @@ import { LEVELS, levelOf, drawSkills } from './skills.js';
     if (refocus) (skmBack || $('#skills')).focus?.();
   }
   $('#skills').addEventListener('click', openSkills);
-  skm.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSkills(); });
+  skm.addEventListener('click', e => {
+    if (e.target.closest('[data-close]')) { closeSkills(); return; }
+    const b = e.target.closest('.sk-tab');
+    if (b) skTab(b.dataset.w, true);
+  });
   skm.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { e.stopPropagation(); closeSkills(); }
-    else if (e.key === 'Tab') { e.preventDefault(); $('.modal-x', skm).focus(); }   // jedino dugme u prozoru zadržava fokus
     e.stopPropagation();
+    if (e.key === 'Escape') { closeSkills(); return; }
+    const tab = e.target.closest?.('.sk-tab');
+    if (tab && (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Home' || e.key === 'End')) {
+      e.preventDefault();
+      const ids = WORLDS.map(w => w.id), k = ids.indexOf(tab.dataset.w);
+      skTab(ids[e.key === 'Home' ? 0 : e.key === 'End' ? ids.length - 1 : (k + (e.key === 'ArrowRight' ? 1 : ids.length - 1)) % ids.length], true);
+    } else if (e.key === 'Tab') {
+      // fokus ostaje u prozoru: dugme za zatvaranje i izabrani tab
+      e.preventDefault();
+      const f = [$('.modal-x', skm), $('.sk-tab[aria-selected="true"]', skm)], k = f.indexOf(document.activeElement);
+      f[(k + (e.shiftKey ? f.length - 1 : 1)) % f.length].focus();
+    }
   });
 
   window.addEventListener('hashchange', route);
   markTheme();
+  // bez adrese se otvara svet koji je poslednji bio izabran
+  if (!location.hash && ls.get(WKEY) === 'hw') history.replaceState(null, '', '#hw');
   route();
 }

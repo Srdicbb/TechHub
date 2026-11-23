@@ -93,7 +93,7 @@ ss -ltnp                       # ko sluša na kom portu; Windows: netstat -abno`
       'Firewall koji odbacuje sav ICMP lomi otkrivanje MTU-a na putu (Path MTU Discovery) i veze koje "samo vise".',
       'NAT krije privatne adrese iza jedne javne. Iza proksija ili L7 load balancera server vidi njihovu adresu, a adresu klijenta nosi `X-Forwarded-For`, kome treba verovati samo kad ga postavlja tvoj proksi.',
     ],
-    rel: ['tcp-udp', 'dns', 'sd-lb'],
+    rel: ['tcp-udp', 'dns', 'sd-lb', 'cc-mreza'],
     viz: {
       knobs: [{ id: 'hops', label: 'Rutera na putu', value: 2, options: [[1, '1'], [2, '2'], [3, '3']] }],
       build(x) {

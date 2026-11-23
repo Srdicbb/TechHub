@@ -70,7 +70,7 @@ var emailProcessor = client.CreateProcessor("orders", "email");`),
       'Ako svaka instanca istog servisa napravi svoju pretplatu, poruka se obradi onoliko puta koliko ima instanci. Instance jednog servisa dele jednu pretplatu.',
       'Kad više potrošača čita isti red, redosled nije garantovan. Ako je bitan, koristi sesije (`SessionId`) ili particije po ključu.',
     ],
-    rel: ['load-leveling', 'kafka', 'delivery'],
+    rel: ['load-leveling', 'kafka', 'delivery', 'ei-mqtt'],
     viz: {
       warm: 7,
       knobs: [{ id: 'n', label: 'Potrošača', min: 2, max: 4, value: 3 }],

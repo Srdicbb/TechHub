@@ -14,5 +14,11 @@ import ai from './ai.js';
 import algorithms from './algorithms.js';
 import sysdesign from './sysdesign.js';
 import network from './network.js';
+import hardware from './hardware.js';
 
-export const TOPICS = [...messaging, ...concurrency, ...concurrency2, ...parallel, ...caching, ...distributed, ...sql, ...architecture, ...kubernetes, ...observability, ...dotnet, ...angular, ...ai, ...algorithms, ...sysdesign, ...network];
+const ALL = [...messaging, ...concurrency, ...concurrency2, ...parallel, ...caching, ...distributed, ...sql, ...architecture, ...kubernetes, ...observability, ...dotnet, ...angular, ...ai, ...algorithms, ...sysdesign, ...network, ...hardware];
+
+// tema u pripremi (soon) ustupa mesto punoj temi sa istim id-jem, gde god da je napisana
+const pick = new Map();
+for (const t of ALL) { const o = pick.get(t.id); if (!o || (o.soon && !t.soon)) pick.set(t.id, t); }
+export const TOPICS = [...pick.values()];

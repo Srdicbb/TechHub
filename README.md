@@ -1,6 +1,11 @@
 # Priručnik koncepata
 
-Lični priručnik za pripremu intervjua i obnavljanje osnova: network, system design, konkurentnost i paralelizam, arhitektura, podaci, cloud, .NET i Angular, AI i algoritmi. Svaka tema ima živu scenu (three.js ili SVG), ključne tačke, primere koda i zamke. System design ima interaktivnu simulaciju sistema pod opterećenjem.
+Lični knowledge base u dva odvojena sveta, sa prekidačem **Software | Hardware** na vrhu menija:
+
+- **Software:** network, system design, konkurentnost i paralelizam, arhitektura, podaci, cloud, .NET i Angular, AI, algoritmi i security. System design ima interaktivnu simulaciju sistema pod opterećenjem.
+- **Hardware:** struja i razvodni ormani (Electrical), elektronika i IoT, smart home, video nadzor (CCTV) i sopstveni projekti.
+
+Svaka gotova tema ima živu scenu (three.js ili SVG), ključne tačke, primere koda i zamke. Tema u pripremi ima naslov, kratak opis i plan sadržaja. Svaki svet ima svoju početnu stranu sa roadmapom, svoje oblasti u meniju, svoj tab u Skillsetu i svoju boju (Hardware je tirkizni). Pretraga ide kroz oba sveta.
 
 Stranica je na srpskom (latinica) i engleskom: dugme **EN** / **SR** u gornjem desnom uglu menja jezik celog sajta. Pored njega su Skillset chart (radar sa osom po oblasti) i promena svetle i tamne teme.
 
@@ -23,14 +28,14 @@ Posle izmene u `src/` ponovo pokreni `npm run build` i osveži stranicu.
 |---|---|
 | `src/index.html` | Kostur stranice: meni i gornja traka. Build ubacuje CSS, kod i ikone. |
 | `src/style.css` | Svi stilovi, svetla i tamna tema (`data-tema` na `<html>`, izbor sa dugmeta u gornjem desnom uglu; bez izbora važi `data-theme` okruženja ili tema sistema). |
-| `src/app.js` | Rutiranje (`#id-teme`), meni, roadmap na početnoj (oblasti sa temama koje se otvaraju u krug), Skillset prozor, stranice tema i stranica System design. |
+| `src/app.js` | Rutiranje, prekidač svetova, meni, roadmap na početnoj (oblasti sa temama koje se otvaraju u krug), Skillset prozor, stranice tema, tema u pripremi i stranica System design. Adrese: `#id-teme` za Software, `#hw` i `#hw/id-teme` za Hardware. |
 | `src/i18n.js` | Izabrani jezik (`lang`), `T('srpski', 'English')`, formatiranje brojeva (`dec`, `dec1`, `grp`) i promena jezika. |
 | `src/skills.js` | Skillset chart: nivoi i crtanje radara. `levelOf(oblast)` vraća nivo 0–5; za sada je uvek 0. |
 | `src/viz.js` | Mali engine za scene: renderer, kamera i labele (Stage), simulirani sat (`wait`, `tween`, `move`, `spawn`) i primitivi (`box`, `db`, `orb`, `plate`...). |
 | `src/sysviz.js` | Simulacija sistema na vrhu oblasti System design: red čekanja, CPU i memorija po instanci, skaliranje, rate limiter, keš. |
-| `src/tabs.js` | Oblasti i njihove sekcije: redosled u meniju i na roadmapi. |
+| `src/tabs.js` | Svetovi (`WORLDS`) i oblasti sa sekcijama: redosled u meniju i na roadmapi. Oblast Hardware sveta ima `world: 'hw'`; `skill: false` je izostavlja iz Skillseta. |
 | `src/domains.js` | Domeni za oblasti koje se pune automatski. |
-| `src/topics/*.js` | Teme: tekst, tačke, tabele, kod i scena. |
+| `src/topics/*.js` | Teme: tekst, tačke, tabele, kod i scena. `hardware.js` ima teme Hardware sveta koje su još u pripremi; puna tema sa istim `id` (npr. iz `smarthome.js`) zamenjuje plan. |
 | `src/legend.js` | Scena "Kako čitati scene" na početnoj. |
 | `build.mjs` | esbuild bundle, prevod, ikone iz lucide-static i spajanje u jedan HTML fajl. |
 | `i18n/en/*.txt` | Engleski prevodi. |
@@ -39,9 +44,11 @@ Posle izmene u `src/` ponovo pokreni `npm run build` i osveži stranicu.
 
 ## Dodavanje teme
 
-1. U odgovarajući fajl u `src/topics/` dodaj objekat sa poljima `id`, `d` (domen), `sym` (dva slova), `title`, `desc`, `points`, a po želji `code`, `table`, `pitfalls`, `viz` i `rel` (veze ka drugim temama).
+1. U odgovarajući fajl u `src/topics/` dodaj objekat sa poljima `id`, `d` (domen), `sym` (dva slova), `title`, `desc`, `points`, a po želji `code`, `table`, `pitfalls`, `viz` i `rel` (veze ka drugim temama, i iz drugog sveta; pločica tada nosi oznaku tog sveta).
 2. Dodaj `id` teme u sekciju u `src/tabs.js`, ili koristi oblast koja se puni iz domena.
 3. Pokreni `npm run build`.
+
+Tema u pripremi ima `soon: true`, `title`, `sym`, `desc` i `plan` (šta će biti obrađeno). Kad tema bude gotova, napiši punu temu sa istim `id`: ona zamenjuje plan, pa plan možeš da obrišeš iz `hardware.js`.
 
 ## Prevod na engleski
 

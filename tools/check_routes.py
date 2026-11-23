@@ -24,7 +24,12 @@ async def main():
         await pg.goto(HTML)
         await pg.wait_for_timeout(800)
         if not routes:
-            routes = [''] + await pg.evaluate("[...document.querySelectorAll('.orb-core, .orb-t:not(.orb-all)')].map(a => a.getAttribute('href').slice(1))")
+            # oba sveta: Software sa početne (#) i Hardware sa svoje početne (#hw)
+            grab = "[...document.querySelectorAll('.orb-core, .orb-t:not(.orb-all)')].map(a => a.getAttribute('href').slice(1))"
+            routes = [''] + await pg.evaluate(grab)
+            await pg.evaluate("location.hash = 'hw'")
+            await pg.wait_for_timeout(500)
+            routes += ['hw'] + await pg.evaluate(grab)
         report = {}
         for r in routes:
             errs.clear()
@@ -32,7 +37,7 @@ async def main():
             await pg.wait_for_timeout(300)
             await pg.evaluate("document.querySelector('.viz')?.scrollIntoView({block: 'center'})")
             await pg.wait_for_timeout(2300)
-            name = r or 'home'
+            name = (r or 'home').replace('/', '_')
             await pg.screenshot(path=str(out / f'{name}.png'))
             # labele se mere prema celoj površini scene (.stage-view); na uskom ekranu ona je šira od kartice i skroluje se vodoravno
             info = await pg.evaluate("""() => { const v = document.querySelector('.stage-view') || document.querySelector('.viz-stage');

@@ -19,7 +19,7 @@ export const idOf = key => crypto.createHash('sha1').update(key).digest('hex').s
 
 const LETTER = /[A-Za-zČĆŠŽĐčćšžđ]/;
 // vrednosti ovih svojstava su identifikatori, ne tekst za čitaoca
-const SKIP_PROP = new Set(['id', 'd', 'icon', 'lang', 'cls', 'side', 'rel', 'topics', 'page', 'domains', 'kind', 'href', 'lpos', 'ease']);
+const SKIP_PROP = new Set(['id', 'd', 'icon', 'lang', 'cls', 'side', 'rel', 'topics', 'page', 'domains', 'kind', 'href', 'lpos', 'ease', 'world', 'sym', 'tags']);
 const COMMENT = { csharp: ['//'], typescript: ['//'], javascript: ['//'], json: ['//'], bash: ['#'], yaml: ['#'], sql: ['--'], xml: ['<!--'] };
 
 // komentari u primeru koda: [{ text, start, end }] gde su start/end granice teksta komentara u src

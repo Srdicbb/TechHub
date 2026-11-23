@@ -4,7 +4,8 @@ import { i18nPlugin } from './tools/i18n.mjs';
 
 const ICONS = ['send', 'lock', 'cpu', 'zap', 'network', 'database', 'blocks', 'container', 'activity', 'braces', 'component', 'brain-circuit', 'route',
   'play', 'pause', 'rotate-ccw', 'maximize', 'copy', 'search', 'menu', 'chevron-left', 'chevron-right', 'arrow-left', 'arrow-right', 'triangle-alert',
-  'plus', 'minus', 'skull', 'power', 'refresh-cw', 'scissors', 'step-forward', 'wifi-off', 'unplug', 'hammer', 'flame', 'bug', 'server-crash', 'map', 'layers', 'gauge', 'timer', 'house', 'chevron-down', 'check', 'server', 'shield', 'crosshair', 'sun', 'moon', 'history', 'globe', 'x', 'sparkles'];
+  'plus', 'minus', 'skull', 'power', 'refresh-cw', 'scissors', 'step-forward', 'wifi-off', 'unplug', 'hammer', 'flame', 'bug', 'server-crash', 'map', 'layers', 'gauge', 'timer', 'house', 'chevron-down', 'check', 'server', 'shield', 'crosshair', 'sun', 'moon', 'history', 'globe', 'x', 'sparkles',
+  'code-xml', 'circuit-board', 'plug-zap', 'cctv', 'house-plug', 'lightbulb', 'cable', 'construction'];
 const icons = {};
 for (const n of ICONS) {
   const p = `node_modules/lucide-static/icons/${n}.svg`;

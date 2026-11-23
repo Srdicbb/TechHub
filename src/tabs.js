@@ -1,6 +1,14 @@
 // Tabovi: glavne oblasti sajta. Tab ima sekcije, a sekcija teme.
 // Sekcija je ili ručno zadat spisak tema (topics) ili cela oblast iz domains.js (domains).
 // page: 'system' znači da su teme delovi jedne stranice sa simulacijom; soon: oblast još nema tema.
+// world: kom svetu oblast pripada ('sw' ako nije navedeno); skill: false znači da oblast nije osa u Skillset radaru.
+
+// Svetovi: sajt ima dva odvojena dela sa svojim oblastima, početnom stranom i Skillsetom
+export const WORLDS = [
+  { id: 'sw', title: 'Software', icon: 'code-xml' },
+  { id: 'hw', title: 'Hardware', icon: 'cpu' },
+];
+
 export const TABS = [
   {
     id: 'network', title: 'Network', name: 'Network', icon: 'globe',
@@ -64,5 +72,52 @@ export const TABS = [
     id: 'security', title: 'Security', name: 'Security', icon: 'shield', soon: true,
     blurb: 'Oblast je u pripremi i stiže na kraju.',
     sections: [],
+  },
+
+  // ---------- Hardware ----------
+  {
+    id: 'electrical', world: 'hw', title: 'Electrical', name: 'Struja i razvodni ormani', icon: 'plug-zap',
+    blurb: 'Od napona i struje do ispitanog razvodnog ormana: zaštita, kablovi, uzemljenje, šeme i merenja.',
+    sections: [
+      { id: 'el-s-osnove', title: 'Osnove', icon: 'zap', topics: ['el-ui', 'el-faze'] },
+      { id: 'el-s-zastita', title: 'Zaštita', icon: 'shield', topics: ['el-mcb', 'el-fid', 'el-spd'] },
+      { id: 'el-s-instalacija', title: 'Instalacija', icon: 'cable', topics: ['el-kabl', 'el-pe'] },
+      { id: 'el-s-ormani', title: 'Razvodni ormani', icon: 'layers', topics: ['el-sema', 'el-orman', 'el-merenja'] },
+    ],
+  },
+  {
+    id: 'electronics', world: 'hw', title: 'Electronics & IoT', name: 'Elektronika i IoT', icon: 'circuit-board',
+    blurb: 'Kako uređaj radi iznutra: komponente i napajanje, ESP32 i firmware, i protokoli kojima uređaji razgovaraju, od UART-a do MQTT-a.',
+    sections: [
+      { id: 'ei-s-osnove', title: 'Komponente i napajanje', icon: 'zap', topics: ['ei-komponente', 'ei-napajanja', 'ei-prekidaci'] },
+      { id: 'ei-s-mcu', title: 'Mikrokontroleri', icon: 'cpu', topics: ['ei-esp32', 'ei-gpio', 'ei-firmware'] },
+      { id: 'ei-s-zicani', title: 'Žičani protokoli', icon: 'cable', topics: ['ei-uart', 'ei-rs485'] },
+      { id: 'ei-s-bezicni', title: 'Bežično i IoT', icon: 'send', topics: ['ei-wifi', 'ei-lora', 'ei-mqtt'] },
+    ],
+  },
+  {
+    id: 'smart-home', world: 'hw', title: 'Smart home', name: 'Smart home', icon: 'house-plug',
+    blurb: 'Kako uređaji rade zajedno u kući: sistemi i protokoli, rasveta, scene i automatizacije, paneli i šta radi kad nestane interneta.',
+    sections: [
+      { id: 'sh-s-sistemi', title: 'Sistemi', icon: 'blocks', topics: ['sh-sistem', 'sh-pierre', 'sh-knx', 'sh-ha'] },
+      { id: 'sh-s-protokoli', title: 'Protokoli', icon: 'network', topics: ['sh-zigbee', 'sh-matter', 'sh-dali'] },
+      { id: 'sh-s-funkcije', title: 'Funkcije', icon: 'lightbulb', topics: ['sh-rasveta', 'sh-scene', 'sh-paneli', 'sh-lokalno'] },
+    ],
+  },
+  {
+    id: 'cctv', world: 'hw', title: 'CCTV', name: 'Video nadzor', icon: 'cctv',
+    blurb: 'Od kamere do snimka: senzor i objektiv, IP kamere i PoE, snimači i diskovi, mreža za kamere i bezbedan pristup sa daljine.',
+    sections: [
+      { id: 'cc-s-kamere', title: 'Kamere', icon: 'cctv', topics: ['cc-kamera', 'cc-noc', 'cc-analitika'] },
+      { id: 'cc-s-snimanje', title: 'Snimanje', icon: 'database', topics: ['cc-poe', 'cc-nvr', 'cc-bitrate', 'cc-disk'] },
+      { id: 'cc-s-mreza', title: 'Mreža i pristup', icon: 'network', topics: ['cc-onvif', 'cc-mreza', 'cc-pristup', 'cc-propisi'] },
+    ],
+  },
+  {
+    id: 'projects', world: 'hw', title: 'Projects', name: 'Projekti', icon: 'hammer', skill: false,
+    blurb: 'Beleške iz sopstvenih projekata: šta je napravljeno, koje su odluke donete, šeme i šta je naučeno.',
+    sections: [
+      { id: 'pr-s-projekti', title: 'Projekti', icon: 'hammer', topics: ['pr-esp32', 'pr-panel'] },
+    ],
   },
 ];

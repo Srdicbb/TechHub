@@ -325,7 +325,7 @@ pidstat -w -p $(pgrep -f MyApi) 1
       '`Thread.Sleep` za čekanje na nešto (polling) drži nit. Koristi događaj, `await Task.Delay` ili `PeriodicTimer`.',
       'Visok prioritet niti (`ThreadPriority.Highest`) može da izgladni ostale niti i skoro nikad nije rešenje.',
     ],
-    rel: ['threads', 'thread-pool', 'cpu-cores', 'concurrency-vs-parallelism'],
+    rel: ['threads', 'thread-pool', 'cpu-cores', 'concurrency-vs-parallelism', 'ei-firmware'],
     viz: {
       knobs: [
         { id: 'cores', label: 'Jezgara', value: 2, options: [[1, '1'], [2, '2'], [4, '4']] },

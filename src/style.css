@@ -31,7 +31,7 @@ code{font:500 .9em var(--fm);background:var(--panel2);padding:.06em .36em;border
 :root{--sbw:280px;
 --sb-bg:light-dark(#f5eae4,#2a1715);--sb-edge:light-dark(#e9d7cd,#3e2521);--sb-ink:light-dark(#3a2620,#f5eae6);--sb-mute:light-dark(#83665c,#bfa59d);
 --sb-hov:light-dark(#eddcd2,#37201c);--sb-on:light-dark(#e6cfc2,#472b26);--sb-sub:light-dark(#efdfd6,#3c2420);--sb-line:light-dark(#d9bfb2,#5d433c);
---acc:#f0a04b;--acc-ink:#2b1409}
+--acc:#f0a04b;--acc-ink:#2b1409;--orb1:#ffc183;--orb2:#d9661c;--orb-sh:rgba(194,65,12,.28)}
 .side{position:fixed;top:0;bottom:0;left:0;z-index:30;width:calc(var(--sbw) + 24px);padding:12px;transition:width .22s ease}
 .sb{position:relative;height:100%;display:flex;flex-direction:column;border-radius:24px;background:var(--sb-bg);border:1px solid var(--sb-edge);color:var(--sb-ink);box-shadow:0 1px 2px rgba(60,25,10,.06),0 14px 30px -22px rgba(60,25,10,.45)}
 .sb-head{position:relative;display:flex;align-items:center;padding:16px 16px 10px}
@@ -287,9 +287,9 @@ td:first-child{font-weight:600}
 .orb.has-open .orb-n:not(.open){opacity:.22;filter:saturate(.4)}
 .orb.has-open .orb-path{opacity:.35}
 .orb-n.open::before{content:"";position:absolute;left:calc(-1 * var(--hw));top:calc(-1 * var(--hh));width:calc(2 * var(--hw));height:calc(2 * var(--hh))}
-.orb-core{position:absolute;left:-33px;top:-33px;z-index:2;display:grid;place-items:center;width:66px;height:66px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#ffc183,var(--acc) 42%,#d9661c);color:#2b1409;box-shadow:0 10px 24px rgba(194,65,12,.28);text-decoration:none;transition:transform .35s cubic-bezier(.2,1.5,.4,1),box-shadow .35s}
+.orb-core{position:absolute;left:-33px;top:-33px;z-index:2;display:grid;place-items:center;width:66px;height:66px;border-radius:50%;background:radial-gradient(circle at 32% 28%,var(--orb1),var(--acc) 42%,var(--orb2));color:var(--acc-ink);box-shadow:0 10px 24px var(--orb-sh);text-decoration:none;transition:transform .35s cubic-bezier(.2,1.5,.4,1),box-shadow .35s}
 .orb-core>.i{position:relative;width:27px;height:27px}
-.orb-core:hover,.orb-n.open .orb-core{transform:scale(1.1);box-shadow:0 0 0 9px color-mix(in srgb,var(--acc) 22%,transparent),0 12px 30px rgba(194,65,12,.35)}
+.orb-core:hover,.orb-n.open .orb-core{transform:scale(1.1);box-shadow:0 0 0 9px color-mix(in srgb,var(--acc) 22%,transparent),0 12px 30px var(--orb-sh)}
 .orb-core:focus-visible{outline:3px solid var(--mag);outline-offset:4px}
 .orb-ring{position:absolute;inset:-12px;border-radius:50%;border:1px dashed color-mix(in srgb,var(--mag) 38%,transparent);animation:orb-spin calc(11s + var(--i) * 1.7s) linear infinite}
 .orb-n:nth-child(even) .orb-ring{animation-direction:reverse}
@@ -508,4 +508,49 @@ html.modal-on{overflow:hidden}
   .stack td::before{content:attr(data-l);font-weight:600;color:var(--mute)}
   .stack td:first-child{font-weight:700}
 }
+/* ---------- svetovi: prekidač u meniju; Hardware ima tirkizni akcenat i hladniji meni ---------- */
+:root[data-svet=hw]{
+--mag:light-dark(#0f766e,#5eead4);--tint:light-dark(#e1f4ef,#123029);--acc:#3cc4b0;--acc-ink:#04221e;
+--sb-bg:light-dark(#e4efeb,#10201c);--sb-edge:light-dark(#cce0d9,#1c3430);--sb-ink:light-dark(#1d2f2b,#e3f1ec);--sb-mute:light-dark(#566f68,#9cb8af);
+--sb-hov:light-dark(#d5e7e1,#172b27);--sb-on:light-dark(#c2dcd3,#20413a);--sb-sub:light-dark(#d8e9e3,#19302b);--sb-line:light-dark(#a6c5bb,#395a52);
+--orb1:#a9f0e2;--orb2:#0e8576;--orb-sh:rgba(13,110,100,.3)}
+.sb{transition:background-color .35s ease,border-color .35s ease}
+.worlds{display:flex;gap:4px;margin:0 14px 10px;padding:4px;border-radius:14px;background:color-mix(in srgb,var(--sb-ink) 6%,transparent);border:1px solid var(--sb-edge)}
+.wld{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;min-height:38px;padding:0 8px;border-radius:10px;color:var(--sb-mute);text-decoration:none;font:600 14px/1 var(--ft);transition:background-color .2s,color .2s,box-shadow .2s}
+.wld .i{width:17px;height:17px}
+.wld:hover{color:var(--sb-ink);background:color-mix(in srgb,var(--sb-ink) 5%,transparent)}
+.wld.on{background:var(--bg);color:var(--sb-ink);box-shadow:0 1px 2px rgba(0,0,0,.07),0 6px 14px -8px rgba(0,0,0,.35)}
+.wld.on .i{color:var(--mag)}
+@media (min-width:1100px){
+  html.mini .worlds{flex-direction:column;width:52px;margin:2px auto 8px;padding:3px}
+  html.mini .wld{min-height:40px;padding:0}
+}
+.eyebrow{margin:0 0 8px;font:700 12.5px/1.2 var(--ft);letter-spacing:.12em;text-transform:uppercase;color:var(--mag)}
+.wtag{font:600 11px/1 var(--ft);letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+.grp-h .wtag{margin-left:auto;font-style:normal;color:var(--sb-mute)}
+.tile .wtag{align-self:flex-start;margin-top:auto;padding:3px 7px;border-radius:6px;border:1px solid var(--line);background:var(--bg)}
+
+/* ---------- teme u pripremi: plan sadržaja umesto scene ---------- */
+.tree a.plan .tt{color:var(--sb-mute)}
+.tree a.plan .sym{opacity:.7}
+.orb-t.plan{border-style:dashed}
+.orb-t.plan .sym{background:transparent;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--mag) 40%,transparent)}
+.drow.plan .tsym{opacity:.6}
+.soon-chip{display:inline-block;margin-left:10px;padding:2px 9px;border-radius:999px;border:1px dashed color-mix(in srgb,var(--mag) 45%,transparent);color:var(--mag);font:600 12px/1.4 var(--ft);letter-spacing:.01em;vertical-align:3px;white-space:nowrap}
+.tile.plan{border:1px dashed var(--line);background:transparent}
+.tile.plan:hover{background:var(--panel)}
+.t-soon{display:inline-flex;align-items:center;gap:7px;margin:0 0 12px;padding:5px 12px 5px 9px;border-radius:999px;background:var(--tint);color:var(--mag);font:600 13.5px/1.2 var(--ft)}
+.t-soon .i{width:16px;height:16px}
+.plan-list{counter-reset:pl;display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.plan-list li{counter-increment:pl;display:flex;align-items:center;gap:14px;padding:12px 16px;border:1px dashed var(--line);border-radius:12px}
+.plan-list li::before{content:counter(pl);flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--tint);color:var(--mag);font:700 13px var(--fd)}
+
+/* ---------- Skillset: tab za svaki svet ---------- */
+.sk-tabs{display:flex;gap:4px;width:max-content;max-width:100%;margin:16px auto 0;padding:4px;border-radius:14px;background:var(--panel);border:1px solid var(--line)}
+.sk-tab{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:0 16px;border:0;border-radius:10px;background:none;color:var(--mute);font:600 14.5px var(--ft);cursor:pointer;transition:background-color .2s,color .2s,box-shadow .2s}
+.sk-tab .i{width:18px;height:18px}
+.sk-tab:hover{color:var(--ink)}
+.sk-tab[aria-selected=true]{background:var(--bg);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.07),0 6px 14px -8px rgba(0,0,0,.35)}
+.sk-tab[aria-selected=true] .i{color:var(--mag)}
+.sk-tab:focus-visible{outline:2px solid var(--mag);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}

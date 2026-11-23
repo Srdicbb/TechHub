@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Priručnik koncepata</title>
-<meta name="description" content="Priručnik koncepata za .NET, Angular, Azure, SQL, Kubernetes, arhitekturu, AI i algoritme, sa živim 3D scenama.">
+<meta name="description" content="Knowledge base sa živim 3D scenama. Software: .NET, Angular, Azure, SQL, Kubernetes, arhitektura, AI i algoritmi. Hardware: struja i razvodni ormani, elektronika i IoT, smart home i video nadzor.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath d='M16 3 28 9.5 16 16 4 9.5Z' fill='%23f0a04b'/%3E%3Cpath d='M4 9.5 16 16v13L4 22.5Z' fill='%238c3b2a'/%3E%3Cpath d='M28 9.5 16 16v13l12-6.5Z' fill='%23d9734a'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700;800&family=Red+Hat+Mono:wght@400;500&family=Red+Hat+Text:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>/*CSS*/</style>
-<script>try{var t=localStorage.getItem('prirucnik.tema');if(t==='light'||t==='dark')document.documentElement.dataset.tema=t;if(localStorage.getItem('prirucnik.meni')==='uzak')document.documentElement.classList.add('mini')}catch(e){}</script>
+<script>(function(){var d=document.documentElement,w=null;try{var t=localStorage.getItem('prirucnik.tema');if(t==='light'||t==='dark')d.dataset.tema=t;if(localStorage.getItem('prirucnik.meni')==='uzak')d.classList.add('mini');w=localStorage.getItem('prirucnik.svet')}catch(e){}var h=location.hash;d.dataset.svet=/^#hw(\/|$)/.test(h)||(!h&&w==='hw')?'hw':'sw'})()</script>
 </head>
 <body>
 <div class="app">
@@ -19,10 +19,14 @@
       <div class="sb-head">
         <a class="sb-me" href="#" data-tip="Početna" data-en-tip="Home">
           <span class="sb-av"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3 28 9.5 16 16 4 9.5Z" fill="#f0a04b"/><path d="M4 9.5 16 16v13L4 22.5Z" fill="#8c3b2a"/><path d="M28 9.5 16 16v13l12-6.5Z" fill="#d9734a"/></svg></span>
-          <span class="sb-who" data-en="&lt;small&gt;Interview prep&lt;/small&gt;&lt;b&gt;Concept Handbook&lt;/b&gt;"><small>Priprema za intervju</small><b>Priručnik koncepata</b></span>
+          <span class="sb-who" data-en="&lt;small&gt;Knowledge base&lt;/small&gt;&lt;b&gt;Concept Handbook&lt;/b&gt;"><small>Knowledge base</small><b>Priručnik koncepata</b></span>
         </a>
         <button class="sb-fold" id="fold" type="button" aria-label="Skupi meni" data-en-aria="Collapse menu" aria-expanded="true"><!--ICON:chevron-left--></button>
       </div>
+      <nav class="worlds" aria-label="Svet" data-en-aria="World">
+        <a class="wld" href="#" data-w="sw" data-tip="Software"><!--ICON:code-xml--><span class="tt">Software</span></a>
+        <a class="wld" href="#hw" data-w="hw" data-tip="Hardware"><!--ICON:cpu--><span class="tt">Hardware</span></a>
+      </nav>
       <div class="search">
         <!--ICON:search-->
         <input id="q" type="search" placeholder="Pretraži teme" data-en-ph="Search topics" autocomplete="off" spellcheck="false" aria-label="Pretraži teme" data-en-aria="Search topics">

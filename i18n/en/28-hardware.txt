@@ -1,0 +1,560 @@
+@a9076b19a0
+Voltage, current and power
+@ef833aa8ee
+Ohm’s law, power and energy, and why it is the **current** that determines cable cross-section and the choice of protection.
+@f739b3c468
+Ohm’s law and power: `P = U · I`
+@ae0b2053c4
+Alternating current: RMS value and power factor
+@a4451d7c28
+Energy and consumption in kWh
+@4fa922b2d2
+Current as the basis for choosing cables and breakers
+@6be2352aee
+Single-phase and three-phase systems
+@bead77bd15
+Phase, neutral and protective conductor, the 230 V phase voltage and 400 V line voltage, and how loads are spread across the phases.
+@986e8f4600
+L, N and PE: the role of each conductor
+@ccaf18a00e
+Phase and line voltage: 230 V and 400 V
+@c558dd9572
+Spreading loads across phases and imbalance
+@cb4995cd52
+Three-phase loads: motors, cooker, EV charger
+@e4628f1b9e
+Circuit breakers (MCB)
+@7fdaacf8d3
+How a circuit breaker protects the cable against overload and short circuit, what the B, C and D curves mean, and how selectivity is achieved.
+@c9b2b26e2e
+Thermal and magnetic trip
+@791b03a78c
+B, C and D curves and rated current
+@27eb52d62e
+Matching the breaker to the cable cross-section
+@8de8f7ae1f
+Selectivity: only the faulty circuit trips
+@54bf439c51
+RCD (residual current device)
+@6ea00715f7
+Protection of people against electric shock: the RCD compares the current leaving through the phase with the current returning through the neutral and trips when the difference exceeds its threshold.
+@846c169a83
+How it works: the difference between phase and neutral current
+@99bd0c1b3e
+30 mA for protecting people, higher ratings for fire protection
+@ef6ab17a0c
+Types AC, A, F and B and when to use each
+@1426629825
+Nuisance tripping: moisture, leakage and mixed-up neutrals
+@2069480eba
+Surge protection (SPD)
+@99dc1db3e1
+How devices are protected against surges from the grid and from lightning: types 1, 2 and 3, coordinating them, and where they go in the board.
+@ae1d1bcf24
+Where surges come from: lightning and switching in the grid
+@b3d415ea2a
+Types 1, 2 and 3 and cascaded protection
+@65532531e2
+Placement in the board and short leads
+@cedacd3a09
+Protecting electronics: controllers and cameras
+@1c33d4519e
+Cables and voltage drop
+@024bdf94a0
+Choosing the cross-section by current, installation method and run length, calculating voltage drop, and separating power cables from signal cables.
+@43c56dfcda
+Current-carrying capacity and installation method
+@c70fedd927
+Voltage drop on long runs
+@d0042ea4b1
+Power and signal cables and keeping them apart
+@ee65a09af0
+Calculator for cross-section and voltage drop
+@0902d6cc9c
+Earthing and equipotential bonding
+@bfce7d52e8
+TN and TT systems, the earth electrode and protective conductor, and bonding metal parts so that touching them is never dangerous.
+@4999d5dd34
+TN-C, TN-S, TN-C-S and TT systems
+@fd9e020b1a
+Earth electrode and earth resistance
+@26f0db49e1
+Main and supplementary equipotential bonding
+@0fac96b90a
+Where PEN splits into N and PE
+@2b22bd9f69
+Single-line diagrams
+@c07ec35908
+How to read and draw a distribution board diagram: symbols, circuits, labels, and the documentation that stays with the board.
+@3ebdc164df
+Symbols: breaker, RCD, contactor, relay
+@c91838a879
+Circuits and their labels
+@b2c4065be9
+From the diagram to the DIN-rail layout
+@1ef0cd6883
+Documentation kept with the board
+@98c9f123d1
+Assembling a distribution board
+@fcd9af777b
+From an empty enclosure to a tested board: equipment layout, wiring, busbars and terminals, labelling, and room for automation.
+@8954aeeb09
+Layout: incoming supply, protection, circuit groups, automation
+@28bc28da46
+Wiring, comb busbars and terminal blocks
+@b1b73aa970
+Labelling conductors and circuits
+@af5e35fc32
+Room for the smart-home controller, modules and power supplies
+@1730231352
+Measurement and testing
+@2bb0f53d66
+What is measured before an installation is put into service: insulation resistance, protective conductor continuity, loop impedance and RCD testing.
+@ff1fb19514
+Insulation resistance
+@68ba2168a6
+Protective conductor continuity
+@9988fd23bd
+Loop impedance and fault current
+@903c600d19
+RCD test: trip current and trip time
+@45643aaee3
+Basic components
+@3223c30192
+Resistor, capacitor, diode and LED: what they do in a circuit, how values are chosen, and how to read package markings.
+@274b302403
+Resistor: voltage divider, pull-up and pull-down
+@2275e8c9cc
+Capacitor: filtering and supply decoupling
+@742509e8e5
+Diode and LED: current direction and series resistor
+@7f1ba6b167
+Values, markings and packages (THT, SMD)
+@305d3991fe
+Power supplies
+@d1816c2dbd
+From 230 V down to 3.3 V: linear regulators, switching supplies (buck and boost), and working out how much current a device really draws.
+@533e62214b
+Linear regulator (LDO) and heat loss
+@8962ce51c9
+Switching supplies: buck and boost
+@9703eeb504
+DIN-rail power supplies: 5, 12 and 24 V
+@c4cb079edf
+Power budget and headroom
+@7376949054
+MOSFETs and relays as switches
+@0ead9290df
+How a 3.3 V microcontroller output switches a 12 V or 230 V load: transistor, MOSFET, relay, optocoupler and SSR.
+@28610fdd1b
+Transistor and logic-level MOSFET as a switch
+@aeb9ad5d31
+Relay and flyback diode
+@0d34a92b27
+Optocoupler and galvanic isolation
+@461dd1c6f5
+SSRs and when they beat a relay
+@1b30b94375
+The most common chip in home automation: cores, memory, pins and peripherals, and how to choose a module or development board.
+@fa66c26c59
+Cores, RAM and flash
+@e8bfbd158e
+Strapping pins and pins to avoid
+@2a64d395d5
+Peripherals: ADC, PWM, timers, touch
+@a3b79b86f2
+Chip variants, modules and development boards
+@b4077f2549
+GPIO, ADC and PWM
+@e22a315405
+Digital inputs and outputs, measuring voltage, and controlling light intensity or motor speed with PWM.
+@aa3fd4c642
+Inputs, outputs, pull-ups and button debounce
+@3ee2500421
+Interrupts
+@9e5691e6e1
+ADC: resolution and non-linearity
+@2578a4d6a1
+PWM: LED dimming and motor control
+@fbc4187acd
+Firmware, FreeRTOS and OTA
+@8a21acba55
+How firmware is organised: Arduino, ESP-IDF or ESPHome, FreeRTOS tasks, deep sleep, and safe over-the-air updates.
+@1065ee6061
+Arduino, ESP-IDF and ESPHome
+@bd9fc7fcc4
+FreeRTOS: tasks, queues and priorities
+@245bb1be63
+Deep sleep and battery operation
+@5972a9ebec
+OTA with two partitions and rollback
+@b7025dacc4
+UART, I²C and SPI
+@62427e44be
+The three basic on-board protocols: how bits travel, how devices are addressed, and when to choose which.
+@c312ab2b34
+UART: baud rate, TX and RX
+@b1aba289f8
+I²C: two wires, addresses and pull-up resistors
+@e3d3d6066f
+SPI: chip select and speed
+@d6a81cb7a5
+A logic analyser for debugging
+@63162cfd00
+RS-485 and Modbus
+@07eb1b13ec
+A reliable long-distance link in buildings and industry: a differential pair, a bus, and Modbus as the language devices speak.
+@28e6541e68
+Differential pair and termination
+@b9e598451d
+Bus topology
+@02e2a078f3
+Modbus RTU: registers and device addresses
+@e4480297c7
+Wi-Fi and BLE
+@d5f4026000
+How a device connects to the home network and to a phone: range, power use, first-time setup, and interference in the 2.4 GHz band.
+@0e25ca8ad4
+Wi-Fi: range, power use and connection stability
+@9af15ecba3
+BLE: advertising and GATT
+@ebcdbd6984
+Provisioning: first-time device setup
+@34d6b6f836
+Interference in the 2.4 GHz band
+@d981d6a212
+Low data rate over long distances: battery sensors sending a few bytes through walls and across the yard.
+@997a10311d
+Range versus data rate
+@ae410a84c2
+LoRa and LoRaWAN
+@6f03691e0c
+Gateway and network server
+@bf31d7a98b
+When LoRa and when Zigbee or Wi-Fi
+@57d835eae5
+The protocol IoT devices use to send and receive messages through a broker: topics, QoS, retained messages and last will.
+@662d41b024
+Broker, publish and subscribe
+@76a98b905b
+Topics and the + and # wildcards
+@4d427a36d3
+QoS 0, 1 and 2 and retained messages
+@ab7530d6b9
+Last will and tracking whether a device is online
+@c163150e3c
+How a smart-home system is put together
+@1edaafd03c
+Controller, actuators, sensors and panels: who sends commands to whom, where the logic lives, and what happens when one part fails.
+@e89e407c2b
+Controller, actuators, sensors and user interfaces
+@bb52d6e983
+Centralised and decentralised systems
+@64bb842efc
+Wired or wireless
+@0261df5d44
+Where the logic lives: controller, device or cloud
+@70a6880504
+The Pierre smart-home system: controller and modules, wiring in the board, configuring devices and scenes, and maintenance.
+@46f75a6150
+Controller and modules
+@7744685fb6
+Wiring in the board
+@9692b00f03
+Configuring devices, scenes and the app
+@728c5ef86c
+Maintenance and troubleshooting
+@2e01d703bd
+An open standard for building automation: devices on a shared bus exchange telegrams through group addresses, with no central computer.
+@5e78568012
+The bus and the line power supply
+@0e6071af33
+Physical and group addresses
+@e5de703d62
+ETS and commissioning
+@bac6be11fb
+KNX IP and integration with other systems
+@d329bd2022
+An open platform that brings devices from different manufacturers together in one place and runs automations locally, inside the house.
+@4cbf427b3c
+Integrations, devices and entities
+@853ca5532a
+Automations, scripts and scenes
+@d740f38c78
+ESPHome for your own devices
+@03fc5da4a2
+Local operation and backups
+@728c3d1920
+A mesh network of battery sensors and switches: coordinator, routers and end devices, and how a message finds its way through the house.
+@051428002b
+Coordinator, router and end device
+@30f732da18
+Mesh and range
+@87fd21dcad
+Pairing devices
+@5e67396d8e
+Zigbee2MQTT and ZHA
+@729b4de3b5
+Thread and Matter
+@77bd670f0f
+A common language for devices from different manufacturers: Thread is an IP mesh network, and Matter is the application layer that runs locally.
+@6485f721f5
+Thread: IP mesh network and border router
+@5e4252521d
+Matter: devices, clusters and fabrics
+@5c91775008
+Several controllers for the same device
+@5904bbc78b
+Support in existing ecosystems
+@2948c2b372
+Digital lighting control on a two-wire bus: every driver has an address, and luminaires are grouped and recalled in scenes.
+@ae8ce6ad5c
+The bus and its power supply
+@1d59bd23ed
+Addresses, groups and scenes
+@713472dd76
+DALI-2 and DT8 for light colour
+@04169febe5
+Connecting to the smart-home system
+@440c01745b
+Lighting
+@40453e7587
+Switching, dimming and light colour: phase-cut dimming, LED drivers, 0–10 V and DALI, LED strips and their voltage drop.
+@a048dae4ea
+Phase-cut dimming: leading and trailing edge
+@66fff8b55b
+LED drivers, 0–10 V and DALI
+@67faa8082b
+LED strips: power and voltage drop
+@a270d0eae4
+Colour temperature and RGBW
+@407f44bcff
+Scenes and automations
+@a154d2dc3a
+Several devices with one tap, or a house that reacts by itself: triggers, conditions and actions, presence, and keeping automations from becoming a nuisance.
+@9bbe9add6c
+Scene versus automation
+@c7204d45cb
+Triggers, conditions and actions
+@8f240068e7
+Presence and motion sensors
+@50dd79db06
+Automations that don’t annoy the household
+@310fc90c5b
+Wall panels and apps
+@61db836ef2
+How the household controls the house: wall buttons, wall screens, the app and voice, and which of them keeps working when something fails.
+@1561d5ecea
+Push buttons and wall switches
+@addd8631d9
+Wall screens and interface design
+@4bd8706bb6
+The phone app
+@e0952042dd
+Voice assistants
+@58dad0cb51
+Local or through the cloud
+@2ea01e97a0
+What works when the internet goes down and what when the controller fails: local logic, cloud services and safe remote access to the house.
+@c49f77f5b4
+Local logic and cloud services
+@b1160382f9
+What works without internet and what without the controller
+@6e1216020f
+Remote access: VPN or cloud
+@18a9f8c97a
+Security: passwords, updates and a separate network
+@3b5e1bbb9d
+Sensor, lens and resolution
+@9f06486cca
+What determines how much you can see in a recording: sensor size, focal length and field of view, and pixels per metre at the spot being recorded.
+@6936e56cbd
+Sensor size and sensitivity
+@981d6e5f44
+Focal length and field of view
+@ac79f3394f
+Pixels per metre: detection, recognition, identification
+@6f15bdbf56
+WDR and backlight
+@dc06062304
+Night operation and IR
+@a8e5c0201f
+How a camera sees in the dark: IR illumination and its range, the filter that switches between day and night, and cameras that record in colour at night.
+@d3570c6faf
+IR illumination and range
+@88f6bd18af
+IR-cut filter: switching between day and night
+@e5147112d2
+Colour cameras in low light
+@7f55a7c40c
+Reflections from glass, walls and cobwebs
+@5f54a629ab
+Video analytics
+@a58c337102
+A camera that understands the scene: it tells people and vehicles apart from shadows and leaves, watches line crossings and zone entry, and reads licence plates.
+@9e81d2f5c0
+Motion detection and false alarms
+@7c143866ad
+People and vehicle detection
+@9efe4c3a59
+Line crossing and intrusion zones
+@683c0520f2
+Licence plate recognition (LPR)
+@dc282bf615
+IP cameras and PoE
+@fd0d1f22c8
+One cable for video and power: PoE standards, power per port, the switch’s power budget and the 100-metre limit.
+@714735358a
+IP versus analogue cameras
+@2c60f67db2
+PoE standards and power per port
+@0f141392a9
+The PoE switch power budget
+@343ad74161
+Cable length and the 100 m limit
+@53eaf41331
+NVR and recording
+@8ec8742856
+How the recorder receives, stores and shows video: channels, continuous and event recording, main and sub stream.
+@1efb8d3cbc
+NVR and DVR
+@ea69993be1
+Continuous and event recording
+@06ca1d1213
+Main and sub stream
+@d9fab2aa5c
+Searching and exporting footage
+@7ac7bf68c0
+Compression and bitrate
+@c5b61d5e1b
+How much data a camera sends and what it depends on: H.264 and H.265, constant and variable bitrate, frame rate and GOP.
+@d4309c04c8
+H.264 and H.265
+@f66529aa57
+CBR and VBR
+@9719ac6200
+Frame rate and GOP
+@35c46de524
+What raises bitrate: night, rain, leaves in the wind
+@25f1d144fe
+Storage calculation
+@4cdd8f39a2
+How many days of recording fit on a disk: camera bitrates, hours recorded per day, surveillance disks and RAID.
+@f8be2e73d9
+Bitrate × time × number of cameras
+@f3a13692dd
+Continuous or event-based
+@47e33c6b82
+Surveillance disks and RAID
+@20223466e1
+Calculator: how many days of recording fit on a disk
+@cd28ea1def
+ONVIF and RTSP
+@ca4ccd98d6
+How cameras and recorders from different manufacturers talk to each other, and how a camera stream is opened in another program.
+@2316ce7b4b
+ONVIF profiles
+@6319539e80
+The RTSP stream URL
+@7db5c40969
+Camera and recorder compatibility
+@57a1400176
+A camera stream in Home Assistant
+@40a79ce833
+A network for cameras
+@e490a559c2
+Cameras on their own network: VLANs, IP addresses, bandwidth to the recorder, and why cameras should not have internet access.
+@e105ebbd2d
+VLANs and separation from the home network
+@535180209c
+IP addresses and DHCP reservations
+@aeb6ec849c
+Bandwidth to the recorder
+@9700b533bd
+Cameras without internet access
+@f2ed0ca675
+Remote access
+@855f9e2c02
+How to watch the cameras from a phone without exposing the recorder to the whole internet: vendor cloud services, VPN, and keeping passwords and firmware up to date.
+@5c389bfc09
+Vendor P2P cloud services
+@ba649886ce
+A VPN into the house
+@0ac91e8b23
+Why not to forward ports
+@5724b14a5f
+Passwords, accounts and firmware updates
+@48728aa621
+Regulations and privacy
+@82c69c4d2d
+Video surveillance records people, so rules apply: what may be recorded, how people are informed, how long recordings are kept and who may access them.
+@d0eec6af8b
+What may be recorded
+@de67c1ca01
+Notice that video surveillance is in use
+@37e98ccadd
+How long recordings are kept
+@bb1f347670
+Who may access recordings
+@38f1c4b22f
+ESP32 smart-home controller
+@33ce964d51
+An own ESP32-based controller instead of a ready-made one: requirements, schematic and component choice, firmware, and a DIN-rail enclosure.
+@af056e8209
+Requirements: inputs, outputs and communication
+@4241d02652
+Schematic and component choice
+@8b7da2accc
+Firmware and integration with the system
+@776410287a
+Enclosure and DIN-rail mounting
+@4c58fece59
+Wall screen with a 3D view
+@4756a135b4
+A wall panel where tapping a room opens it in 3D, and lights are switched through icons that pop up above the fixtures.
+@42ca8f5d15
+The idea and how it is used
+@0508570dec
+A 3D view of the apartment in the browser
+@4ce29db7e8
+Hardware: screen and computer in the wall
+@76c207f962
+Power and distribution boards
+@1cadde5dbf
+Electronics and IoT
+@563987a047
+Video surveillance
+@a34ccadf1b
+Projects
+@0ae6444862
+From voltage and current to a tested distribution board: protection, cables, earthing, diagrams and measurements.
+@9e84c423df
+How a device works inside: components and power, the ESP32 and firmware, and the protocols devices use to talk to each other, from UART to MQTT.
+@d26ede5193
+How devices work together in a house: systems and protocols, lighting, scenes and automations, panels, and what still works when the internet goes down.
+@732fd87fd9
+From camera to recording: sensor and lens, IP cameras and PoE, recorders and disks, the camera network and safe remote access.
+@cc728d5975
+Notes from my own projects: what was built, which decisions were made, schematics and lessons learned.
+@b5bfcb01f4
+Installation
+@ac69dab1df
+Distribution boards
+@d02c0493e7
+Components and power
+@abb8f55e25
+Microcontrollers
+@789d8e8e9d
+Wired protocols
+@e89bcd802b
+Wireless and IoT
+@a352c4789c
+Systems
+@582a826e63
+Functions
+@6303f16545
+Cameras
+@2e6d56288c
+Recording
+@d78d959798
+Network and access
